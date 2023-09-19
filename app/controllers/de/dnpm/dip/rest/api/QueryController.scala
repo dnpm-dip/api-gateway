@@ -1,0 +1,166 @@
+package de.dnpm.dip.rest.api
+
+
+import scala.util.{
+  Left,
+  Right
+}
+import scala.concurrent.{
+  Future,
+  ExecutionContext
+}
+import play.api.mvc.{
+  Action,
+  AnyContent,
+  BaseController
+}
+import play.api.libs.json.{
+  Json,
+  Format,
+  Reads,
+  Writes
+}
+import cats.Monad
+import de.dnpm.dip.service.query.{
+  Data,
+  PatientMatch,
+  Query,
+  Querier,
+  QueryService,
+  UseCaseConfig
+}
+import de.dnpm.dip.model.{
+  Id,
+  Patient,
+  Snapshot
+}
+import de.dnpm.dip.rest.util._
+
+
+abstract class QueryController[UseCase <: UseCaseConfig]
+(
+  implicit
+  ec: ExecutionContext,
+  jsCriteria: Format[UseCase#Criteria],
+  jsFilters: Format[UseCase#Filters],
+  jsPatRec: Format[UseCase#PatientRecord],
+  jsSummary: Writes[UseCase#Results#Summary],
+)
+extends BaseController
+   with JsonOps
+{
+
+  type PatientRecord = UseCase#PatientRecord
+  type Criteria      = UseCase#Criteria
+  type Filters       = UseCase#Filters
+  type Results       = UseCase#Results
+
+  import cats.data.NonEmptyList
+  import cats.syntax.either._
+  import Data.{Outcome,Save,Saved,Delete,Deleted}
+
+  val service: QueryService[Future,Monad[Future],UseCase,String]
+
+
+  //TODO: extract from authenticated request
+  implicit val querier: Querier =
+    Querier("Dummy-Querier-ID")
+
+
+  // --------------------------------------------------------------------------  
+  // Data Operations
+  // --------------------------------------------------------------------------  
+
+  def upload =
+    JsonAction[PatientRecord].async { 
+      req =>
+        (service ! Save(req.body))
+          .map {
+            case Right(Saved(snp)) => Created(Json.toJson(snp))
+            case Right(_)          => InternalServerError("Unexpected data upload outcome")
+            case Left(err)         => InternalServerError(err)
+          }
+    }
+
+
+  def delete(patId: Id[Patient]): Action[AnyContent] =
+    Action.async { 
+      (service ! Delete(patId))
+        .map {
+          case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
+          case Right(_)           => InternalServerError("Unexpected data deletion outcome")
+          case Left(err)          => InternalServerError(err)
+        }
+         
+    }
+
+
+
+  // --------------------------------------------------------------------------  
+  // Query Operations
+  // --------------------------------------------------------------------------  
+
+  def submit =
+    JsonAction[Query.Submit[Criteria]].async { 
+      req =>
+        (service ! req.body)
+          .map(JsonResult(_,InternalServerError(_)))
+
+    }
+
+
+  def get(id: Query.Id): Action[AnyContent] =
+    Action.async { 
+      service.get(id)
+        .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
+
+  def update =
+    JsonAction[Query.Update[Criteria]].async{ 
+      req =>
+        (service ! req.body)
+          .map(JsonResult(_,InternalServerError(_)))
+
+    }
+
+
+  def applyFilters =
+    JsonAction[Query.ApplyFilters[Filters]].async{ 
+      req =>
+        (service ! req.body)
+          .map(JsonResult(_,InternalServerError(_)))
+
+    }
+
+
+  def summary(
+    id: Query.Id
+  ): Action[AnyContent] =
+    Action.async { 
+      service.summary(id)
+        .map(JsonResult(_))
+    }
+
+  
+  def patientMatches(
+    id: Query.Id
+  ): Action[AnyContent] =
+    Action.async {
+      service.patientMatches(id)
+        .map(_.map(Collection(_)))
+        .map(JsonResult(_))
+      
+    }
+
+  def patientRecord(
+    id: Query.Id,
+    patId: Id[Patient]
+  ): Action[AnyContent] =
+    Action.async {
+      service.patientRecord(id,patId)
+        .map(JsonResult(_,s"Invalid Query ID ${id.value} or Patient ID ${patId.value}"))
+      
+    }
+
+}
