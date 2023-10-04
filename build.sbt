@@ -30,6 +30,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "rd-query-service-api"   % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "rd-query-service-impl"  % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "connector-base"         % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "hgnc-gene-set-impl"     % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "hp-ontology"            % "1.0-SNAPSHOT",
   "de.ekut.tbi"            %% "generators"             % "1.0-SNAPSHOT",
 
