@@ -124,19 +124,19 @@ extends BaseController
         .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
-/*
+
   def update(
-    id: Query,Id,
-    mode: Coding[Query.Mode.Value]
+    id: Query.Id,
+    mode: Option[Coding[Query.Mode.Value]]
   ) =
-    JsonAction[Criteria].async { 
+    JsonActionOpt[Criteria].async { 
       req =>
         (service ! Query.Update(id,mode,req.body))
           .map(JsonResult(_,InternalServerError(_)))
     }
-*/
 
-  def update =
+
+  def update(id: Query.Id) =
     JsonAction[Query.Update[Criteria]].async{ 
       req =>
         (service ! req.body)
@@ -145,7 +145,7 @@ extends BaseController
     }
 
 
-  def applyFilters =
+  def applyFilters(id: Query.Id) =
     JsonAction[Query.ApplyFilters[Filters]].async{ 
       req =>
         (service ! req.body)

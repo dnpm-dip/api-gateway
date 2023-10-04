@@ -83,20 +83,32 @@ extends SimpleRouter
     case POST(p"/query") =>
       controller.submit
 
-    case GET(p"/query/${QueryId(id)}") =>
-      controller.get(id)
-
     case GET(p"/query"?q"id=${QueryId(id)}") =>
       controller.get(id)
 
-    case PUT(p"/query/$id/filters") =>
-      controller.applyFilters
+    case GET(p"/query/${QueryId(id)}") =>
+      controller.get(id)
 
-//    case PUT(p"/query/$id"?q_o"mode=$mode") =>
-//      controller.update(id,)
+    case PUT(p"/query/${QueryId(id)}/filters") =>
+      controller.applyFilters(id)
 
-    case PUT(p"/query/$id") =>
-      controller.update
+    case PUT(p"/query/${QueryId(id)}"?q"mode=$mode") =>
+      mode match {
+        case QueryMode(md) =>
+          controller.update(id,Some(md))
+
+        case _ =>
+          controller.Action {
+            BadRequest(
+              Json.toJson(
+                Outcome(s"Invalid Query Mode value, expected one of: {${Query.Mode.values.mkString(",")}}")
+              )
+            )
+          }
+      }
+
+    case PUT(p"/query/${QueryId(id)}") =>
+      controller.update(id)
 
     case GET(p"/query/${QueryId(id)}/summary") =>
       controller.summary(id)

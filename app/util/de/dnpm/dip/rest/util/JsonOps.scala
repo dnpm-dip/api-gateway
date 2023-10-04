@@ -28,12 +28,25 @@ trait JsonOps
 
 
 
-  def jsonOutcome[T: Reads](
+//  def jsonOutcome[T: Reads](
+  def OutcomeOrJson[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[T] =
     parse.tolerantJson
       .validate(
         _.validate[T]
+         .asEither
+         .leftMap(
+           errs => BadRequest(Json.toJson(Outcome(errs))),
+         )
+       )
+
+  def OutcomeOrJsonOpt[T: Reads](
+    implicit ec: ExecutionContext
+  ): BodyParser[Option[T]] =
+    parse.tolerantJson
+      .validate(
+        _.validateOpt[T]
          .asEither
          .leftMap(
            errs => BadRequest(Json.toJson(Outcome(errs))),
@@ -46,9 +59,32 @@ trait JsonOps
   ): ActionBuilder[Request,T] =
     new ActionBuilder[Request,T]{
 
-      override val executionContext = ec
+      override val executionContext =
+        ec
 
-      override def parser: BodyParser[T] = jsonOutcome[T]
+      override val parser: BodyParser[T] =
+        OutcomeOrJson[T]
+
+      override def invokeBlock[A](
+        request: Request[A],
+        block: (Request[A]) => Future[Result]
+      ): Future[Result] = {
+        block(request)
+      }
+
+    }
+
+
+  def JsonActionOpt[T: Reads](
+    implicit ec: ExecutionContext
+  ): ActionBuilder[Request,Option[T]] =
+    new ActionBuilder[Request,Option[T]]{
+
+      override val executionContext =
+        ec
+
+      override val parser =
+        OutcomeOrJsonOpt[T]
 
       override def invokeBlock[A](
         request: Request[A],
