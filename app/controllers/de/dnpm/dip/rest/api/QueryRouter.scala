@@ -4,22 +4,39 @@ package de.dnpm.dip.rest.api
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
-import play.api.libs.json.Writes
+import play.api.mvc.Results.BadRequest
+import play.api.libs.json.{
+  Json,
+  Writes
+}
 import de.dnpm.dip.model.{
   Id,
   Patient
+}
+import de.dnpm.dip.coding.{
+  Coding,
+  CodeSystem
 }
 import de.dnpm.dip.service.query.{
   Query,
   UseCaseConfig
 }
-import de.dnpm.dip.rest.util.Extractor
-
+import de.dnpm.dip.rest.util.{
+  Extractor,
+  Outcome
+}
 
 
 object QueryId extends Extractor(Query.Id(_))
 
 object PatId extends Extractor(Id[Patient](_))
+
+object QueryMode
+{
+  def unapply(mode: String): Option[Coding[Query.Mode.Value]] =
+    CodeSystem[Query.Mode.Value].codingWithCode(mode)
+}
+
 
 
 abstract class QueryRouter[UseCase <: UseCaseConfig]
@@ -48,6 +65,21 @@ extends SimpleRouter
       controller.delete(patId)
 
 
+    case POST(p"/query"?q"mode=$mode") =>
+      mode match {
+        case QueryMode(md) =>
+          controller.submit(md)
+
+        case _ =>
+          controller.Action {
+            BadRequest(
+              Json.toJson(
+                Outcome(s"Invalid Query Mode value, expected one of: {${Query.Mode.values.mkString(",")}}")
+              )
+            )
+          }
+      }
+
     case POST(p"/query") =>
       controller.submit
 
@@ -59,6 +91,9 @@ extends SimpleRouter
 
     case PUT(p"/query/$id/filters") =>
       controller.applyFilters
+
+//    case PUT(p"/query/$id"?q_o"mode=$mode") =>
+//      controller.update(id,)
 
     case PUT(p"/query/$id") =>
       controller.update

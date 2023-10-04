@@ -29,6 +29,7 @@ import de.dnpm.dip.service.query.{
   QueryService,
   UseCaseConfig
 }
+import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
   Id,
   Patient,
@@ -100,6 +101,14 @@ extends BaseController
   // Query Operations
   // --------------------------------------------------------------------------  
 
+  def submit(mode: Coding[Query.Mode.Value]) =
+    JsonAction[Criteria].async { 
+      req =>
+        (service ! Query.Submit(mode,req.body))
+          .map(JsonResult(_,InternalServerError(_)))
+    }
+
+
   def submit =
     JsonAction[Query.Submit[Criteria]].async { 
       req =>
@@ -115,6 +124,17 @@ extends BaseController
         .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
+/*
+  def update(
+    id: Query,Id,
+    mode: Coding[Query.Mode.Value]
+  ) =
+    JsonAction[Criteria].async { 
+      req =>
+        (service ! Query.Update(id,mode,req.body))
+          .map(JsonResult(_,InternalServerError(_)))
+    }
+*/
 
   def update =
     JsonAction[Query.Update[Criteria]].async{ 
