@@ -27,6 +27,12 @@ extends SimpleRouter
     case GET(p"/coding/codesystems")   => catalogController.codeSystemInfos
 
 
+    case GET(p"/coding/valuesets"
+              ?q"uri=${Uri(uri)}"
+              ?q_o"version=$version")  => catalogController.valueSet(uri,version) 
+
+    case GET(p"/coding/valuesets")     => catalogController.codeSystemInfos
+
   }
 
 

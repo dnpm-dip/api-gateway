@@ -15,6 +15,7 @@ import play.api.mvc.{
   ControllerComponents
 }
 import play.api.libs.json.Json.toJson
+import de.dnpm.dip.coding.ValueSet
 import de.dnpm.dip.catalog.api.CatalogService
 import de.dnpm.dip.rest.util.{
   Collection,
@@ -57,6 +58,19 @@ with JsonOps
         .map(JsonResult(_))
 
     }
+
+
+  def valueSet(
+    uri: URI,
+    version: Option[String]
+  ): Action[AnyContent] =
+    Action.async {
+      catalogService.codeSystem(uri,version)
+        .map(_.map(ValueSet.from(_)))
+        .map(JsonResult(_))
+
+    }
+
 
 
 

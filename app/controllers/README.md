@@ -1,6 +1,6 @@
 # REST API
 
-## CodeSystems
+## Catalogs (CodeSystems/ValueSets)
 
 ### Get List of CodeSystems
 
@@ -40,33 +40,117 @@ GET /api/coding/codesystems
 ### Get specific CodeSystem
 
 ```
-GET /api/coding/codesystems?uri={CodeSystem-URI}
+GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}]
 ```
 
 **Response**
 <details>
-<summary>CodeSystem object</summary>
+<summary>CodeSystem object (conceptually equivalent to <a ref="https://hl7.org/fhir/R4/codesystem.html">FHIR CodeSystem</a>)</summary>
 
 ```javascript
 {
-  "name": "Gender",
-  "title": "Gender",
-  "uri": "Gender"
-  "properties": [],
-  "concepts": [
+    "uri": "https://hpo.jax.org",
+    "name": "Human-Phenotype-Ontology",
+    "title": "Human Phenotype Ontology",
+    "date": "2023-09-01T00:00:00",
+    "version": "2023-09-01",
+    "properties": [
+       // Properties defined on the CodeSystem's concepts, e.g. "type", "superClasses"
+    ],
+    "concepts": [
+        {
+            "code": "HP:...",
+            "display": "...",
+            "version": "2023-09-01",
+            "properties": {
+                "type": [
+                    "CLASS"
+                ],
+                "superClasses": [
+                   HP:...,
+                   HP:...,
+                   HP:...
+                ]
+            },
+            "children": [
+                "HP:000...",
+                "HP:000...",
+                "HP:001...",
+                "HP:003...",
+                "HP:003...",
+                "HP:004..."
+            ]
+        },
+        ...
+    ]
+}
+```
+</details>
+
+### Get List of ValueSets
+
+```
+GET /api/coding/valuesets
+```
+
+**Response**
+<details>
+<summary>List of ValueSet info objects containing name, title and URI (currently identical to CodeSystem Info objects)</summary>
+
+```javascript
+{
+  "entries": [
     {
-      "code": "male",
-      "display": "Männlich",
-      "properties": {}
-    },
-    {
-      "code": "female",
-      "display": "Weiblich",
-      "properties": {}
+        "name": "Diagnosis-Category",
+        "title": "Diagnosis-Category",
+        "uri": "dnpm-dip/rd/diagnosis/category"
     },
     ...
-  ],
+  ]
 }
+```
+</details>
+
+
+### Get specific ValueSet
+
+```
+GET /api/coding/valuesets?uri={ValueSet-URI}[&version={Version}]
+```
+
+**Response**
+<details>
+<summary>ValueSet object (conceptually equivalent to <a ref="https://hl7.org/fhir/R4/valueset.html">FHIR ValueSet</a>)</summary>
+
+```javascript
+{
+    "uri": "https://hpo.jax.org",
+    "name": "Human-Phenotype-Ontology",
+    "title": "Human Phenotype Ontology",
+    "date": "2023-10-12T15:11:25.973661",
+    "codings": [
+        {
+            "code": "HP:0000001",
+            "display": "All",
+            "system": "https://hpo.jax.org",
+            "version": "2023-09-01"
+        },
+        {
+            "code": "HP:0000002",
+            "display": "Abnormality of body height",
+            "system": "https://hpo.jax.org",
+            "version": "2023-09-01"
+        },
+        {
+            "code": "HP:0000003",
+            "display": "Multicystic kidney dysplasia",
+            "system": "https://hpo.jax.org",
+            "version": "2023-09-01"
+        },
+        ...
+    ]
+}
+
 ```
 </details>
 

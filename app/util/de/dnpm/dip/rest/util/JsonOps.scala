@@ -28,7 +28,6 @@ trait JsonOps
 
 
 
-//  def jsonOutcome[T: Reads](
   def OutcomeOrJson[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[T] =
