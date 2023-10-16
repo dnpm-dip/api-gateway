@@ -21,6 +21,7 @@ import de.dnpm.dip.rest.util.{
   Collection,
   JsonOps
 }
+import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
 
@@ -31,6 +32,7 @@ class CatalogController @Inject()(
 )
 extends BaseController
 with JsonOps
+with CatalogHypermedia
 {
 
   val catalogService =
@@ -42,6 +44,7 @@ with JsonOps
   def codeSystemInfos: Action[AnyContent] =
     Action.async {
       catalogService.codeSystemInfos
+        .map(_.map(Hyper(_)))
         .map(Collection(_))
         .map(toJson(_))
         .map(Ok(_))
@@ -55,8 +58,8 @@ with JsonOps
   ): Action[AnyContent] =
     Action.async {
       catalogService.codeSystem(uri,version)
+        .map(_.map(Hyper(_)))
         .map(JsonResult(_))
-
     }
 
 
@@ -67,11 +70,8 @@ with JsonOps
     Action.async {
       catalogService.codeSystem(uri,version)
         .map(_.map(ValueSet.from(_)))
+        .map(_.map(Hyper(_)))
         .map(JsonResult(_))
-
     }
-
-
-
 
 }

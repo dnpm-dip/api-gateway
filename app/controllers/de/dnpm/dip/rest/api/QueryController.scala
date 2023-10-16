@@ -36,6 +36,7 @@ import de.dnpm.dip.model.{
   Snapshot
 }
 import de.dnpm.dip.rest.util._
+import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
 abstract class QueryController[UseCase <: UseCaseConfig]
@@ -49,6 +50,7 @@ abstract class QueryController[UseCase <: UseCaseConfig]
 )
 extends BaseController
    with JsonOps
+   with QueryHypermedia[UseCase]
 {
 
   type PatientRecord = UseCase#PatientRecord
@@ -61,6 +63,12 @@ extends BaseController
   import Data.{Outcome,Save,Saved,Delete,Deleted}
 
   val service: QueryService[Future,Monad[Future],UseCase,String]
+
+//  val hyperMedia = new QueryHypermedia[UseCase]("rd")
+
+//  import hyperMedia._
+
+  override lazy val prefix = "rd"
 
 
   //TODO: extract from authenticated request
@@ -105,6 +113,7 @@ extends BaseController
     JsonAction[Criteria].async { 
       req =>
         (service ! Query.Submit(mode,req.body))
+          .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
 
@@ -113,6 +122,7 @@ extends BaseController
     JsonAction[Query.Submit[Criteria]].async { 
       req =>
         (service ! req.body)
+          .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
 
     }
@@ -121,6 +131,7 @@ extends BaseController
   def get(id: Query.Id): Action[AnyContent] =
     Action.async { 
       service.get(id)
+        .map(_.map(Hyper(_)))
         .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
@@ -132,6 +143,7 @@ extends BaseController
     JsonActionOpt[Criteria].async { 
       req =>
         (service ! Query.Update(id,mode,req.body))
+          .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
 
@@ -140,6 +152,7 @@ extends BaseController
     JsonAction[Query.Update[Criteria]].async{ 
       req =>
         (service ! req.body)
+          .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
 
     }
@@ -149,36 +162,41 @@ extends BaseController
     JsonAction[Query.ApplyFilters[Filters]].async{ 
       req =>
         (service ! req.body)
+          .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
 
     }
 
 
   def summary(
-    id: Query.Id
+    implicit id: Query.Id
   ): Action[AnyContent] =
     Action.async { 
       service.summary(id)
+        .map(_.map(Hyper(_)))
         .map(JsonResult(_))
     }
 
   
   def patientMatches(
-    id: Query.Id
+    implicit id: Query.Id
   ): Action[AnyContent] =
     Action.async {
       service.patientMatches(id)
+        .map(_.map(_.map(Hyper(_))))
         .map(_.map(Collection(_)))
         .map(JsonResult(_))
       
     }
 
   def patientRecord(
+    implicit
     id: Query.Id,
     patId: Id[Patient]
   ): Action[AnyContent] =
     Action.async {
       service.patientRecord(id,patId)
+        .map(_.map(Hyper(_)))
         .map(JsonResult(_,s"Invalid Query ID ${id.value} or Patient ID ${patId.value}"))
       
     }

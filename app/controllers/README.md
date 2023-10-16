@@ -1,5 +1,5 @@
 # REST API
-
+----
 ## Catalogs (CodeSystems/ValueSets)
 
 ### Get List of CodeSystems
@@ -55,7 +55,23 @@ GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}]
     "date": "2023-09-01T00:00:00",
     "version": "2023-09-01",
     "properties": [
-       // Properties defined on the CodeSystem's concepts, e.g. "type", "superClasses"
+       // Properties defined on the CodeSystem's concepts, e.g.
+       {
+            "name": "type",
+            "type": "string",
+            "description": "Node type"
+        },
+        {
+            "name": "definition",
+            "type": "string",
+            "description": "Definition of the concept ..."
+        },
+        {
+            "name": "superClasses",
+            "type": "string",
+            "description": "Super-classes, i.e. parent concepts"
+        }
+
     ],
     "concepts": [
         {
@@ -159,6 +175,7 @@ GET /api/coding/valuesets?uri={ValueSet-URI}[&version={Version}]
 This ValueSet structure is *conceptually* equivalent to [FHIR ValueSet](https://hl7.org/fhir/R4/valueset.html), but syntactically slightly different.
 
 
+----
 ## Rare Disease Query Module
 
 Possible Query Criteria by which to query for RD Patients (all optional):
@@ -166,8 +183,8 @@ Possible Query Criteria by which to query for RD Patients (all optional):
 | Scope  | Name | Type |
 | -----  | ----      | ---- |
 | HPO       | Term   |  |
-| Diagnosis | Category | Coding (ValueSet binding: http(s)://HOSTNAME/api/coding/valueset?uri=dnpm-dip/rd/diagnosis/category) |
-| Variant   | Gene     | Coding (ValueSet binding: http(s)://HOSTNAME/api/coding/valueset?uri= https://www.genenames.org/)  |
+| Diagnosis | Category | Coding (ValueSet binding: <code>http(s)://HOSTNAME/api/coding/valueset?uri=dnpm-dip/rd/diagnosis/category</code>) |
+| Variant   | Gene     | Coding (ValueSet binding: <code>http(s)://HOSTNAME/api/coding/valueset?uri= https://www.genenames.org/</code>)  |
 | Variant   | cDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
 | Variant   | gDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
 | Variant   | protein change | Coding where code is a [HGVS Protein Change](https://varnomen.hgvs.org/recommendations/protein/) text pattern (using **3-letter amino acid code** ??) |

@@ -4,7 +4,10 @@ package de.dnpm.dip.rest.api
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
-import play.api.mvc.Results.BadRequest
+import play.api.mvc.Results.{
+  BadRequest,
+  Ok
+}
 import play.api.libs.json.{
   Json,
   Writes
@@ -58,12 +61,17 @@ extends SimpleRouter
 
   final val baseRoutes: Routes = {
 
-    case POST(p"/patient-record") =>
+    case POST(p"/etl/patient-record") =>
       controller.upload
 
-    case DELETE(p"/patient/${PatId(patId)}") =>
+    case DELETE(p"/etl/patient/${PatId(patId)}") =>
       controller.delete(patId)
 
+    // TODO: Peer-to-peer Endpoints
+
+
+    case GET(p"/query/") =>
+      controller.HyperQueryApi
 
     case POST(p"/query"?q"mode=$mode") =>
       mode match {
@@ -113,8 +121,14 @@ extends SimpleRouter
     case GET(p"/query/${QueryId(id)}/summary") =>
       controller.summary(id)
 
+    case GET(p"/query/${QueryId(id)}/patient-matches") =>
+      controller.patientMatches(id)
+
     case GET(p"/query/${QueryId(id)}/patients") =>
       controller.patientMatches(id)
+
+    case GET(p"/query/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
+      controller.patientRecord(id,patId)
 
     case GET(p"/query/${QueryId(id)}/patient-record/${PatId(patId)}") =>
       controller.patientRecord(id,patId)
