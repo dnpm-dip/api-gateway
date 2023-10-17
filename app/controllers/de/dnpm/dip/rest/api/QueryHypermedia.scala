@@ -8,7 +8,8 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Link,
   Relations,
   Method,
-  Hyper
+  Hyper,
+  HypermediaBase
 }
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
@@ -18,18 +19,7 @@ import de.dnpm.dip.service.query.{
 }
 
 
-/*
-class QueryHypermedia[UseCase <: UseCaseConfig](
-  prefix: String
-)
-{
-  type PatientRecord = UseCase#PatientRecord
-  type Criteria      = UseCase#Criteria
-  type Filters       = UseCase#Filters
-  type Results       = UseCase#Results
-*/
-
-trait QueryHypermedia[UseCase <: UseCaseConfig]
+trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 {
 
   self: QueryController[UseCase] =>
@@ -47,10 +37,11 @@ trait QueryHypermedia[UseCase <: UseCaseConfig]
 
   val prefix: String
 
-
+/*
   private val BASE_URL =
     Option(System.getProperty("de.dnpm.dip.rest.api.baseurl"))
       .getOrElse("")
+*/
 
 
   protected val BASE_URI =

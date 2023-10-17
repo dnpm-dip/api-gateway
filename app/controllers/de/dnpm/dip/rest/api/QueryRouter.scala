@@ -140,7 +140,7 @@ extends SimpleRouter
     PartialFunction.empty
 
 
-  override val routes: Routes =
+  override lazy val routes: Routes =
     baseRoutes orElse additionalRoutes
 
 }

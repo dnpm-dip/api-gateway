@@ -5,7 +5,8 @@ import java.net.URI
 import de.dnpm.dip.rest.util.sapphyre.{
   Link,
   Relations,
-  Hyper
+  Hyper,
+  HypermediaBase
 }
 import de.dnpm.dip.coding.{
   CodeSystem,
@@ -14,7 +15,7 @@ import de.dnpm.dip.coding.{
 
 
 
-trait CatalogHypermedia
+trait CatalogHypermedia extends HypermediaBase
 {
 
   import Hyper.syntax._
@@ -24,16 +25,19 @@ trait CatalogHypermedia
   }
 
 
-  private val BASE_URI = "/api/coding"
+  protected val BASE_URI =
+    s"$BASE_URL/api/coding"
 
+  private val collectionLink =
+    Link(s"$BASE_URI/codesystems")
 
-  private def CodeSystemLink(
+  private def codeSystemLink(
     uri: URI,
     version: Option[String]
   ): Link =
     Link(s"$BASE_URI/codesystems?uri=${uri}${version.map(v => s"&version=$v").getOrElse("")}")
 
-  private def ValueSetLink(
+  private def valueSetLink(
     uri: URI,
     version: Option[String]
   ): Link =
@@ -45,9 +49,9 @@ trait CatalogHypermedia
     Hyper.Mapper(
       info =>
         info.withLinks(
-          COLLECTION   -> Link(s"$BASE_URI/codesystems"),
-          "codesystem" -> CodeSystemLink(info.uri,info.version),
-          "valueset"   -> ValueSetLink(info.uri,info.version)
+          COLLECTION   -> collectionLink,
+          "codesystem" -> codeSystemLink(info.uri,info.version),
+          "valueset"   -> valueSetLink(info.uri,info.version)
         )
     )
 
@@ -56,9 +60,9 @@ trait CatalogHypermedia
     Hyper.Mapper(
       cs =>
         cs.withLinks(
-          COLLECTION  -> Link(s"$BASE_URI/codesystems"),
-          SELF        -> CodeSystemLink(cs.uri,cs.version),
-          "valueset"   -> ValueSetLink(cs.uri,cs.version)
+          COLLECTION  -> collectionLink,
+          SELF        -> codeSystemLink(cs.uri,cs.version),
+          "valueset"   -> valueSetLink(cs.uri,cs.version)
         )
     )
 
@@ -67,9 +71,9 @@ trait CatalogHypermedia
     Hyper.Mapper(
       vs =>
         vs.withLinks(
-          COLLECTION   -> Link(s"$BASE_URI/codesystems"),
-          "codesystem" -> CodeSystemLink(vs.uri,vs.version),
-          SELF         -> ValueSetLink(vs.uri,vs.version)
+          COLLECTION   -> collectionLink,
+          "codesystem" -> codeSystemLink(vs.uri,vs.version),
+          SELF         -> valueSetLink(vs.uri,vs.version)
         )
     )
 
