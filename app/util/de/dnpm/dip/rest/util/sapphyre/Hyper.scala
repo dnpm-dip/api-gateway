@@ -98,30 +98,49 @@ object Hyper
         Hyper(
           data = t,
           links = ls.toMap
-//          links = Some(ls.toMap)
         )
 
       def withOperations(ops: (String,Operation)*) =
         Hyper(
           data = t,
           operations = ops.toMap
-//          operations = Some(ops.toMap)
         )
 
     }
 
   }
 
+  import scala.util.chaining._
 
   implicit def writesHyper[T: Writes]: Writes[Hyper[T]] =
     Writes {
       t =>
-//        Json.toJsObject(t.data) ++
+        Json.toJson(t.data).as[JsObject]
+          .pipe(
+            js => 
+              if (t.links.nonEmpty)
+                js + ("_links" -> Json.toJson(t.links))
+              else
+                js
+          )
+          .pipe(
+            js => 
+              if (t.operations.nonEmpty)
+                js + ("_operations" -> Json.toJson(t.operations))
+              else
+                js
+          )
+    }
+
+/*
+  implicit def writesHyper[T: Writes]: Writes[Hyper[T]] =
+    Writes {
+      t =>
         Json.toJson(t.data).as[JsObject] ++
           Json.obj(
             "_links"      -> Json.toJson(t.links),
             "_operations" -> Json.toJson(t.operations)
           )
     }
-
+*/
 }

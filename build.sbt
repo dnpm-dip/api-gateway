@@ -2,7 +2,7 @@ import sbt.Keys._
 
 
 
-name := "api-gateway"
+name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / version      := "1.0-SNAPSHOT"
