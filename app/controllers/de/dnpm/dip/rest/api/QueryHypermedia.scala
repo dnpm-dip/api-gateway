@@ -37,15 +37,9 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   val prefix: String
 
-/*
-  private val BASE_URL =
-    Option(System.getProperty("de.dnpm.dip.rest.api.baseurl"))
-      .getOrElse("")
-*/
-
 
   protected val BASE_URI =
-    s"$BASE_URL/api/$prefix/query"
+    s"$BASE_URL/api/$prefix/queries"
 
 
   private def QueryUri(id: Query.Id) =

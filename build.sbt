@@ -32,6 +32,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "connector-base"         % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "hgnc-gene-set-impl"     % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "hp-ontology"            % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "orphanet-ordo"          % "1.0-SNAPSHOT",
   "de.ekut.tbi"            %% "generators"             % "1.0-SNAPSHOT",
 
 

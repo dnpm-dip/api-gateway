@@ -65,15 +65,21 @@ extends SimpleRouter
       controller.upload
 
     case DELETE(p"/etl/patient/${PatId(patId)}") =>
-      controller.delete(patId)
-
-    // TODO: Peer-to-peer Endpoints
+      controller.deletePatient(patId)
 
 
-    case GET(p"/query/") =>
+    case POST(p"/peer2peer/query") =>
+      controller.peerToPeerQuery
+
+    case POST(p"/peer2peer/patient-record") =>
+      controller.patientRecordRequest
+
+
+    case GET(p"/query-api") =>
       controller.HyperQueryApi
 
-    case POST(p"/query"?q"mode=$mode") =>
+
+    case POST(p"/queries"?q"mode=$mode") =>
       mode match {
         case QueryMode(md) =>
           controller.submit(md)
@@ -88,19 +94,26 @@ extends SimpleRouter
           }
       }
 
-    case POST(p"/query") =>
+    case POST(p"/queries") =>
       controller.submit
 
-    case GET(p"/query"?q"id=${QueryId(id)}") =>
+    case GET(p"/queries"?q"id=${QueryId(id)}") =>
       controller.get(id)
 
-    case GET(p"/query/${QueryId(id)}") =>
+    case GET(p"/queries/${QueryId(id)}") =>
       controller.get(id)
 
-    case PUT(p"/query/${QueryId(id)}/filters") =>
+    case DELETE(p"/queries"?q"id=${QueryId(id)}") =>
+      controller.delete(id)
+
+    case DELETE(p"/queries/${QueryId(id)}") =>
+      controller.delete(id)
+
+
+    case PUT(p"/queries/${QueryId(id)}/filters") =>
       controller.applyFilters(id)
 
-    case PUT(p"/query/${QueryId(id)}"?q"mode=$mode") =>
+    case PUT(p"/queries/${QueryId(id)}"?q"mode=$mode") =>
       mode match {
         case QueryMode(md) =>
           controller.update(id,Some(md))
@@ -115,23 +128,26 @@ extends SimpleRouter
           }
       }
 
-    case PUT(p"/query/${QueryId(id)}") =>
+    case PUT(p"/queries/${QueryId(id)}") =>
       controller.update(id)
 
-    case GET(p"/query/${QueryId(id)}/summary") =>
+    case GET(p"/queries/${QueryId(id)}/summary") =>
       controller.summary(id)
 
-    case GET(p"/query/${QueryId(id)}/patient-matches") =>
+    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
       controller.patientMatches(id)
 
-    case GET(p"/query/${QueryId(id)}/patients") =>
+    case GET(p"/queries/${QueryId(id)}/patients") =>
       controller.patientMatches(id)
 
-    case GET(p"/query/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
+    case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
 
-    case GET(p"/query/${QueryId(id)}/patient-record/${PatId(patId)}") =>
+    case GET(p"/queries/${QueryId(id)}/patient-record/${PatId(patId)}") =>
       controller.patientRecord(id,patId)
+
+    case GET(p"/queries") =>
+      controller.queries
 
   }
 

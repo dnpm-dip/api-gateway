@@ -24,6 +24,8 @@ import cats.Monad
 import de.dnpm.dip.service.query.{
   Data,
   PatientMatch,
+  PeerToPeerQuery,
+  PatientRecordRequest,
   Query,
   Querier,
   QueryService,
@@ -64,9 +66,6 @@ extends BaseController
 
   val service: QueryService[Future,Monad[Future],UseCase,String]
 
-//  val hyperMedia = new QueryHypermedia[UseCase]("rd")
-
-//  import hyperMedia._
 
   override lazy val prefix = "rd"
 
@@ -92,7 +91,7 @@ extends BaseController
     }
 
 
-  def delete(patId: Id[Patient]): Action[AnyContent] =
+  def deletePatient(patId: Id[Patient]): Action[AnyContent] =
     Action.async { 
       (service ! Delete(patId))
         .map {
@@ -167,6 +166,13 @@ extends BaseController
 
     }
 
+  def delete(id: Query.Id): Action[AnyContent] =
+    Action.async { 
+      (service ! Query.Delete(id))
+        .map(_.toOption)
+        .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
 
   def summary(
     implicit id: Query.Id
@@ -200,5 +206,38 @@ extends BaseController
         .map(JsonResult(_,s"Invalid Query ID ${id.value} or Patient ID ${patId.value}"))
       
     }
+
+
+  def queries: Action[AnyContent] =
+    Action.async { 
+      service.queries
+        .map(Collection(_))
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
+
+
+  // --------------------------------------------------------------------------  
+  // Peer-to-Peer Operations
+  // --------------------------------------------------------------------------  
+
+  def peerToPeerQuery =
+    JsonAction[PeerToPeerQuery[Criteria,PatientRecord]].async { 
+      req =>
+        (service ! req.body)
+          .map {
+            case Right(resultSet) => Ok(Json.toJson(resultSet))
+            case Left(err)        => InternalServerError(err)
+          }
+    }
+
+
+  def patientRecordRequest =
+    JsonAction[PatientRecordRequest[PatientRecord]].async { 
+      req =>
+        (service ! req.body)
+          .map(JsonResult(_))
+    }
+
 
 }

@@ -130,7 +130,6 @@ trait JsonOps
       Ok(_)
     )
 
-
   def JsonResult[T: Writes](
     opt: Option[T],
     err: => String = ""
