@@ -75,9 +75,6 @@ extends SimpleRouter
       controller.patientRecordRequest
 
 
-    case GET(p"/query-api") =>
-      controller.HyperQueryApi
-
 
     case POST(p"/queries"?q"mode=$mode") =>
       mode match {
@@ -134,11 +131,18 @@ extends SimpleRouter
     case GET(p"/queries/${QueryId(id)}/summary") =>
       controller.summary(id)
 
-    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
-      controller.patientMatches(id)
+    case GET(p"/queries/${QueryId(id)}/patient-matches"
+             ?q_o"offset=${int(offset)}"
+             ?q_o"length=${int(length)}") =>
+      controller.patientMatches(offset,length)(id)
 
-    case GET(p"/queries/${QueryId(id)}/patients") =>
-      controller.patientMatches(id)
+//    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
+//      controller.patientMatches(id)
+
+    case GET(p"/queries/${QueryId(id)}/patients"
+             ?q_o"offset=${int(offset)}"
+             ?q_o"length=${int(length)}") =>
+      controller.patientMatches(offset,length)(id)
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)

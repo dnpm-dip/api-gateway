@@ -3,6 +3,7 @@ package de.dnpm.dip.rest.api
 
 import java.net.URI
 import play.api.libs.json.Json
+import de.dnpm.dip.rest.util.Collection
 import de.dnpm.dip.rest.util.sapphyre.{
   Operation,
   Link,
@@ -50,17 +51,6 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
 
 
-  private val HyperQueryOps =
-    Hyper.Api
-      .withOperations(
-        "submit" -> Operation(POST, Link(BASE_URI))
-      )
-
-  def HyperQueryApi =
-    Action { Ok(Json.toJson(HyperQueryOps)) }
-      
-
-
   implicit val HyperQuery: Hyper.Mapper[Query[UseCase#Criteria,UseCase#Filters]] =
     Hyper.Mapper {
       query =>
@@ -77,6 +67,15 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           UPDATE   -> Operation(PUT, selfLink),
           "filter" -> Operation(PUT, Link(s"${Uri(query)}/filters"))
         )
+    }
+
+
+  implicit val HyperQueryCollection: Hyper.Mapper[Collection[Hyper[Query[UseCase#Criteria,UseCase#Filters]]]] =
+    Hyper.Mapper { 
+      _.withOperations(
+        "submit" -> Operation(POST, Link(BASE_URI))
+      )
+
     }
 
 

@@ -185,15 +185,19 @@ extends BaseController
 
   
   def patientMatches(
+    offset: Option[Int],
+    length: Option[Int],
+  )(
     implicit id: Query.Id
   ): Action[AnyContent] =
     Action.async {
-      service.patientMatches(id)
+      service.patientMatches(id,offset,length)
         .map(_.map(_.map(Hyper(_))))
         .map(_.map(Collection(_)))
         .map(JsonResult(_))
       
     }
+
 
   def patientRecord(
     implicit
@@ -211,7 +215,9 @@ extends BaseController
   def queries: Action[AnyContent] =
     Action.async { 
       service.queries
+        .map(_.map(Hyper(_)))
         .map(Collection(_))
+        .map(Hyper(_))
         .map(Json.toJson(_))
         .map(Ok(_))
     }

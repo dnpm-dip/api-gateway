@@ -9,9 +9,9 @@
 The provided Dockerfile requires the self-contained zip package of the backend application, as created by the <code>sbt dist</code> task.
 With this zip package named <code>dnpm-dip-api-gateway-{VERSION}.zip</code> in the current work directory:
 
-<code>
-docker build -t dnpm-dip-backend --build-arg="BACKEND_APP=dnpm-dip-api-gateway-{VERSION}" .
-</code>
+```bash
+foo@bar: docker build -t dnpm-dip-backend --build-arg="BACKEND_APP=dnpm-dip-api-gateway-{VERSION}" .
+```
 
 
 ## Operation
