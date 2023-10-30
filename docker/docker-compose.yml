@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  backend:
+
+    image: dnpm-dip-backend
+    
+    ports:
+      - 9000:9000
+    
+    environment:
+      RD_RANDOM_DATA: 50
+      HOST_BASEURL: "http://localhost:9000"
+    
+    volumes:
+      - /home/lucien/Downloads/bwhc_config:/config
+

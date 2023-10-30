@@ -12,7 +12,7 @@ trait HypermediaBase
 {
 
   protected val BASE_URL: String =
-    System.getProperty("de.dnpm.dip.rest.api.baseurl","")
+    System.getProperty("dnpm.dip.rest.api.baseurl","")
 
 
   protected val BASE_URI: String
