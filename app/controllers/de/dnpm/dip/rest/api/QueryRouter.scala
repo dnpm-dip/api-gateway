@@ -30,6 +30,7 @@ import de.dnpm.dip.rest.util.{
 }
 
 
+/*
 object QueryId extends Extractor(Query.Id(_))
 
 object PatId extends Extractor(Id[Patient](_))
@@ -39,6 +40,7 @@ object QueryMode
   def unapply(mode: String): Option[Coding[Query.Mode.Value]] =
     CodeSystem[Query.Mode.Value].codingWithCode(mode)
 }
+*/
 
 
 
@@ -49,11 +51,26 @@ abstract class QueryRouter[UseCase <: UseCaseConfig]
 extends SimpleRouter
 {
 
+  private val QueryId =
+    Extractor(Query.Id(_))
+
+  private val PatId =
+    Extractor(Id[Patient](_))
+
+  private val QueryMode =
+    new Extractor[String,Coding[Query.Mode.Value]]{
+      override def unapply(mode: String): Option[Coding[Query.Mode.Value]] =
+        CodeSystem[Query.Mode.Value].codingWithCode(mode)
+    }
+
+
+
   val prefix =
     if (pref startsWith "/")
       pref
     else
       s"/$pref"
+
 
 
   val controller: QueryController[UseCase]
@@ -135,9 +152,6 @@ extends SimpleRouter
              ?q_o"offset=${int(offset)}"
              ?q_o"length=${int(length)}") =>
       controller.patientMatches(offset,length)(id)
-
-//    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
-//      controller.patientMatches(id)
 
     case GET(p"/queries/${QueryId(id)}/patients"
              ?q_o"offset=${int(offset)}"

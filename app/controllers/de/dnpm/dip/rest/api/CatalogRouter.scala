@@ -9,7 +9,7 @@ import play.api.routing.sird._
 import de.dnpm.dip.rest.util.Extractor
 
 
-object Uri extends Extractor(URI.create)
+//object Uri extends Extractor(URI.create)
 
 
 class CatalogRouter @Inject()(
@@ -17,6 +17,10 @@ class CatalogRouter @Inject()(
 )
 extends SimpleRouter
 {
+
+  val Uri =
+    Extractor(URI.create)
+
 
   override val routes: Routes = {
 

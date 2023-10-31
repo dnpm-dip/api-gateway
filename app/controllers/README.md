@@ -182,9 +182,9 @@ Possible Query Criteria by which to query for RD Patients (all optional):
 
 | Scope  | Name | Type |
 | -----  | ----      | ---- |
-| HPO       | Term   |  |
-| Diagnosis | Category | Coding (ValueSet binding: <code>http(s)://HOSTNAME/api/coding/valueset?uri=dnpm-dip/rd/diagnosis/category</code>) |
-| Variant   | Gene     | Coding (ValueSet binding: <code>http(s)://HOSTNAME/api/coding/valueset?uri= https://www.genenames.org/</code>)  |
+| HPO       | Term   |  Coding from [Human Phenotype Ontology](https://hpo.jax.org) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://hpo.jax.org</code>) |
+| Diagnosis | Category | Coding from [Orphanet Rare Disease Ontology](https://www.orpha.net) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://www.orpha.net</code>) |
+| Variant   | Gene     | Coding from [HGNC Gene Set](https://www.genenames.org) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://www.genenames.org/</code>)  |
 | Variant   | cDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
 | Variant   | gDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
 | Variant   | protein change | Coding where code is a [HGVS Protein Change](https://varnomen.hgvs.org/recommendations/protein/) text pattern (using **3-letter amino acid code** ??) |
