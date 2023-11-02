@@ -335,6 +335,8 @@ GET /api/rd/queries
 
 ```
 GET /api/rd/queries/{Query-ID}
+
+GET /api/rd/queries?id={Query-ID}
 ```
 
 **Response**

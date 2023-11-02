@@ -43,6 +43,19 @@ import de.dnpm.dip.rest.util._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
+
+final case class PartialQuerySubmit[Criteria]
+(
+  criteria: Criteria
+)
+object PartialQuerySubmit
+{
+  implicit def format[Criteria: Reads]: Reads[PartialQuerySubmit[Criteria]] =
+    Json.reads[PartialQuerySubmit[Criteria]]
+}
+
+
+
 abstract class QueryController[UseCase <: UseCaseConfig]
 (
   implicit
@@ -111,9 +124,9 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def submit(mode: Coding[Query.Mode.Value]) =
-    JsonAction[Criteria].async { 
+    JsonAction[PartialQuerySubmit[Criteria]].async { 
       req =>
-        (service ! Query.Submit(mode,req.body))
+        (service ! Query.Submit(mode,req.body.criteria))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
@@ -141,9 +154,9 @@ extends BaseController
     id: Query.Id,
     mode: Option[Coding[Query.Mode.Value]]
   ) =
-    JsonActionOpt[Criteria].async { 
+    JsonActionOpt[PartialQuerySubmit[Criteria]].async { 
       req =>
-        (service ! Query.Update(id,mode,req.body))
+        (service ! Query.Update(id,mode,req.body.map(_.criteria)))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
