@@ -4,7 +4,8 @@ package de.dnpm.dip.rest.util.sapphyre
 import play.api.libs.json.{
   Json,
   JsObject,
-  Writes
+  Writes,
+  OWrites
 }
 
 
@@ -112,35 +113,24 @@ object Hyper
 
   import scala.util.chaining._
 
-  implicit def writesHyper[T: Writes]: Writes[Hyper[T]] =
-    Writes {
+  implicit def writesHyper[T: OWrites]: OWrites[Hyper[T]] =
+    OWrites {
       t =>
-        Json.toJson(t.data).as[JsObject]
+        Json.toJsObject(t.data)
           .pipe(
             js => 
-              if (t.links.nonEmpty)
-                js + ("_links" -> Json.toJson(t.links))
-              else
-                js
+              t.links.nonEmpty match {
+                case true  => js + ("_links" -> Json.toJson(t.links))
+                case false => js
+              }
           )
           .pipe(
             js => 
-              if (t.operations.nonEmpty)
-                js + ("_operations" -> Json.toJson(t.operations))
-              else
-                js
+              t.operations.nonEmpty match {
+                case true  => js + ("_operations" -> Json.toJson(t.operations))
+                case false => js
+              }
           )
     }
 
-/*
-  implicit def writesHyper[T: Writes]: Writes[Hyper[T]] =
-    Writes {
-      t =>
-        Json.toJson(t.data).as[JsObject] ++
-          Json.obj(
-            "_links"      -> Json.toJson(t.links),
-            "_operations" -> Json.toJson(t.operations)
-          )
-    }
-*/
 }

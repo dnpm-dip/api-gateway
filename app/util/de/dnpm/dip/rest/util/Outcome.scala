@@ -4,12 +4,12 @@ package de.dnpm.dip.rest.util
 
 import play.api.libs.json.{
   Json,
-  JsValue,
+//  JsValue,
   JsPath,
   JsonValidationError,
-  Format,
+//  Format,
   Writes,
-  Reads
+  OWrites,
 }
 import cats.data.{
   Ior,
@@ -58,14 +58,25 @@ object Outcome
       Issue(Severity.Information,details)
 
 
-    implicit val writes: Writes[Issue] =
+    implicit val writes: OWrites[Issue] =
       Json.writes[Issue]
 
   }
 
 
-  implicit val writes: Writes[Outcome] =
-    Json.writes[Outcome]
+//  implicit val writes: Writes[Outcome] =
+//    Json.writes[Outcome]
+
+  // Define Custom Writes so that field "issues" be called "_issues",
+  // in order to maintain convention that field "_issues" will also occur
+  // on resources in case of partial success
+  implicit val writes: OWrites[Outcome] =
+    OWrites(
+      out =>
+        Json.obj("_issues" -> Json.toJson(out.issues))
+    )
+
+
 
   def apply(
     errors: Iterable[(JsPath, Iterable[JsonValidationError])]

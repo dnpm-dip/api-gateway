@@ -17,8 +17,10 @@ import play.api.mvc.{
 import play.api.libs.json.{
   Json,
   Format,
+  OFormat,
   Reads,
-  Writes
+  Writes,
+  OWrites
 }
 import cats.Monad
 import de.dnpm.dip.service.query.{
@@ -47,8 +49,8 @@ abstract class QueryController[UseCase <: UseCaseConfig]
   ec: ExecutionContext,
   jsCriteria: Format[UseCase#Criteria],
   jsFilters: Format[UseCase#Filters],
-  jsPatRec: Format[UseCase#PatientRecord],
-  jsSummary: Writes[UseCase#Results#Summary],
+  jsPatRec: OFormat[UseCase#PatientRecord],
+  jsSummary: OWrites[UseCase#Results#Summary],
 )
 extends BaseController
    with JsonOps

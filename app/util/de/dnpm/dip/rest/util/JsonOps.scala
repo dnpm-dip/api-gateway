@@ -1,15 +1,24 @@
 package de.dnpm.dip.rest.util
 
 
-import scala.concurrent.{Future,ExecutionContext}
+import scala.concurrent.{
+  Future,
+  ExecutionContext
+}
 import scala.util.Either
-import cats.data.{IorNel,NonEmptyList}
+import cats.data.{
+  Ior,
+  IorNel,
+  NonEmptyList
+}
 import cats.syntax.either._
 import play.api.libs.json.{
   Json,
   JsValue,
+  JsObject,
   Reads,
-  Writes
+//  Writes,
+  OWrites
 }
 import play.api.mvc.{
   BaseController,
@@ -26,6 +35,7 @@ trait JsonOps
 
   self: BaseController =>
 
+  import Json.toJson
 
 
   def OutcomeOrJson[T: Reads](
@@ -96,6 +106,17 @@ trait JsonOps
 
 
 
+  def JsonResult[T: OWrites](
+    ior: IorNel[String,T],
+    err: JsValue => Result,
+  ): Result =
+    ior.leftMap(Outcome(_)) match {
+      case Ior.Left(out)   => err(Json.toJson(out))
+      case Ior.Right(t)    => Ok(Json.toJson(t))
+      case Ior.Both(out,t) => Ok(Json.toJson(t).as[JsObject] + ("_issues" -> Json.toJson(out.issues)))
+    }
+
+/*
   def JsonResult[T: Writes](
     ior: IorNel[String,T],
     err: JsValue => Result
@@ -112,9 +133,10 @@ trait JsonOps
       err(_),
       Ok(_)
     )
+*/
 
 
-  def JsonResult[T: Writes](
+  def JsonResult[T: OWrites](
     xor: Either[NonEmptyList[String],T],
     err: JsValue => Result
   ): Result =
@@ -130,7 +152,7 @@ trait JsonOps
       Ok(_)
     )
 
-  def JsonResult[T: Writes](
+  def JsonResult[T: OWrites](
     opt: Option[T],
     err: => String = ""
   ): Result =

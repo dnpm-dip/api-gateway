@@ -193,7 +193,7 @@ Possible Query Criteria by which to query for RD Patients (all optional):
 ### Submit Query
 
 ```
-POST /api/rd/query
+POST /api/rd/queries
 ```
 **Request Body**
 <details>
@@ -205,11 +205,11 @@ POST /api/rd/query
     "code": "local | federated"  
   },
   "criteria": {
-    "diagnoses" : [ {
-      "category" : {
+    "diagnoses" : [
+      {
         "code" : "endocrine",
       }
-    } ],
+    ],
     "hpoTerms" : [ {
       "code" : "HP:398974",
     } ],
@@ -232,10 +232,10 @@ POST /api/rd/query
 ```
 </details>
 
-#### Variant
+#### Alternative Query submission
 
 ```
-POST /api/rd/query?mode={local|federated}
+POST /api/rd/queries?mode={local|federated}
 ```
 
 **Request Body**
@@ -244,11 +244,11 @@ POST /api/rd/query?mode={local|federated}
 
 ```javascript
 {
-  "diagnoses" : [ {
-    "category" : {
-      "code" : "endocrine",
+  "diagnoses" : [
+    {
+      "code" : "endocrine"
     }
-  } ],
+  ],
   "hpoTerms" : [ {
     "code" : "HP:398974",
   } ],
@@ -296,10 +296,45 @@ POST /api/rd/query?mode={local|federated}
 </details>
 
 
-### Get Query
+### Get Open Queries
 
 ```
-GET /api/rd/query/{Query-ID}
+GET /api/rd/queries
+```
+
+**Response**
+<details>
+<summary>Collection of Query session objects</summary>
+
+```javascript
+{
+  "entries": [
+    {
+      "id" : "1e3c229e-ffb4-47fa-9602-1c2b26c8117f",
+      "submittedAt" : "2023-09-15T12:04:06.521604",
+      "querier" : "Dummy-Querier-ID",
+      "mode" : {
+        "code" : "local",
+        "display" : "Lokal",
+        "system" : "dnpm-dip/query/mode"
+      },
+      "criteria" : {
+        // RD Query Criteria object as submitted, but with initialized "display" and "system" values in all codings
+      },
+      "expiresAfter" : 900,  // Validity period (seconds) after which query session expires unless refreshed by some operation
+      "lastUpdate" : "2023-09-15T10:04:06.521634Z"
+    }
+  ]
+}
+
+```
+</details>
+
+
+### Get Query by ID
+
+```
+GET /api/rd/queries/{Query-ID}
 ```
 
 **Response**
@@ -330,7 +365,7 @@ GET /api/rd/query/{Query-ID}
 ### Get Query ResultSet Summary
 
 ```
-GET /api/rd/query/{Query-ID}/summary
+GET /api/rd/queries/{Query-ID}/summary
 ```
 
 **Response**
@@ -349,19 +384,24 @@ GET /api/rd/query/{Query-ID}/summary
 ### Get Patient Matches from Query ResultSet
 
 ```
-GET /api/rd/query/{Query-ID}/patients
+GET /api/rd/queries/{Query-ID}/patient-matches
+
+GET /api/rd/queries/{Query-ID}/patients
 ```
 
 **Response**
 <details>
-<summary>List of Patient Match object, i.e. minimal Patient Info together with subset of matching query criteria</summary>
+<summary>Collection of Patient Match objects, i.e. minimal Patient Info together with subset of matching query criteria</summary>
 
 ```javascript
 {
   "entries": [
     {
       "id": "018b00bb-2898-49eb-82b8-dd88617da326",  // Patient-ID
-      "age": 48,                                     // Age in years
+      "age": { 
+         "value": 48,
+         "unit": "a"   // Years
+      },
       "gender": {
           "code": "other",
           "display": "Divers",
@@ -387,50 +427,67 @@ GET /api/rd/query/{Query-ID}/patients
 ### Get specific PatientRecord from Query ResultSet
 
 ```
-GET /api/rd/query/{Query-ID}/patient-record/{Patient-ID}
+GET /api/rd/queries/{Query-ID}/patient-record/{Patient-ID}
 ```
 
 **Response**
 <details>
 <summary>RD Patient Record</summary>
-
 ```javascript
 {
+    "patient": {
+        "birthDate": "1978-01-17",
+        "gender": {
+            "code": "other",
+            "display": "Divers",
+            "system": "Gender"
+        },
+        "id": "ba25035b-26db-4d52-87ad-312a27bc8079",
+        "managingSite": {
+            "code": "UKX",
+            "display": "Fake Site",
+            "system": "dnpm/site"
+        }
+    },
     "case": {
         "externalId": {
-            "value": "3e81e210-2fad-47c5-893e-e65200332b21"
-        },
-        "face2geneId": {
-            "system": "https://www.face2gene.com/",
-            "value": "9fd827fc-c7f8-4d80-ad86-c60c41f28e4a"
+            "value": "3ff22a20-7a85-4494-b387-e81051561875"
         },
         "gestaltMatcherId": {
             "system": "https://www.gestaltmatcher.org/",
-            "value": "a81d078b-98a2-42f3-85c4-2959d3d34de1"
+            "value": "b92e7f22-5bd6-42d6-af9e-6660f80e4ba0"
         },
-        "id": "5c6573a7-74ac-45fa-b1d3-ee15a36a1d1b",
+        "id": "673caf7d-b182-4c70-aab6-771e9b002608",
         "patient": {
-            "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+            "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
         },
         "reason": {
-            "id": "d2ff9f74-84af-43dc-9e7f-d83c607a4819"
+            "id": "324edd16-793f-4574-814f-89e685442aa2"
         },
-        "recordedOn": "2023-10-04",
+        "recordedOn": "2023-11-02",
         "referrer": {
             "name": "Dr. House"
         }
     },
     "diagnosis": {
-        "category": {
-            "code": "organ abnormality",
-            "display": "organ abnormality",
-            "system": "dnpm-dip/rd/diagnosis/category"
+        "categories": [
+            {
+                "code": "ORPHA:984",
+                "display": "Lungenagenesie",
+                "system": "https://www.orpha.net",
+                "version": "4.3"
+            }
+        ],
+        "id": "324edd16-793f-4574-814f-89e685442aa2",
+        "onsetAge": {
+            "unit": "a",
+            "value": 18
         },
-        "id": "d2ff9f74-84af-43dc-9e7f-d83c607a4819",
         "patient": {
-            "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+            "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
         },
-        "recordedOn": "2023-10-04",
+        "prenatal": false,
+        "recordedOn": "2023-11-02",
         "status": {
             "code": "partially-solved",
             "display": "Teilweise gelöst",
@@ -439,376 +496,379 @@ GET /api/rd/query/{Query-ID}/patient-record/{Patient-ID}
     },
     "hpoTerms": [
         {
-            "id": "c8542899-b598-4c42-b6bc-922cd6d5758d",
+            "id": "cde829a8-30b4-4701-bbc8-0c2df3c80663",
             "patient": {
-                "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+                "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
             },
             "value": {
-                "code": "ORPHA:315311",
-                "system": "https://hpo.jax.org"
+                "code": "HP:0100871",
+                "display": "Abnormal palm morphology",
+                "system": "https://hpo.jax.org",
+                "version": "2023-09-01"
             }
         },
         {
-            "id": "b62db10c-4a13-4e0e-8a83-b4398bef3958",
+            "id": "d8dc300e-b9ca-4b95-81da-1531aff0d9bb",
             "patient": {
-                "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+                "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
             },
             "value": {
-                "code": "ORPHA:142684",
-                "system": "https://hpo.jax.org"
+                "code": "HP:0100869",
+                "display": "Palmar telangiectasia",
+                "system": "https://hpo.jax.org",
+                "version": "2023-09-01"
             }
         },
         {
-            "id": "6adce0ff-2eb1-431b-9df6-7a7f43c5ea29",
+            "id": "80f665cf-2eac-4fd0-9316-d001ca33033b",
             "patient": {
-                "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+                "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
             },
             "value": {
-                "code": "ORPHA:315440",
-                "system": "https://hpo.jax.org"
+                "code": "HP:0100863",
+                "display": "Aplasia of the femoral neck",
+                "system": "https://hpo.jax.org",
+                "version": "2023-09-01"
             }
         },
         {
-            "id": "1c56c92d-fd8a-49ca-96f2-7d816b5f7e4d",
+            "id": "2f3eeffe-b16c-4612-b37c-556c8fac4c42",
             "patient": {
-                "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+                "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
             },
             "value": {
-                "code": "ORPHA:253592",
-                "system": "https://hpo.jax.org"
+                "code": "HP:0100869",
+                "display": "Palmar telangiectasia",
+                "system": "https://hpo.jax.org",
+                "version": "2023-09-01"
             }
         }
     ],
-    "ngsReport": {
-        "autozygosity": {
-            "id": "c105ac8d-1f81-4513-90ab-dc8ed701b4f8",
+    "ngsReports": [
+        {
+            "autozygosity": {
+                "id": "6d13b450-ec6c-43c7-9c6a-7c9bc95c08ce",
+                "patient": {
+                    "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
+                },
+                "value": 0.9874248504638672
+            },
+            "familyControls": {
+                "code": "trio",
+                "display": "trio",
+                "system": "dnpm-dip/rd/ngs-report/family-control-level"
+            },
+            "id": "e1df79f5-6888-4f01-afae-35e0edaa8c62",
+            "metaInfo": {
+                "kit": "Kit...",
+                "sequencingType": "Seq. Type"
+            },
             "patient": {
-                "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+                "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
             },
-            "value": 0.03219771385192871
-        },
-        "id": "e7ab1968-b8af-4039-a8e2-ebd0d0173aa4",
-        "metaInfo": {
-            "kit": "Kit...",
-            "sequencingType": "Seq. Type"
-        },
-        "patient": {
-            "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-        },
-        "performingLab": {
-            "name": "Lab name"
-        },
-        "recordedOn": "2023-10-04",
-        "type": {
-            "code": "array",
-            "display": "Array",
-            "system": "dnpm-dip/rd/ngs-report/type"
-        },
-        "variants": [
-            {
-                "acmgClass": {
-                    "code": "likely-benign",
-                    "display": "Likely benign",
-                    "system": "https://www.acmg.net"
-                },
-                "cDNAChange": {
-                    "code": "NG_012232.1(NM_004006.2):c.93+1G>T",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "clinVarAccessionID": [
-                    "bdc73f79-c81f-4847-8ee3-954907148bba"
-                ],
-                "deNovo": {
-                    "code": "no",
-                    "display": "No",
-                    "system": "dnpm-dip/rd/variant/de-novo"
-                },
-                "gDNAChange": {
-                    "code": "NC_000023.11:g.33344590_33344592=/dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "gene": {
-                    "code": "HGNC:20",
-                    "display": "AARS1",
-                    "system": "https://www.genenames.org/"
-                },
-                "id": "3cba188f-bf0e-40af-a954-4f294015434a",
-                "iscnDescription": "Some ISCN description",
-                "levelOfEvidence": "Level of evidence",
-                "modeOfInheritance": {
-                    "code": "dominant",
-                    "display": "Dominant",
-                    "system": "dnpm-dip/rd/variant/mode-of-inheritance"
-                },
-                "patient": {
-                    "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-                },
-                "proteinChange": {
-                    "code": "NP_003997.2:p.Val7dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "pubMedID": {
-                    "system": "https://pubmed.ncbi.nlm.nih.gov/",
-                    "value": "-2066413175"
-                },
-                "significance": {
-                    "code": "primary",
-                    "display": "Primary",
-                    "system": "dnpm-dip/rd/variant/significance"
-                },
-                "zygosity": {
-                    "code": "hemi",
-                    "display": "Hemizygous",
-                    "system": "dnpm-dip/rd/variant/zygosity"
-                }
+            "performingLab": {
+                "name": "Lab name"
             },
-            {
-                "acmgClass": {
-                    "code": "likely-pathogenic",
-                    "display": "Likely pathogenic",
-                    "system": "https://www.acmg.net"
-                },
-                "cDNAChange": {
-                    "code": "G_199t1:c.54G>H",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "clinVarAccessionID": [
-                    "a2bb7fca-b4fe-43d6-9e13-265a0dba5aa0"
-                ],
-                "deNovo": {
-                    "code": "no",
-                    "display": "No",
-                    "system": "dnpm-dip/rd/variant/de-novo"
-                },
-                "gDNAChange": {
-                    "code": "NC_000023.11:g.pter_qtersup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "gene": {
-                    "code": "HGNC:20",
-                    "display": "AARS1",
-                    "system": "https://www.genenames.org/"
-                },
-                "id": "8c45efa4-b888-400a-99ea-44d24017ea80",
-                "iscnDescription": "Some ISCN description",
-                "levelOfEvidence": "Level of evidence",
-                "modeOfInheritance": {
-                    "code": "recessive",
-                    "display": "Recessive",
-                    "system": "dnpm-dip/rd/variant/mode-of-inheritance"
-                },
-                "patient": {
-                    "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-                },
-                "proteinChange": {
-                    "code": "NP_003997.1:p.(Gly56Ala^Ser^Cys)",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "pubMedID": {
-                    "system": "https://pubmed.ncbi.nlm.nih.gov/",
-                    "value": "449154329"
-                },
-                "significance": {
-                    "code": "candidate",
-                    "display": "Candidate",
-                    "system": "dnpm-dip/rd/variant/significance"
-                },
-                "zygosity": {
-                    "code": "comp-het",
-                    "display": "Comp. het",
-                    "system": "dnpm-dip/rd/variant/zygosity"
-                }
+            "recordedOn": "2023-11-02",
+            "type": {
+                "code": "panel",
+                "display": "Panel",
+                "system": "dnpm-dip/rd/ngs-report/type"
             },
-            {
-                "acmgClass": {
-                    "code": "pathogenic",
-                    "display": "Pathogenic",
-                    "system": "https://www.acmg.net"
+            "variants": [
+                {
+                    "acmgClass": {
+                        "code": "likely-benign",
+                        "display": "Likely benign",
+                        "system": "https://www.acmg.net/class"
+                    },
+                    "acmgCriteria": [
+                        {
+                            "code": "PP5",
+                            "display": "PP5",
+                            "system": "https://www.acmg.net/criteria"
+                        },
+                        {
+                            "code": "BP6",
+                            "display": "BP6",
+                            "system": "https://www.acmg.net/criteria"
+                        },
+                        {
+                            "code": "BP2",
+                            "display": "BP2",
+                            "system": "https://www.acmg.net/criteria"
+                        }
+                    ],
+                    "cDNAChange": {
+                        "code": "NG_012232.1(NM_004006.2):c.93+1G>T",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "clinVarAccessionID": [
+                        "1ab4bfd4-813c-4af2-8155-1e09104e2a18"
+                    ],
+                    "gDNAChange": {
+                        "code": "NC_000023.11:g.32343183dup",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "gene": {
+                        "code": "HGNC:51526",
+                        "display": "apoptosis associated transcript in bladder cancer",
+                        "system": "https://www.genenames.org/"
+                    },
+                    "id": "e40aca00-2374-408c-9e43-72c05245a8ec",
+                    "iscnDescription": "Some ISCN description",
+                    "levelOfEvidence": "Level of evidence",
+                    "modeOfInheritance": {
+                        "code": "mitochondrial",
+                        "display": "Mitochondrial",
+                        "system": "dnpm-dip/rd/variant/mode-of-inheritance"
+                    },
+                    "patient": {
+                        "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
+                    },
+                    "proteinChange": {
+                        "code": "LRG_199p1:p.Trp24=/Cys",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "pubMedID": {
+                        "system": "https://pubmed.ncbi.nlm.nih.gov/",
+                        "value": "195855529"
+                    },
+                    "segregationAnalysis": {
+                        "code": "from-father",
+                        "display": "Transmitted from father",
+                        "system": "dnpm-dip/rd/variant/segregation-analysis"
+                    },
+                    "significance": {
+                        "code": "candidate",
+                        "display": "Candidate",
+                        "system": "dnpm-dip/rd/variant/significance"
+                    },
+                    "zygosity": {
+                        "code": "heterozygous",
+                        "display": "Heterozygous",
+                        "system": "dnpm-dip/rd/variant/zygosity"
+                    }
                 },
-                "cDNAChange": {
-                    "code": "G_199t1:c.54G>H",
-                    "system": "https://varnomen.hgvs.org"
+                {
+                    "acmgClass": {
+                        "code": "likely-benign",
+                        "display": "Likely benign",
+                        "system": "https://www.acmg.net/class"
+                    },
+                    "acmgCriteria": [
+                        {
+                            "code": "BA1",
+                            "display": "BA1",
+                            "system": "https://www.acmg.net/criteria"
+                        },
+                        {
+                            "code": "PM6",
+                            "display": "PM6",
+                            "system": "https://www.acmg.net/criteria"
+                        },
+                        {
+                            "code": "PP4",
+                            "display": "PP4",
+                            "system": "https://www.acmg.net/criteria"
+                        }
+                    ],
+                    "cDNAChange": {
+                        "code": "NG_012232.1(NM_004006.2):c.93+1G>T",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "clinVarAccessionID": [
+                        "efad7330-1fe1-4f0f-867a-e9f6d652dca0"
+                    ],
+                    "gDNAChange": {
+                        "code": "NC_000023.11:g.pter_qtersup",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "gene": {
+                        "code": "HGNC:20",
+                        "display": "alanyl-tRNA synthetase 1",
+                        "system": "https://www.genenames.org/"
+                    },
+                    "id": "7193507f-c8b5-4a05-868e-cbdcb9e1644c",
+                    "iscnDescription": "Some ISCN description",
+                    "levelOfEvidence": "Level of evidence",
+                    "modeOfInheritance": {
+                        "code": "dominant",
+                        "display": "Dominant",
+                        "system": "dnpm-dip/rd/variant/mode-of-inheritance"
+                    },
+                    "patient": {
+                        "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
+                    },
+                    "proteinChange": {
+                        "code": "LRG_199p1:p.Trp24Ter (p.Trp24*)",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "pubMedID": {
+                        "system": "https://pubmed.ncbi.nlm.nih.gov/",
+                        "value": "1216365734"
+                    },
+                    "segregationAnalysis": {
+                        "code": "from-father",
+                        "display": "Transmitted from father",
+                        "system": "dnpm-dip/rd/variant/segregation-analysis"
+                    },
+                    "significance": {
+                        "code": "incidental",
+                        "display": "Incidental",
+                        "system": "dnpm-dip/rd/variant/significance"
+                    },
+                    "zygosity": {
+                        "code": "homozygous",
+                        "display": "Homozygous",
+                        "system": "dnpm-dip/rd/variant/zygosity"
+                    }
                 },
-                "clinVarAccessionID": [
-                    "cc6fce60-7f1b-4889-a71b-408443146392"
-                ],
-                "deNovo": {
-                    "code": "yes",
-                    "display": "Yes",
-                    "system": "dnpm-dip/rd/variant/de-novo"
+                {
+                    "acmgClass": {
+                        "code": "pathogenic",
+                        "display": "Pathogenic",
+                        "system": "https://www.acmg.net/class"
+                    },
+                    "acmgCriteria": [
+                        {
+                            "code": "BS1",
+                            "display": "BS1",
+                            "system": "https://www.acmg.net/criteria"
+                        }
+                    ],
+                    "cDNAChange": {
+                        "code": "LRG_199t1:c.79_80delinsTT",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "clinVarAccessionID": [
+                        "186ae3d7-3b0f-4a02-9f07-20d2a275be44"
+                    ],
+                    "gDNAChange": {
+                        "code": "NC_000023.11:g.(31060227_31100351)_(33274278_33417151)dup",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "gene": {
+                        "code": "HGNC:20",
+                        "display": "alanyl-tRNA synthetase 1",
+                        "system": "https://www.genenames.org/"
+                    },
+                    "id": "b29636e2-0b1a-4311-8d34-29a82956e124",
+                    "iscnDescription": "Some ISCN description",
+                    "levelOfEvidence": "Level of evidence",
+                    "modeOfInheritance": {
+                        "code": "unclear",
+                        "display": "Unclear",
+                        "system": "dnpm-dip/rd/variant/mode-of-inheritance"
+                    },
+                    "patient": {
+                        "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
+                    },
+                    "proteinChange": {
+                        "code": "LRG_199p1:p.Trp24Cys",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "pubMedID": {
+                        "system": "https://pubmed.ncbi.nlm.nih.gov/",
+                        "value": "282670945"
+                    },
+                    "segregationAnalysis": {
+                        "code": "from-father",
+                        "display": "Transmitted from father",
+                        "system": "dnpm-dip/rd/variant/segregation-analysis"
+                    },
+                    "significance": {
+                        "code": "primary",
+                        "display": "Primary",
+                        "system": "dnpm-dip/rd/variant/significance"
+                    },
+                    "zygosity": {
+                        "code": "heterozygous",
+                        "display": "Heterozygous",
+                        "system": "dnpm-dip/rd/variant/zygosity"
+                    }
                 },
-                "gDNAChange": {
-                    "code": "NC_000023.11:g.32343183dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "gene": {
-                    "code": "HGNC:49667",
-                    "display": "ABALON",
-                    "system": "https://www.genenames.org/"
-                },
-                "id": "7d08ab08-2614-41c3-93f9-53f0e7864d36",
-                "iscnDescription": "Some ISCN description",
-                "levelOfEvidence": "Level of evidence",
-                "modeOfInheritance": {
-                    "code": "X-linked",
-                    "display": "X-linked",
-                    "system": "dnpm-dip/rd/variant/mode-of-inheritance"
-                },
-                "patient": {
-                    "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-                },
-                "proteinChange": {
-                    "code": "LRG_199p1:p.Trp24Cys",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "pubMedID": {
-                    "system": "https://pubmed.ncbi.nlm.nih.gov/",
-                    "value": "401170830"
-                },
-                "significance": {
-                    "code": "incidental",
-                    "display": "Incidental",
-                    "system": "dnpm-dip/rd/variant/significance"
-                },
-                "zygosity": {
-                    "code": "hemi",
-                    "display": "Hemizygous",
-                    "system": "dnpm-dip/rd/variant/zygosity"
+                {
+                    "acmgClass": {
+                        "code": "likely-benign",
+                        "display": "Likely benign",
+                        "system": "https://www.acmg.net/class"
+                    },
+                    "acmgCriteria": [
+                        {
+                            "code": "PM2",
+                            "display": "PM2",
+                            "system": "https://www.acmg.net/criteria"
+                        },
+                        {
+                            "code": "BP5",
+                            "display": "BP5",
+                            "system": "https://www.acmg.net/criteria"
+                        }
+                    ],
+                    "cDNAChange": {
+                        "code": "G_199t1:c.54G>H",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "clinVarAccessionID": [
+                        "1a73be31-b003-476b-8039-7ecb6387bebb"
+                    ],
+                    "gDNAChange": {
+                        "code": "NC_000023.10:g.33038255C>A",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "gene": {
+                        "code": "HGNC:21",
+                        "display": "apoptosis associated tyrosine kinase",
+                        "system": "https://www.genenames.org/"
+                    },
+                    "id": "2857a2c8-18dd-4e8a-a027-e208f035f3a8",
+                    "iscnDescription": "Some ISCN description",
+                    "levelOfEvidence": "Level of evidence",
+                    "modeOfInheritance": {
+                        "code": "mitochondrial",
+                        "display": "Mitochondrial",
+                        "system": "dnpm-dip/rd/variant/mode-of-inheritance"
+                    },
+                    "patient": {
+                        "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
+                    },
+                    "proteinChange": {
+                        "code": "NP_003997.2:p.Val7dup",
+                        "system": "https://varnomen.hgvs.org"
+                    },
+                    "pubMedID": {
+                        "system": "https://pubmed.ncbi.nlm.nih.gov/",
+                        "value": "102034715"
+                    },
+                    "segregationAnalysis": {
+                        "code": "from-mother",
+                        "display": "Transmitted from mother",
+                        "system": "dnpm-dip/rd/variant/segregation-analysis"
+                    },
+                    "significance": {
+                        "code": "incidental",
+                        "display": "Incidental",
+                        "system": "dnpm-dip/rd/variant/significance"
+                    },
+                    "zygosity": {
+                        "code": "comp-het",
+                        "display": "Comp. het",
+                        "system": "dnpm-dip/rd/variant/zygosity"
+                    }
                 }
-            },
-            {
-                "acmgClass": {
-                    "code": "pathogenic",
-                    "display": "Pathogenic",
-                    "system": "https://www.acmg.net"
-                },
-                "cDNAChange": {
-                    "code": "LRG_199t1:c.79_80delinsTT",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "clinVarAccessionID": [
-                    "569182a8-e2fe-4e01-86e6-cac1c1e823a7"
-                ],
-                "deNovo": {
-                    "code": "yes",
-                    "display": "Yes",
-                    "system": "dnpm-dip/rd/variant/de-novo"
-                },
-                "gDNAChange": {
-                    "code": "NC_000023.11:g.(31060227_31100351)_(33274278_33417151)dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "gene": {
-                    "code": "HGNC:17929",
-                    "display": "AADAT",
-                    "system": "https://www.genenames.org/"
-                },
-                "id": "ccb73f7a-818d-4698-8e4b-07a9f054f08b",
-                "iscnDescription": "Some ISCN description",
-                "levelOfEvidence": "Level of evidence",
-                "modeOfInheritance": {
-                    "code": "dominant",
-                    "display": "Dominant",
-                    "system": "dnpm-dip/rd/variant/mode-of-inheritance"
-                },
-                "patient": {
-                    "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-                },
-                "proteinChange": {
-                    "code": "NP_003997.1:p.(Gly56Ala^Ser^Cys)",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "pubMedID": {
-                    "system": "https://pubmed.ncbi.nlm.nih.gov/",
-                    "value": "709123527"
-                },
-                "significance": {
-                    "code": "candidate",
-                    "display": "Candidate",
-                    "system": "dnpm-dip/rd/variant/significance"
-                },
-                "zygosity": {
-                    "code": "homozygous",
-                    "display": "Homozygous",
-                    "system": "dnpm-dip/rd/variant/zygosity"
-                }
-            },
-            {
-                "acmgClass": {
-                    "code": "unclear",
-                    "display": "Unclear",
-                    "system": "https://www.acmg.net"
-                },
-                "cDNAChange": {
-                    "code": "G_199t1:c.54G>H",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "clinVarAccessionID": [
-                    "9b065175-8ad9-4ce4-a9a7-55682dc1a4a6"
-                ],
-                "deNovo": {
-                    "code": "from-father",
-                    "display": "Transmitted from father",
-                    "system": "dnpm-dip/rd/variant/de-novo"
-                },
-                "gDNAChange": {
-                    "code": "NC_000023.11:g.33344590_33344592=/dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "gene": {
-                    "code": "HGNC:17929",
-                    "display": "AADAT",
-                    "system": "https://www.genenames.org/"
-                },
-                "id": "46f3a8ec-4816-48fe-a49d-358058f55345",
-                "iscnDescription": "Some ISCN description",
-                "levelOfEvidence": "Level of evidence",
-                "modeOfInheritance": {
-                    "code": "recessive",
-                    "display": "Recessive",
-                    "system": "dnpm-dip/rd/variant/mode-of-inheritance"
-                },
-                "patient": {
-                    "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-                },
-                "proteinChange": {
-                    "code": "NP_003997.2:p.Val7dup",
-                    "system": "https://varnomen.hgvs.org"
-                },
-                "pubMedID": {
-                    "system": "https://pubmed.ncbi.nlm.nih.gov/",
-                    "value": "-376749163"
-                },
-                "significance": {
-                    "code": "incidental",
-                    "display": "Incidental",
-                    "system": "dnpm-dip/rd/variant/significance"
-                },
-                "zygosity": {
-                    "code": "homozygous",
-                    "display": "Homozygous",
-                    "system": "dnpm-dip/rd/variant/zygosity"
-                }
-            }
-        ]
-    },
-    "patient": {
-        "birthDate": "1961-07-26",
-        "gender": {
-            "code": "male",
-            "display": "Männlich",
-            "system": "Gender"
-        },
-        "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
-    },
+            ]
+        }
+    ],
     "therapy": {
-        "id": "b57f1164-68bb-4428-8a85-a2c6abde5f0d",
+        "id": "d46030c2-52ad-4a44-88b7-b3517c43acb5",
         "notes": "Notes on the therapy...",
         "patient": {
-            "id": "210a1de0-02a8-44b5-8399-db9cc4c42057"
+            "id": "ba25035b-26db-4d52-87ad-312a27bc8079"
         }
     }
 }
+
 ```
 </details>
 
@@ -816,7 +876,7 @@ GET /api/rd/query/{Query-ID}/patient-record/{Patient-ID}
 ### Update Query
 
 ```
-PUT /api/rd/query/{Query-ID}
+PUT /api/rd/queries/{Query-ID}
 ```
 **Request Body**
 <details>
@@ -850,6 +910,37 @@ PUT /api/rd/query/{Query-ID}
 ```
 </details>
 
+
+
+### Delete Query by ID
+
+```
+DELETE /api/rd/queries/{Query-ID}
+```
+
+**Response**
+<details>
+<summary>Query session object</summary>
+
+```javascript
+{
+  "id" : "1e3c229e-ffb4-47fa-9602-1c2b26c8117f",
+  "submittedAt" : "2023-09-15T12:04:06.521604",
+  "querier" : "Dummy-Querier-ID",
+  "mode" : {
+    "code" : "local",
+    "display" : "Lokal",
+    "system" : "dnpm-dip/query/mode"
+  },
+  "criteria" : {
+    // RD Query Criteria object as submitted, but with initialized "display" and "system" values in all codings
+  },
+  "expiresAfter" : 900,  // Validity period (seconds) after which query session expires unless refreshed by some operation
+  "lastUpdate" : "2023-09-15T10:04:06.521634Z"
+}
+
+```
+</details>
 
 
 
