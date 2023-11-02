@@ -240,32 +240,34 @@ POST /api/rd/queries?mode={local|federated}
 
 **Request Body**
 <details>
-<summary>RD Query Criteria object</summary>
+<summary>Partial RD Query Criteria object</summary>
 
 ```javascript
 {
-  "diagnoses" : [
-    {
-      "code" : "endocrine"
-    }
-  ],
-  "hpoTerms" : [ {
-    "code" : "HP:398974",
-  } ],
-  "variants" : [ {
-    "gene" : {
-      "code" : "HGNC:17929",
-    },
-    "cDNAChange" : {
-      "code" : "NG_012232.1(NM_004006.2):c.93+1G>T",
-    },
-    "gDNAChange" : {
-      "code" : "NC_000023.10:g.33038255C>A",
-    },
-    "proteinChange" : {
-      "code" : "LRG_199p1:p.Trp24Ter (p.Trp24*)",
-    }
-  } ]
+  "criteria": {
+    "diagnoses" : [
+      {
+        "code" : "endocrine"
+      }
+    ],
+    "hpoTerms" : [ {
+      "code" : "HP:398974",
+    } ],
+    "variants" : [ {
+      "gene" : {
+        "code" : "HGNC:17929",
+      },
+      "cDNAChange" : {
+        "code" : "NG_012232.1(NM_004006.2):c.93+1G>T",
+      },
+      "gDNAChange" : {
+        "code" : "NC_000023.10:g.33038255C>A",
+      },
+      "proteinChange" : {
+        "code" : "LRG_199p1:p.Trp24Ter (p.Trp24*)",
+      }
+    } ]
+  }
 }
 ```
 </details>
@@ -870,7 +872,6 @@ GET /api/rd/queries/{Query-ID}/patient-record/{Patient-ID}
         }
     }
 }
-
 ```
 </details>
 
@@ -883,7 +884,6 @@ PUT /api/rd/queries/{Query-ID}
 **Request Body**
 <details>
 <summary>Query Update object</summary>
-
 ```javascript
 {
   "id": "<Query-ID>",
@@ -891,6 +891,23 @@ PUT /api/rd/queries/{Query-ID}
     "code": "local | federated"  
   },
   "criteria": {    // Optional here, only if query criteria changed
+    ...
+  }
+}
+```
+</details>
+
+#### Alternative Query Update
+```
+PUT /api/rd/queries/{Query-ID}?mode={local|federated}
+```
+**Request Body**
+<details>
+<summary>Partial Query Update object</summary>
+```javascript
+// Optional here, only if query criteria changed
+{
+  "criteria": {   
     ...
   }
 }
