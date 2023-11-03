@@ -18,12 +18,17 @@ import de.dnpm.dip.service.query.{
   Query,
   UseCaseConfig
 }
+import scala.util.chaining._
+
 
 
 trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 {
 
   self: QueryController[UseCase] =>
+
+
+  type QueryType = Query[UseCase#Criteria,UseCase#Filters]
 
 
   import Hyper.syntax._
@@ -46,12 +51,12 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   private def QueryUri(id: Query.Id) =
     s"$BASE_URI/${id.value}"
 
-  private def Uri(query: Query[UseCase#Criteria,UseCase#Filters]) =
+  private def Uri(query: QueryType) =
     QueryUri(query.id)
 
 
 
-  implicit val HyperQuery: Hyper.Mapper[Query[UseCase#Criteria,UseCase#Filters]] =
+  implicit val HyperQuery: Hyper.Mapper[QueryType] =
     Hyper.Mapper {
       query =>
 
@@ -70,13 +75,14 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     }
 
 
-  implicit val HyperQueryCollection: Hyper.Mapper[Collection[Hyper[Query[UseCase#Criteria,UseCase#Filters]]]] =
+  implicit val HyperQueryCollection: Hyper.Mapper[Collection[Hyper[QueryType]]] =
     Hyper.Mapper { 
       _.withOperations(
         "submit" -> Operation(POST, Link(BASE_URI))
       )
 
     }
+
 
 
   implicit def HyperSummary(
@@ -99,6 +105,55 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           "query"          -> Link(QueryUri(id)),
           "patient-record" -> Link(s"${QueryUri(id)}/patient-record/${patMatch.id.value}")
         )
+    }
+
+
+  def HyperPatientMatches(
+    id: Query.Id,
+    offset: Option[Int],
+    length: Option[Int]
+  ): Hyper.Mapper[Collection[Hyper[PatientMatch[UseCase#Criteria]]]] =
+    Hyper.Mapper {
+      matches =>
+
+        val next =
+          length.collect {
+            case n if (matches.entries.size - n >= 0) =>
+              (offset.getOrElse(0) + n -> n)
+          }
+
+        val prev =
+          length.map(
+            n => 
+              offset.collect {
+                case off if (off - n >= 0) => off - n
+              }
+              .getOrElse(0) -> n
+          )
+
+      matches.withLinks(
+        "query" -> Link(QueryUri(id)),
+       )
+       .pipe { coll =>
+
+         next match {
+           case Some((off,n)) =>
+             coll.addLinks(
+               "next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&length=${n}"),
+             )
+           case _ => coll
+         }
+       }
+       .pipe { coll =>
+
+         prev match {
+           case Some((off,n)) =>
+             coll.addLinks(
+               "prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&length=${n}")
+             )
+           case _ => coll
+         }
+       }
     }
 
 

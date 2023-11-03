@@ -44,14 +44,14 @@ import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
 
-final case class PartialQuerySubmit[Criteria]
+final case class PartialQuery[Criteria]
 (
   criteria: Criteria
 )
-object PartialQuerySubmit
+object PartialQuery
 {
-  implicit def format[Criteria: Reads]: Reads[PartialQuerySubmit[Criteria]] =
-    Json.reads[PartialQuerySubmit[Criteria]]
+  implicit def format[Criteria: Reads]: Reads[PartialQuery[Criteria]] =
+    Json.reads[PartialQuery[Criteria]]
 }
 
 
@@ -70,14 +70,17 @@ extends BaseController
    with QueryHypermedia[UseCase]
 {
 
+  import scala.util.chaining._
+  import cats.data.NonEmptyList
+  import cats.syntax.either._
+  import Data.{Outcome,Save,Saved,Delete,Deleted}
+
+
   type PatientRecord = UseCase#PatientRecord
   type Criteria      = UseCase#Criteria
   type Filters       = UseCase#Filters
   type Results       = UseCase#Results
 
-  import cats.data.NonEmptyList
-  import cats.syntax.either._
-  import Data.{Outcome,Save,Saved,Delete,Deleted}
 
   val service: QueryService[Future,Monad[Future],UseCase,String]
 
@@ -124,7 +127,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def submit(mode: Coding[Query.Mode.Value]) =
-    JsonAction[PartialQuerySubmit[Criteria]].async { 
+    JsonAction[PartialQuery[Criteria]].async { 
       req =>
         (service ! Query.Submit(mode,req.body.criteria))
           .map(_.map(Hyper(_)))
@@ -154,7 +157,7 @@ extends BaseController
     id: Query.Id,
     mode: Option[Coding[Query.Mode.Value]]
   ) =
-    JsonActionOpt[PartialQuerySubmit[Criteria]].async { 
+    JsonActionOpt[PartialQuery[Criteria]].async { 
       req =>
         (service ! Query.Update(id,mode,req.body.map(_.criteria)))
           .map(_.map(Hyper(_)))
@@ -209,6 +212,17 @@ extends BaseController
       service.patientMatches(id,offset,length)
         .map(_.map(_.map(Hyper(_))))
         .map(_.map(Collection(_)))
+        .map(
+          _.map(
+            Hyper(_)(
+              HyperPatientMatches(
+                id = id,
+                offset = offset,
+                length = length
+              )
+            )
+          )
+        )
         .map(JsonResult(_))
       
     }
