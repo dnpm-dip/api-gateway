@@ -1,15 +1,10 @@
 package de.dnpm.dip.rest.util
 
 
-/*
-abstract class Extractor[S,T](
-  f: S => T
-)
-{
-  final def unapply(s: S): Option[T] =
-    Some(f(s))
+import de.dnpm.dip.coding.{
+  Coding,
+  CodeSystem
 }
-*/
 
 
 abstract class Extractor[S,T]
@@ -17,9 +12,14 @@ abstract class Extractor[S,T]
   def unapply(s: S): Option[T]
 }
 
-
 object Extractor
 {
+
+  def unlift[S,T](f: S => Option[T]): Extractor[S,T] =
+    new Extractor[S,T]{
+      override def unapply(s: S): Option[T] =
+        f(s)
+    }
 
   def apply[S,T](
     f: S => T
@@ -29,5 +29,17 @@ object Extractor
         Some(f(s))
     }
 
+
+  def Coding[T: CodeSystem]: Extractor[String,Coding[T]] =
+    unlift[String,Coding[T]](
+      CodeSystem[T].codingWithCode(_)
+    )
+  
+
+  def Codings[T: CodeSystem]: Extractor[Seq[String],Set[Coding[T]]] =
+    Extractor[Seq[String],Set[Coding[T]]](
+      _.toSet.flatMap(CodeSystem[T].codingWithCode(_))
+    )
+  
 }
 

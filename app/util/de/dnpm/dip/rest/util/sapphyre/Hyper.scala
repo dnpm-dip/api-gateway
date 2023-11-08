@@ -11,26 +11,10 @@ import play.api.libs.json.{
 
 case class Hyper[T] private (
   data: T,
-//  links: Option[Map[String,Link]] = None,
-//  operations: Option[Map[String,Operation]] = None,
   links: Map[String,Link] = Map.empty,
   operations: Map[String,Operation] = Map.empty,
 )
 {
-/*  
-  def addLinks(ls: (String,Link)*) =
-    this.copy(links = links.map(_ ++ ls).orElse(Some(ls.toMap)))
-
-  def withLinks(ls: (String,Link)*) =
-    this.copy(links = Some(ls.toMap))
-
-
-  def addOperations(ops: (String,Operation)*) =
-    this.copy(operations = operations.map(_ ++ ops).orElse(Some(ops.toMap)))
-
-  def withOperations(ops: (String,Operation)*) =
-    this.copy(operations = Some(ops.toMap))
-*/
 
   def addLinks(ls: (String,Link)*) =
     this.copy(links = links ++ ls)
@@ -132,5 +116,14 @@ object Hyper
               }
           )
     }
+
+
+  import scala.language.implicitConversions
+
+  implicit def liftPredicate[T](
+    f: T => Boolean
+  ): Hyper[T] => Boolean =
+    _.data pipe f
+
 
 }

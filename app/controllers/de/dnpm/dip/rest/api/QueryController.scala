@@ -25,6 +25,7 @@ import play.api.libs.json.{
 import cats.Monad
 import de.dnpm.dip.service.query.{
   Data,
+  PatientFilter,
   PatientMatch,
   PeerToPeerQuery,
   PatientRecordRequest,
@@ -33,9 +34,14 @@ import de.dnpm.dip.service.query.{
   QueryService,
   UseCaseConfig
 }
-import de.dnpm.dip.coding.Coding
+import de.dnpm.dip.coding.{
+  Coding,
+  CodeSystem
+}
 import de.dnpm.dip.model.{
   Id,
+  Gender,
+  VitalStatus,
   Patient,
   Snapshot
 }
@@ -174,7 +180,7 @@ extends BaseController
 
     }
 
-
+/*
   def applyFilters(id: Query.Id) =
     JsonAction[Query.ApplyFilters[Filters]].async{ 
       req =>
@@ -183,6 +189,7 @@ extends BaseController
           .map(JsonResult(_,InternalServerError(_)))
 
     }
+*/
 
   def delete(id: Query.Id): Action[AnyContent] =
     Action.async { 
@@ -204,26 +211,37 @@ extends BaseController
   
   def patientMatches(
     offset: Option[Int],
-    length: Option[Int],
+    limit: Option[Int],
+    genders: Set[Coding[Gender.Value]],
+    ageMin: Option[Int],
+    ageMax: Option[Int],
+    vitalStatus: Set[Coding[VitalStatus.Value]],
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
     Action.async {
-      service.patientMatches(id,offset,length)
-        .map(_.map(_.map(Hyper(_))))
-        .map(_.map(Collection(_)))
-        .map(
-          _.map(
-            Hyper(_)(
-              HyperPatientMatches(
-                id = id,
-                offset = offset,
-                length = length
+      service.patientMatches(
+        id,
+        PatientFilter(
+          Some(genders).filter(_.nonEmpty),
+          ageMin,
+          ageMax,
+          Some(vitalStatus).filter(_.nonEmpty),
+        ),
+        offset,
+        limit
+      )
+      .map(
+        _.map(
+          coll =>
+            coll
+              .map(Hyper(_))(coll.appliedFilter.map(Hyper.liftPredicate)
+              .pipe(
+                Hyper(_)
               )
-            )
-          )
         )
-        .map(JsonResult(_))
+      )
+      .map(JsonResult(_))
       
     }
 

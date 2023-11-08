@@ -14,7 +14,9 @@ import play.api.libs.json.{
 }
 import de.dnpm.dip.model.{
   Id,
-  Patient
+  Patient,
+  Gender,
+  VitalStatus
 }
 import de.dnpm.dip.coding.{
   Coding,
@@ -51,6 +53,8 @@ abstract class QueryRouter[UseCase <: UseCaseConfig]
 extends SimpleRouter
 {
 
+  import scala.util.chaining._
+
   private val QueryId =
     Extractor(Query.Id(_))
 
@@ -58,11 +62,13 @@ extends SimpleRouter
     Extractor(Id[Patient](_))
 
   private val QueryMode =
-    new Extractor[String,Coding[Query.Mode.Value]]{
-      override def unapply(mode: String): Option[Coding[Query.Mode.Value]] =
-        CodeSystem[Query.Mode.Value].codingWithCode(mode)
-    }
+    Extractor.Coding[Query.Mode.Value]
 
+  private val Genders =
+    Extractor.Codings[Gender.Value]
+
+  private val VitalStatuses =
+    Extractor.Codings[VitalStatus.Value]
 
 
   val prefix =
@@ -124,8 +130,8 @@ extends SimpleRouter
       controller.delete(id)
 
 
-    case PUT(p"/queries/${QueryId(id)}/filters") =>
-      controller.applyFilters(id)
+//    case PUT(p"/queries/${QueryId(id)}/filters") =>
+//      controller.applyFilters(id)
 
     case PUT(p"/queries/${QueryId(id)}"?q"mode=$mode") =>
       mode match {
@@ -149,14 +155,24 @@ extends SimpleRouter
       controller.summary(id)
 
     case GET(p"/queries/${QueryId(id)}/patient-matches"
-             ?q_o"offset=${int(offset)}"
-             ?q_o"length=${int(length)}") =>
-      controller.patientMatches(offset,length)(id)
+             ? q_o"offset=${int(offset)}"
+             ? q_o"limit=${int(limit)}"
+             ? q_s"gender=${Genders(genders)}"
+             ? q_o"age[min]=${int(ageMin)}"
+             ? q_o"age[max]=${int(ageMax)}"
+             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}") =>
+      controller.patientMatches(offset,limit,genders,ageMin,ageMax,vitalStatus)(id)
 
+    //TODO: remove
     case GET(p"/queries/${QueryId(id)}/patients"
-             ?q_o"offset=${int(offset)}"
-             ?q_o"length=${int(length)}") =>
-      controller.patientMatches(offset,length)(id)
+             ? q_o"offset=${int(offset)}"
+             ? q_o"limit=${int(limit)}"
+             ? q_s"gender=${Genders(genders)}"
+             ? q_o"age[min]=${int(ageMin)}"
+             ? q_o"age[max]=${int(ageMax)}"
+             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}") =>
+      controller.patientMatches(offset,limit,genders,ageMin,ageMax,vitalStatus)(id)
+
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
