@@ -208,7 +208,7 @@ extends BaseController
         .map(JsonResult(_))
     }
 
-  
+
   def patientMatches(
     offset: Option[Int],
     limit: Option[Int],
@@ -227,18 +227,13 @@ extends BaseController
           ageMin,
           ageMax,
           Some(vitalStatus).filter(_.nonEmpty),
-        ),
-        offset,
-        limit
+        )
       )
       .map(
         _.map(
-          coll =>
-            coll
-              .map(Hyper(_))(coll.appliedFilter.map(Hyper.liftPredicate)
-              .pipe(
-                Hyper(_)
-              )
+          Collection(_,offset,limit)
+            .map(Hyper(_))
+            .pipe(Hyper(_))
         )
       )
       .map(JsonResult(_))

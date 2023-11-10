@@ -14,7 +14,7 @@ import de.dnpm.dip.rest.util.sapphyre.{
 }
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
-  Collection => Coll,
+//  Collection => Coll,
   PatientMatch,
   Query,
   UseCaseConfig
@@ -111,7 +111,7 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   implicit def HyperPatientMatches(
     implicit id: Query.Id,
-  ): Hyper.Mapper[Coll[Hyper[PatientMatch[UseCase#Criteria]]]] =
+  ): Hyper.Mapper[Collection[Hyper[PatientMatch[UseCase#Criteria]]]] =
     Hyper.Mapper {
       matches =>
 
@@ -120,7 +120,7 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
             n => 
               matches.offset.map(_ - n)
                 .collect {
-                  case off if (off > 0) => off - n -> n
+                  case off if (off > 0) => off -> n
                   case _                => 0 -> n
                 }
           )
@@ -160,60 +160,6 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
        }
     }
 
-/*
-  def HyperPatientMatches(
-    id: Query.Id,
-    offset: Option[Int],
-    limit: Option[Int]
-  ): Hyper.Mapper[Collection[Hyper[PatientMatch[UseCase#Criteria]]]] =
-    Hyper.Mapper {
-      matches =>
-
-        val prev =
-          limit.flatMap(
-            n => 
-              offset.map(_ - n)
-                .collect {
-                  case off if (off > 0) => off - n -> n
-                  case _                => 0 -> n
-                }
-          )
-
-        val next =
-          limit.collect {
-            case n if (matches.entries.size - n >= 0) =>
-              (offset.getOrElse(0) + n -> n)
-          }
-
-      matches.withLinks(
-        "query" -> Link(QueryUri(id)),
-       )
-       .pipe { coll =>
-
-         prev match {
-           case Some(0 -> n) =>
-             coll.addLinks(
-               "prev" -> Link(s"${QueryUri(id)}/patient-matches?limit=${n}"),
-             )
-           case Some(off -> n) =>
-             coll.addLinks(
-               "prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}")
-             )
-           case _ => coll
-         }
-       }
-       .pipe { coll =>
-
-         next match {
-           case Some(off -> n) =>
-             coll.addLinks(
-               "next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"),
-             )
-           case _ => coll
-         }
-       }
-    }
-*/
 
   implicit def HyperPatientRecord(
     implicit id: Query.Id

@@ -32,20 +32,6 @@ import de.dnpm.dip.rest.util.{
 }
 
 
-/*
-object QueryId extends Extractor(Query.Id(_))
-
-object PatId extends Extractor(Id[Patient](_))
-
-object QueryMode
-{
-  def unapply(mode: String): Option[Coding[Query.Mode.Value]] =
-    CodeSystem[Query.Mode.Value].codingWithCode(mode)
-}
-*/
-
-
-
 abstract class QueryRouter[UseCase <: UseCaseConfig]
 (
   private val pref: String
