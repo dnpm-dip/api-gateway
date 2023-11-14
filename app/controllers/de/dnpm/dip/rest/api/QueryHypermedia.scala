@@ -14,9 +14,9 @@ import de.dnpm.dip.rest.util.sapphyre.{
 }
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
-//  Collection => Coll,
   PatientMatch,
   Query,
+  PreparedQuery,
   UseCaseConfig
 }
 import scala.util.chaining._
@@ -31,14 +31,17 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   type QueryType = Query[UseCase#Criteria,UseCase#Filters]
 
+  type PreparedQueryType = PreparedQuery[UseCase#Criteria]
+
 
   import Hyper.syntax._
   import Relations.{
     COLLECTION,
     SELF,
+    CREATE,
     UPDATE
   }
-  import Method.{GET,POST,PUT}
+  import Method.{DELETE,GET,PATCH,POST,PUT}
 
 
 
@@ -46,14 +49,27 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
 
   protected val BASE_URI =
-    s"$BASE_URL/api/$prefix/queries"
+    s"$BASE_URL/api/$prefix"
+//    s"$BASE_URL/api/$prefix/queries"
+
+  private val QUERY_BASE_URI =
+    s"$BASE_URI/queries"
+
+  private val PREPARED_QUERY_BASE_URI =
+    s"$BASE_URI/prepared-queries"
 
 
   private def QueryUri(id: Query.Id) =
-    s"$BASE_URI/${id.value}"
+    s"$QUERY_BASE_URI/${id.value}"
 
   private def Uri(query: QueryType) =
     QueryUri(query.id)
+
+  private def PreparedQueryUri(id: PreparedQuery.Id) =
+    s"$PREPARED_QUERY_BASE_URI/${id.value}"
+
+  private def Uri(query: PreparedQueryType) =
+    PreparedQueryUri(query.id)
 
 
 
@@ -76,10 +92,10 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     }
 
 
-  implicit val HyperQueryCollection: Hyper.Mapper[Collection[Hyper[QueryType]]] =
+  implicit val HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
     Hyper.Mapper { 
       _.withOperations(
-        "submit" -> Operation(POST, Link(BASE_URI))
+        "submit" -> Operation(POST, Link(QUERY_BASE_URI))
       )
 
     }
@@ -173,6 +189,32 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           "query" -> Link(QueryUri(id)),
           SELF    -> Link(s"${QueryUri(id)}/patient-record/${patRec.patient.id.value}")
         )
+    }
+
+
+  implicit val HyperPreparedQuery: Hyper.Mapper[PreparedQueryType] =
+    Hyper.Mapper {
+      query =>
+
+        val selfLink =
+          Link(Uri(query))
+
+        query.withLinks(
+          SELF -> selfLink,
+        )
+        .withOperations(
+          UPDATE           -> Operation(PATCH, selfLink),
+          Relations.DELETE -> Operation(DELETE, selfLink)
+        )
+    }
+
+
+  implicit val HyperPreparedQueries: Hyper.Mapper[Collection[Hyper[PreparedQueryType]]] =
+    Hyper.Mapper {
+      _.withOperations(
+        CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
+      )
+
     }
 
 }

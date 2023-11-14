@@ -32,6 +32,7 @@ import de.dnpm.dip.service.query.{
   Query,
   Querier,
   QueryService,
+  PreparedQuery,
   UseCaseConfig
 }
 import de.dnpm.dip.coding.{
@@ -58,6 +59,18 @@ object PartialQuery
 {
   implicit def format[Criteria: Reads]: Reads[PartialQuery[Criteria]] =
     Json.reads[PartialQuery[Criteria]]
+}
+
+
+final case class PatchPreparedQuery[Criteria]
+(
+  name: Option[String],
+  criteria: Option[Criteria]
+)
+object PatchPreparedQuery
+{
+  implicit def format[Criteria: Reads]: Reads[PatchPreparedQuery[Criteria]] =
+    Json.reads[PatchPreparedQuery[Criteria]]
 }
 
 
@@ -124,6 +137,53 @@ extends BaseController
           case Left(err)          => InternalServerError(err)
         }
          
+    }
+
+
+  // --------------------------------------------------------------------------  
+  // PreparedQuery Operations
+  // --------------------------------------------------------------------------  
+
+  def createPreparedQuery =
+    JsonAction[PreparedQuery.Create[Criteria]].async { 
+      req =>
+        (service ! req.body)
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,InternalServerError(_)))
+
+    }
+
+  def getPreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
+    Action.async { 
+      (service ? id)
+        .map(_.map(Hyper(_)))
+        .map(JsonResult(_,s"Invalid PreparedQuery ID ${id.value}"))
+    }
+
+  def getPreparedQueries: Action[AnyContent] =
+    Action.async { 
+      (service ? PreparedQuery.Query(Some(querier)))
+        .map(_.map(Hyper(_)))
+        .map(Collection(_))
+        .map(Hyper(_))
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
+
+  def updatePreparedQuery(id: PreparedQuery.Id) =
+    JsonAction[PatchPreparedQuery[Criteria]].async { 
+      req =>
+        (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,InternalServerError(_)))
+    }
+
+  def deletePreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
+    Action.async { 
+      (service ! PreparedQuery.Delete(id))
+       .map(
+         JsonResult(_,_ => BadRequest(s"Invalid PreparedQuery ID ${id.value}"))
+       )
     }
 
 
