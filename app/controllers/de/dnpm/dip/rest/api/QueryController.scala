@@ -12,7 +12,8 @@ import scala.concurrent.{
 import play.api.mvc.{
   Action,
   AnyContent,
-  BaseController
+  BaseController,
+  Request
 }
 import play.api.libs.json.{
   Json,
@@ -79,8 +80,8 @@ abstract class QueryController[UseCase <: UseCaseConfig]
 (
   implicit
   ec: ExecutionContext,
-  jsCriteria: Format[UseCase#Criteria],
-  jsFilters: Format[UseCase#Filters],
+  jsCriteria: OFormat[UseCase#Criteria],
+  jsFilters: Writes[UseCase#Filter],
   jsPatRec: OFormat[UseCase#PatientRecord],
   jsSummary: OWrites[UseCase#Results#Summary],
 )
@@ -97,7 +98,7 @@ extends BaseController
 
   type PatientRecord = UseCase#PatientRecord
   type Criteria      = UseCase#Criteria
-  type Filters       = UseCase#Filters
+  type Filter        = UseCase#Filter
   type Results       = UseCase#Results
 
 
@@ -269,6 +270,37 @@ extends BaseController
     }
 
 
+  def FilterFrom[T](
+    req: Request[T],
+    patientFilter: PatientFilter
+  ): Filter 
+
+
+  def patientMatches(
+    offset: Option[Int],
+    limit: Option[Int],
+    patientFilter: PatientFilter
+  )(
+    implicit id: Query.Id
+  ): Action[AnyContent] =
+    Action.async {
+      req =>
+      service.patientMatches(
+        id,
+        FilterFrom(req,patientFilter)
+      )
+      .map(
+        _.map(
+          Collection(_,offset,limit)
+            .map(Hyper(_))
+            .pipe(Hyper(_))
+        )
+      )
+      .map(JsonResult(_))
+      
+    }
+
+/*    
   def patientMatches(
     offset: Option[Int],
     limit: Option[Int],
@@ -299,7 +331,7 @@ extends BaseController
       .map(JsonResult(_))
       
     }
-
+*/
 
   def patientRecord(
     implicit

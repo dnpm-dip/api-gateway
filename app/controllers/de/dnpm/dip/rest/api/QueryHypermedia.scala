@@ -29,7 +29,7 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   self: QueryController[UseCase] =>
 
 
-  type QueryType = Query[UseCase#Criteria,UseCase#Filters]
+  type QueryType = Query[UseCase#Criteria,UseCase#Filter]
 
   type PreparedQueryType = PreparedQuery[UseCase#Criteria]
 
@@ -94,9 +94,12 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   implicit val HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
     Hyper.Mapper { 
-      _.withOperations(
-        "submit" -> Operation(POST, Link(QUERY_BASE_URI))
-      )
+      _.withLinks(
+         SELF -> Link(QUERY_BASE_URI)
+       )
+       .withOperations(
+         "submit" -> Operation(POST, Link(QUERY_BASE_URI))
+       )
 
     }
 
@@ -211,9 +214,12 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   implicit val HyperPreparedQueries: Hyper.Mapper[Collection[Hyper[PreparedQueryType]]] =
     Hyper.Mapper {
-      _.withOperations(
-        CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
-      )
+      _.withLinks(
+         SELF -> Link(PREPARED_QUERY_BASE_URI)
+       )
+       .withOperations(
+         CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
+       )
 
     }
 

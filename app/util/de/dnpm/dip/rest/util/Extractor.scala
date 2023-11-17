@@ -30,16 +30,21 @@ object Extractor
     }
 
 
-  def Coding[T: CodeSystem]: Extractor[String,Coding[T]] =
+  def AsCoding[T: CodeSystem]: Extractor[String,Coding[T]] =
     unlift[String,Coding[T]](
       CodeSystem[T].codingWithCode(_)
     )
   
 
-  def Codings[T: CodeSystem]: Extractor[Seq[String],Set[Coding[T]]] =
+  def AsCodings[T: CodeSystem]: Extractor[Seq[String],Set[Coding[T]]] =
     Extractor[Seq[String],Set[Coding[T]]](
       _.toSet.flatMap(CodeSystem[T].codingWithCode(_))
     )
-  
-}
 
+
+  def AsCodingsOf[T: Coding.System]: Extractor[Seq[String],Set[Coding[T]]] =
+    Extractor[Seq[String],Set[Coding[T]]](
+      _.toSet[String].map(Coding[T](_))
+    )
+
+}

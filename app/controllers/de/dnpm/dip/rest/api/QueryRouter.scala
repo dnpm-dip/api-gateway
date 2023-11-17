@@ -8,15 +8,13 @@ import play.api.mvc.Results.{
   BadRequest,
   Ok
 }
-import play.api.libs.json.{
-  Json,
-  Writes
-}
+import play.api.libs.json.Json
 import de.dnpm.dip.model.{
   Id,
   Patient,
   Gender,
-  VitalStatus
+  VitalStatus,
+  Site
 }
 import de.dnpm.dip.coding.{
   Coding,
@@ -24,6 +22,7 @@ import de.dnpm.dip.coding.{
 }
 import de.dnpm.dip.service.query.{
   Query,
+  PatientFilter,
   PreparedQuery,
   UseCaseConfig
 }
@@ -52,13 +51,16 @@ extends SimpleRouter
     Extractor(Id[Patient](_))
 
   private val QueryMode =
-    Extractor.Coding[Query.Mode.Value]
+    Extractor.AsCoding[Query.Mode.Value]
 
   private val Genders =
-    Extractor.Codings[Gender.Value]
+    Extractor.AsCodings[Gender.Value]
 
   private val VitalStatuses =
-    Extractor.Codings[VitalStatus.Value]
+    Extractor.AsCodings[VitalStatus.Value]
+
+  private val Sites =
+    Extractor.AsCodingsOf[Site]
 
 
   val prefix =
@@ -157,9 +159,21 @@ extends SimpleRouter
              ? q_s"gender=${Genders(genders)}"
              ? q_o"age[min]=${int(ageMin)}"
              ? q_o"age[max]=${int(ageMax)}"
-             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}") =>
-      controller.patientMatches(offset,limit,genders,ageMin,ageMax,vitalStatus)(id)
+             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}"
+             ? q_s"site=${Sites(sites)}") =>
+      controller.patientMatches(
+        offset,
+        limit,
+        PatientFilter(
+          Option(genders),
+          ageMin,
+          ageMax,
+          Option(vitalStatus),
+          Option(sites)
+        )
+      )(id)
 
+/*      
     //TODO: remove
     case GET(p"/queries/${QueryId(id)}/patients"
              ? q_o"offset=${int(offset)}"
@@ -169,7 +183,7 @@ extends SimpleRouter
              ? q_o"age[max]=${int(ageMax)}"
              ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}") =>
       controller.patientMatches(offset,limit,genders,ageMin,ageMax,vitalStatus)(id)
-
+*/
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
