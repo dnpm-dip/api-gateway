@@ -173,17 +173,28 @@ extends SimpleRouter
         )
       )(id)
 
-/*      
-    //TODO: remove
+
+    // TODO: remove redundant endpoint
     case GET(p"/queries/${QueryId(id)}/patients"
              ? q_o"offset=${int(offset)}"
              ? q_o"limit=${int(limit)}"
              ? q_s"gender=${Genders(genders)}"
              ? q_o"age[min]=${int(ageMin)}"
              ? q_o"age[max]=${int(ageMax)}"
-             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}") =>
-      controller.patientMatches(offset,limit,genders,ageMin,ageMax,vitalStatus)(id)
-*/
+             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}"
+             ? q_s"site=${Sites(sites)}") =>
+      controller.patientMatches(
+        offset,
+        limit,
+        PatientFilter(
+          Option(genders),
+          ageMin,
+          ageMax,
+          Option(vitalStatus),
+          Option(sites)
+        )
+      )(id)
+
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
