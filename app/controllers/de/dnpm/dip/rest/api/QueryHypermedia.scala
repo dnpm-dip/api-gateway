@@ -50,7 +50,6 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   protected val BASE_URI =
     s"$BASE_URL/api/$prefix"
-//    s"$BASE_URL/api/$prefix/queries"
 
   private val QUERY_BASE_URI =
     s"$BASE_URI/queries"
@@ -86,8 +85,7 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           "patient-matches" -> Link(s"${Uri(query)}/patient-matches")
         )
         .withOperations(
-          UPDATE   -> Operation(PUT, selfLink),
-          "filter" -> Operation(PUT, Link(s"${Uri(query)}/filters"))
+          UPDATE   -> Operation(PUT, selfLink)
         )
     }
 

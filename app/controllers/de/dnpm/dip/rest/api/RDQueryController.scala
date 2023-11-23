@@ -8,7 +8,7 @@ import scala.concurrent.{
   ExecutionContext
 }
 import play.api.mvc.{
-  Request,
+  RequestHeader,
   ControllerComponents
 }
 import play.api.libs.json.{
@@ -52,29 +52,23 @@ extends QueryController[RDConfig]
     Extractor.AsCodingsOf[Orphanet]
 
 
-  override def FilterFrom[T](
-    req: Request[T],
+  override def FilterFrom(
+    req: RequestHeader,
     patientFilter: PatientFilter
-  ): RDFilters = {
-
-    val hpos =
-      req.queryString.get("hpo[value]") match {
-        case Some(HPOTerms(hpos)) if hpos.nonEmpty => Some(hpos)
-        case _ => None
-      }
-
-    val categories =
-      req.queryString.get("diagnosis[category]") match {
-        case Some(Categories(orphas)) if orphas.nonEmpty => Some(orphas)
-        case _  => None
-      }
-
-
+  ): RDFilters = 
     RDFilters(
       patientFilter,
-      HPOFilter(hpos),
-      DiagnosisFilter(categories)
+      HPOFilter(
+        req.queryString.get("hpo[value]") collect {
+          case HPOTerms(hpos) if hpos.nonEmpty => hpos
+        }
+      ),
+      DiagnosisFilter(
+        req.queryString.get("diagnosis[category]") collect {
+          case Categories(orphas) if orphas.nonEmpty => orphas
+        }
+      )
     )
-  }
+  
 
 }

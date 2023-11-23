@@ -13,7 +13,7 @@ import play.api.mvc.{
   Action,
   AnyContent,
   BaseController,
-  Request
+  RequestHeader
 }
 import play.api.libs.json.{
   Json,
@@ -45,6 +45,7 @@ import de.dnpm.dip.model.{
   Gender,
   VitalStatus,
   Patient,
+  Site,
   Snapshot
 }
 import de.dnpm.dip.rest.util._
@@ -63,15 +64,16 @@ object PartialQuery
 }
 
 
-final case class PatchPreparedQuery[Criteria]
+final case class PatchQuery[Criteria]
 (
   name: Option[String],
+  mode: Option[Coding[Query.Mode.Value]],
   criteria: Option[Criteria]
 )
-object PatchPreparedQuery
+object PatchQuery
 {
-  implicit def format[Criteria: Reads]: Reads[PatchPreparedQuery[Criteria]] =
-    Json.reads[PatchPreparedQuery[Criteria]]
+  implicit def format[Criteria: Reads]: Reads[PatchQuery[Criteria]] =
+    Json.reads[PatchQuery[Criteria]]
 }
 
 
@@ -172,7 +174,7 @@ extends BaseController
     }
 
   def updatePreparedQuery(id: PreparedQuery.Id) =
-    JsonAction[PatchPreparedQuery[Criteria]].async { 
+    JsonAction[PatchQuery[Criteria]].async { 
       req =>
         (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
           .map(_.map(Hyper(_)))
@@ -233,24 +235,14 @@ extends BaseController
 
 
   def update(id: Query.Id) =
-    JsonAction[Query.Update[Criteria]].async{ 
+    JsonAction[PatchQuery[Criteria]].async{ 
       req =>
-        (service ! req.body)
+        (service ! Query.Update(id,req.body.mode,req.body.criteria))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
 
     }
 
-/*
-  def applyFilters(id: Query.Id) =
-    JsonAction[Query.ApplyFilters[Filters]].async{ 
-      req =>
-        (service ! req.body)
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,InternalServerError(_)))
-
-    }
-*/
 
   def delete(id: Query.Id): Action[AnyContent] =
     Action.async { 
@@ -260,26 +252,63 @@ extends BaseController
     }
 
 
-  def summary(
-    implicit id: Query.Id
-  ): Action[AnyContent] =
-    Action.async { 
-      service.summary(id)
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_))
-    }
+  private val Genders =
+    Extractor.AsCodings[Gender.Value]
+
+  private val VitalStatuses =
+    Extractor.AsCodings[VitalStatus.Value]
+
+  private val Sites =
+    Extractor.AsCodingsOf[Site]
+
+  
+  def PatientFilterFrom(
+    req: RequestHeader
+  ): PatientFilter = {
+
+    PatientFilter(
+      req.queryString.get("gender").collect {
+        case Genders(gender) if gender.nonEmpty => gender
+      },
+      req.queryString.get("age[min]").flatMap(_.headOption).map(_.toInt),
+      req.queryString.get("age[max]").flatMap(_.headOption).map(_.toInt),
+      req.queryString.get("vitalStatus").collect {
+        case VitalStatuses(vs) if vs.nonEmpty => vs
+      },
+      req.queryString.get("site").collect {
+        case Sites(sites) if sites.nonEmpty => sites
+      }
+    )
+
+  }
 
 
-  def FilterFrom[T](
-    req: Request[T],
+  def FilterFrom(
+    req: RequestHeader,
     patientFilter: PatientFilter
   ): Filter 
 
 
+  def summary(
+    implicit id: Query.Id
+  ): Action[AnyContent] =
+    Action.async {
+      req =>
+      service.summary(
+        id,
+        FilterFrom(
+          req,
+          PatientFilterFrom(req)
+        )
+      )
+      .map(_.map(Hyper(_)))
+      .map(JsonResult(_))
+    }
+
+
   def patientMatches(
     offset: Option[Int],
-    limit: Option[Int],
-    patientFilter: PatientFilter
+    limit: Option[Int]
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
@@ -287,7 +316,10 @@ extends BaseController
       req =>
       service.patientMatches(
         id,
-        FilterFrom(req,patientFilter)
+        FilterFrom(
+          req,
+          PatientFilterFrom(req)
+        )
       )
       .map(
         _.map(
@@ -300,26 +332,19 @@ extends BaseController
       
     }
 
-/*    
+/*
   def patientMatches(
     offset: Option[Int],
     limit: Option[Int],
-    genders: Set[Coding[Gender.Value]],
-    ageMin: Option[Int],
-    ageMax: Option[Int],
-    vitalStatus: Set[Coding[VitalStatus.Value]],
+    patientFilter: PatientFilter
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
     Action.async {
+      req =>
       service.patientMatches(
         id,
-        PatientFilter(
-          Some(genders).filter(_.nonEmpty),
-          ageMin,
-          ageMax,
-          Some(vitalStatus).filter(_.nonEmpty),
-        )
+        FilterFrom(req,patientFilter)
       )
       .map(
         _.map(

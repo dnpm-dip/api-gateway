@@ -881,9 +881,11 @@ GET /api/rd/queries/{Query-ID}/patient-record/{Patient-ID}
 ```
 PUT /api/rd/queries/{Query-ID}
 ```
+
 **Request Body**
 <details>
 <summary>Query Update object</summary>
+
 ```javascript
 {
   "id": "<Query-ID>",

@@ -155,6 +155,18 @@ extends SimpleRouter
 
     case GET(p"/queries/${QueryId(id)}/patient-matches"
              ? q_o"offset=${int(offset)}"
+             ? q_o"limit=${int(limit)}") =>
+      controller.patientMatches(offset,limit)(id)
+
+    case GET(p"/queries/${QueryId(id)}/patients"
+             ? q_o"offset=${int(offset)}"
+             ? q_o"limit=${int(limit)}") =>
+      controller.patientMatches(offset,limit)(id)
+
+
+/*
+    case GET(p"/queries/${QueryId(id)}/patient-matches"
+             ? q_o"offset=${int(offset)}"
              ? q_o"limit=${int(limit)}"
              ? q_s"gender=${Genders(genders)}"
              ? q_o"age[min]=${int(ageMin)}"
@@ -194,7 +206,7 @@ extends SimpleRouter
           Option(sites)
         )
       )(id)
-
+*/
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
