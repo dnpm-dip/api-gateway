@@ -24,6 +24,9 @@ libraryDependencies ++= Seq(
 
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.4",
 
+//  "ch.qos.logback" % "logback-classic" % "1.4.11",
+//  "com.typesafe.play" % "play-logback" % "2.8.20",
+
   "de.dnpm.dip"            %% "catalog-service-api"    % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "catalog-service-impl"   % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "service-base"           % "1.0-SNAPSHOT",
