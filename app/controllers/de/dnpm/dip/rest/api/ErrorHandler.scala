@@ -15,7 +15,8 @@ import play.api.{
 import play.api.http.DefaultHttpErrorHandler
 import play.api.mvc.{
   RequestHeader,
-  Result
+  Result,
+  Results
 }
 import play.api.mvc.Results.InternalServerError
 import play.api.routing.Router
@@ -38,14 +39,24 @@ extends DefaultHttpErrorHandler(env,config,sourceMapper,router)
   import scala.util.chaining._
 
 
+  override def onClientError(
+    request: RequestHeader,
+    statusCode: Int,
+    message: String
+  ): Future[Result] = 
+    Outcome(s"For request '${request.method} ${request.path}' Status: $statusCode")
+      .pipe(toJson(_))
+      .pipe(Results.Status(statusCode)(_))
+      .pipe(Future.successful(_))
+
+
   override def onServerError(
     request: RequestHeader,
     exception: Throwable
   ): Future[Result] =
-    Future.successful(
-      Outcome("A server error occurred: " + exception.getMessage)
-        .pipe(toJson(_))
-        .pipe(InternalServerError(_))
-    )
+    Outcome("Server error: " + exception.getMessage)
+      .pipe(toJson(_))
+      .pipe(InternalServerError(_))
+      .pipe(Future.successful(_))
 
 }
