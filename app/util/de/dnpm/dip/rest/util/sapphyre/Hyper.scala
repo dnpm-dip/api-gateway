@@ -53,6 +53,9 @@ object Hyper
         t => self(t).addOperations(ops: _*)
       )
 
+    def andThen(f: Hyper[T] => Hyper[T]): Mapper[T] =
+      Mapper(t => f(self(t)))
+
   }
 
   object Mapper

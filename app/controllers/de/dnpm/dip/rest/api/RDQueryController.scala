@@ -8,6 +8,8 @@ import scala.concurrent.{
   ExecutionContext
 }
 import play.api.mvc.{
+  Action,
+  AnyContent,
   RequestHeader,
   ControllerComponents
 }
@@ -18,7 +20,11 @@ import play.api.libs.json.{
   Writes
 }
 import de.dnpm.dip.rest.util._
-import de.dnpm.dip.service.query.PatientFilter
+import de.dnpm.dip.service.query.{
+  PatientFilter,
+  Query,
+  ResultSet
+}
 import de.dnpm.dip.coding.Coding 
 import de.dnpm.dip.rd.model.{ 
   HPO, Orphanet
@@ -28,7 +34,8 @@ import de.dnpm.dip.rd.query.api.{
   RDFilters,
   HPOFilter,
   DiagnosisFilter,
-  RDQueryService
+  RDQueryService,
+  RDResultSet
 }
 
 
@@ -39,6 +46,9 @@ class RDQueryController @Inject()(
 )
 extends QueryController[RDConfig]
 {
+
+  override lazy val prefix = "rd"
+
 
   override val service: RDQueryService =
     RDQueryService.getInstance.get
@@ -70,5 +80,4 @@ extends QueryController[RDConfig]
       )
     )
   
-
 }

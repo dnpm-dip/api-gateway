@@ -11,7 +11,8 @@ import play.api.routing.sird._
 
 class Router @Inject()(
   catalogRouter: CatalogRouter,
-  rareDiseaseRouter: RDQueryRouter
+  mtbRouter: MTBQueryRouter,
+  rdRouter: RDQueryRouter
 )
 extends SimpleRouter
 {
@@ -19,7 +20,10 @@ extends SimpleRouter
   override val routes: Routes =
     catalogRouter
       .orElse(
-        rareDiseaseRouter withPrefix rareDiseaseRouter.prefix
+        mtbRouter withPrefix mtbRouter.prefix
+      )
+      .orElse(
+        rdRouter withPrefix rdRouter.prefix
       )
       .routes
 

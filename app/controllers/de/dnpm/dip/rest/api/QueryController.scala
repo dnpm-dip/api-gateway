@@ -34,6 +34,7 @@ import de.dnpm.dip.service.query.{
   Querier,
   QueryService,
   PreparedQuery,
+  ResultSet,
   UseCaseConfig
 }
 import de.dnpm.dip.coding.{
@@ -85,7 +86,7 @@ abstract class QueryController[UseCase <: UseCaseConfig]
   jsCriteria: OFormat[UseCase#Criteria],
   jsFilters: Writes[UseCase#Filter],
   jsPatRec: OFormat[UseCase#PatientRecord],
-  jsSummary: OWrites[UseCase#Results#Summary],
+  jsSummary: OWrites[UseCase#Results#SummaryType],
 )
 extends BaseController
    with JsonOps
@@ -105,9 +106,6 @@ extends BaseController
 
 
   val service: QueryService[Future,Monad[Future],UseCase,String]
-
-
-  override lazy val prefix = "rd"
 
 
   //TODO: extract from authenticated request
@@ -290,7 +288,7 @@ extends BaseController
 
 
   def summary(
-    implicit id: Query.Id
+    id: Query.Id
   ): Action[AnyContent] =
     Action.async {
       req =>
@@ -332,31 +330,6 @@ extends BaseController
       
     }
 
-/*
-  def patientMatches(
-    offset: Option[Int],
-    limit: Option[Int],
-    patientFilter: PatientFilter
-  )(
-    implicit id: Query.Id
-  ): Action[AnyContent] =
-    Action.async {
-      req =>
-      service.patientMatches(
-        id,
-        FilterFrom(req,patientFilter)
-      )
-      .map(
-        _.map(
-          Collection(_,offset,limit)
-            .map(Hyper(_))
-            .pipe(Hyper(_))
-        )
-      )
-      .map(JsonResult(_))
-      
-    }
-*/
 
   def patientRecord(
     implicit

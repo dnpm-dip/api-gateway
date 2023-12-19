@@ -17,6 +17,7 @@ import de.dnpm.dip.service.query.{
   PatientMatch,
   Query,
   PreparedQuery,
+  ResultSet,
   UseCaseConfig
 }
 import scala.util.chaining._
@@ -58,21 +59,21 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     s"$BASE_URI/prepared-queries"
 
 
-  private def QueryUri(id: Query.Id) =
+  protected def QueryUri(id: Query.Id) =
     s"$QUERY_BASE_URI/${id.value}"
 
-  private def Uri(query: QueryType) =
+  protected def Uri(query: QueryType) =
     QueryUri(query.id)
 
-  private def PreparedQueryUri(id: PreparedQuery.Id) =
+  protected def PreparedQueryUri(id: PreparedQuery.Id) =
     s"$PREPARED_QUERY_BASE_URI/${id.value}"
 
-  private def Uri(query: PreparedQueryType) =
+  protected def Uri(query: PreparedQueryType) =
     PreparedQueryUri(query.id)
 
 
 
-  implicit val HyperQuery: Hyper.Mapper[QueryType] =
+  implicit def HyperQuery: Hyper.Mapper[QueryType] =
     Hyper.Mapper {
       query =>
 
@@ -90,7 +91,7 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     }
 
 
-  implicit val HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
+  implicit def HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
     Hyper.Mapper { 
       _.withLinks(
          SELF -> Link(QUERY_BASE_URI)
@@ -102,15 +103,13 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     }
 
 
-
-  implicit def HyperSummary(
-    implicit id: Query.Id
-  ): Hyper.Mapper[Results#Summary] =
+  implicit def HyperSummary: Hyper.Mapper[UseCase#Results#SummaryType] =
     Hyper.Mapper {
-      _.withLinks(
-        "query"           -> Link(QueryUri(id)),
-        "patient-matches" -> Link(s"${QueryUri(id)}/patient-matches")
-      )
+      summary =>
+        summary.withLinks(
+          "query"           -> Link(QueryUri(summary.id)),
+          "patient-matches" -> Link(s"${QueryUri(summary.id)}/patient-matches")
+        )
     }
 
 

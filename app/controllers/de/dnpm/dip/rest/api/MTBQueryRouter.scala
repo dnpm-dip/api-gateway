@@ -7,22 +7,20 @@ import scala.util.chaining._
 import play.api.routing.sird._
 import play.api.mvc.Results.Ok
 import play.api.libs.json.Json.toJson
-import de.dnpm.dip.rd.query.api.{
-  RDConfig,
-  RDQueryService
+import de.dnpm.dip.mtb.query.api.{
+  MTBConfig,
+  MTBQueryService
 }
-import de.dnpm.dip.rd.model.RDPatientRecord
-import de.dnpm.dip.rd.gens.Generators._
+import de.dnpm.dip.mtb.model.MTBPatientRecord
+import de.dnpm.dip.mtb.gens.Generators._
 import de.ekut.tbi.generators.Gen
 
 
 
-class RDQueryRouter @Inject()(
-  override val controller: RDQueryController
+class MTBQueryRouter @Inject()(
+  override val controller: MTBQueryController
 )
-extends QueryRouter[RDConfig](
-  "rd"
-)
+extends QueryRouter[MTBConfig]("mtb")
 {
 
   private implicit val rnd: Random =
@@ -32,13 +30,10 @@ extends QueryRouter[RDConfig](
 
     case GET(p"/fake/data/patient-record") =>
       controller.Action {
-        Gen.of[RDPatientRecord].next
+        Gen.of[MTBPatientRecord].next
           .pipe(toJson(_))
           .pipe(Ok(_))
       }
-
-//    case GET(p"/queries/${QueryId(id)}/diagnostics") =>
-//      controller.diagnostics(id)
  
   }
 
