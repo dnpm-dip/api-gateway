@@ -17,7 +17,6 @@ import play.api.libs.json.{
   JsValue,
   JsObject,
   Reads,
-//  Writes,
   OWrites
 }
 import play.api.mvc.{
@@ -35,6 +34,8 @@ trait JsonOps
 
   self: BaseController =>
 
+  import scala.util.chaining._
+  import cats.syntax.either._
   import Json.toJson
 
 
@@ -116,25 +117,6 @@ trait JsonOps
       case Ior.Both(out,t) => Ok(Json.toJson(t).as[JsObject] + ("_issues" -> Json.toJson(out.issues)))
     }
 
-/*
-  def JsonResult[T: Writes](
-    ior: IorNel[String,T],
-    err: JsValue => Result
-  ): Result =
-    ior.leftMap(
-      Outcome(_)
-    )
-    .bimap(
-      Json.toJson(_),
-      Json.toJson(_)
-    )
-    .toEither
-    .fold(
-      err(_),
-      Ok(_)
-    )
-*/
-
 
   def JsonResult[T: OWrites](
     xor: Either[NonEmptyList[String],T],
@@ -152,16 +134,15 @@ trait JsonOps
       Ok(_)
     )
 
+
   def JsonResult[T: OWrites](
     opt: Option[T],
     err: => String = ""
   ): Result =
-    opt.map(
-      Json.toJson(_)
+    JsonResult(
+      opt.toRight(err).toEitherNel,
+      NotFound(_)
     )
-    .map(Ok(_))
-    .getOrElse(NotFound(err))
-
 
 
 }
