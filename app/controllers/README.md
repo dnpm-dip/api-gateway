@@ -176,11 +176,36 @@ This ValueSet structure is *conceptually* equivalent to [FHIR ValueSet](https://
 
 
 ----
+## MTB Query Module
+
+Query Criteria for MTB patient records:
+
+| Block | Attribute Name | Type | Multiplicity | CodeSystem/ValueSet Binding |
+| ----- | ----           | ---- | ----         | ----                        |
+| Diagnosis Criteria          | Code | Coding[ICD-10-GM] | 0...N | URI: http://fhir.de/CodeSystem/bfarm/icd-10-gm |
+| Tumor-Morphology Criteria   | Code | Coding[ICD-O-3-M] | 0...N | URI: urn:oid:2.16.840.1.113883.6.43.1          |
+| SNV Criteria (0...N)        | Gene | Coding[HGNC]      | 0...1 | URI: https://www.genenames.org/                |
+| SNV Criteria (0...N)        | DNA Change     | Coding[HGVS.DNA]     | 0...1 |  |
+| SNV Criteria (0...N)        | Protein Change | Coding[HGVS.Protein] | 0...1 |  |
+| CNV Criteria (0...N)        | Genes  | Coding[HGNC]      | 0...N | URI: https://www.genenames.org/              |
+| CNV Criteria (0...N)        | Type  | Coding[CNV.Type]   | 0...1 | URI: dnpm-dip/mtb/ngs-report/cnv/type        |
+| DNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
+| DNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
+| RNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
+| RNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
+| Medication Criteria (0...1) | Medication | Coding[ATC]   | 0...N | URI: http://fhir.de/CodeSystem/bfarm/atc  |
+| Medication Criteria (0...1) | Usage Mode | Coding[Usage] | 0...2  | URI: dnpm-dip/mtb/query/medication-usage  |
+| Medication Criteria (0...1) | Operator | String | 0...1  | {and, or} Default: or  |
+| Response Criteria | Code  | Coding[RECIST] | 0...N | URI: RECIST |
+
+See [MTBQueryCriteria DTO](https://github.com/KohlbacherLab/dnpm-dip-mtb-query-service/blob/main/api/src/main/scala/de/dnpm/dip/mtb/query/api/MTBQueryCriteria.scala#L113) for structure of the corresponding JSON form.
+
+----
 ## Rare Disease Query Module
 
 Possible Query Criteria by which to query for RD Patients (all optional):
 
-| Scope  | Name | Type |
+| Block  | Attribute Name | Type |
 | -----  | ----      | ---- |
 | HPO       | Term   |  Coding from [Human Phenotype Ontology](https://hpo.jax.org) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://hpo.jax.org</code>) |
 | Diagnosis | Category | Coding from [Orphanet Rare Disease Ontology](https://www.orpha.net) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://www.orpha.net</code>) |
