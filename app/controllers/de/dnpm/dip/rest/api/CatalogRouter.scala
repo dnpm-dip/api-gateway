@@ -25,17 +25,19 @@ extends SimpleRouter
   override val routes: Routes = {
 
     case GET(p"/coding/codesystems"
-              ?q"uri=${Uri(uri)}"
-              ?q_o"version=$version")  => catalogController.codeSystem(uri,version) 
+              ? q"uri=${Uri(uri)}"
+              & q_o"version=$version"
+              & q_s"filter=$filters")  => catalogController.codeSystem(uri,version,filters) 
 
-    case GET(p"/coding/codesystems")   => catalogController.codeSystemInfos
+    case GET(p"/coding/codesystems")   => catalogController.infos
 
 
     case GET(p"/coding/valuesets"
-              ?q"uri=${Uri(uri)}"
-              ?q_o"version=$version")  => catalogController.valueSet(uri,version) 
+              ? q"uri=${Uri(uri)}"
+              & q_o"version=$version"
+              & q_s"filter=$filters")  => catalogController.valueSet(uri,version,filters) 
 
-    case GET(p"/coding/valuesets")     => catalogController.codeSystemInfos
+    case GET(p"/coding/valuesets")     => catalogController.infos
 
   }
 

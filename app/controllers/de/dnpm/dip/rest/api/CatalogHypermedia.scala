@@ -10,6 +10,7 @@ import de.dnpm.dip.rest.util.sapphyre.{
 }
 import de.dnpm.dip.coding.{
   CodeSystem,
+  CodeSystemProvider,
   ValueSet
 }
 
@@ -33,28 +34,28 @@ trait CatalogHypermedia extends HypermediaBase
 
   private def codeSystemLink(
     uri: URI,
-    version: Option[String]
+    version: Option[String] = None
   ): Link =
     Link(s"$BASE_URI/codesystems?uri=${uri}${version.map(v => s"&version=$v").getOrElse("")}")
 
   private def valueSetLink(
     uri: URI,
-    version: Option[String]
+    version: Option[String] = None
   ): Link =
     Link(s"$BASE_URI/valuesets?uri=${uri}${version.map(v => s"&version=$v").getOrElse("")}")
 
 
 
-  implicit val HyperCodeSystemInfo: Hyper.Mapper[CodeSystem.Info] =
+
+  implicit val HyperCodeSystemProviderInfo: Hyper.Mapper[CodeSystemProvider.Info[Any]] =
     Hyper.Mapper(
       info =>
         info.withLinks(
           COLLECTION   -> collectionLink,
-          "codesystem" -> codeSystemLink(info.uri,info.version),
-          "valueset"   -> valueSetLink(info.uri,info.version)
+          "codesystem" -> codeSystemLink(info.uri),
+          "valueset"   -> valueSetLink(info.uri)
         )
     )
-
 
   implicit def HyperCodeSystem[S]: Hyper.Mapper[CodeSystem[S]] =
     Hyper.Mapper(

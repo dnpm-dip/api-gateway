@@ -19,12 +19,8 @@ extends SimpleRouter
 
   override val routes: Routes =
     catalogRouter
-      .orElse(
-        mtbRouter withPrefix mtbRouter.prefix
-      )
-      .orElse(
-        rdRouter withPrefix rdRouter.prefix
-      )
+      .orElse(mtbRouter withPrefix mtbRouter.prefix)
+      .orElse(rdRouter withPrefix rdRouter.prefix)
       .routes
 
 

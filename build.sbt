@@ -48,16 +48,16 @@ libraryDependencies ++= Seq(
 //  "de.dnpm.dip"            %% "..."  % "1.0-SNAPSHOT",
 )
 
-
+/*
 dependencyOverrides ++= Seq(
   "org.scala-lang.modules" %% "scala-xml"          % "2.2.0",
   "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2",
 )
-
+*/
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
-  .disablePlugins(PlayLogback)
+//  .disablePlugins(PlayLogback)
   .settings()
 
 
