@@ -15,7 +15,12 @@ import play.api.mvc.{
   ControllerComponents
 }
 import play.api.libs.json.Json.toJson
-import de.dnpm.dip.coding.ValueSet
+import de.dnpm.dip.coding.{
+  Coding,
+  CodeSystem,
+  ValueSet
+}
+import de.dnpm.dip.coding.atc.ATC
 import de.dnpm.dip.catalog.api.CatalogService
 import de.dnpm.dip.rest.util.{
   Collection,
@@ -62,13 +67,58 @@ with CatalogHypermedia
     .filter(_.nonEmpty)
 
 
+  private def getCodeSystem(
+    uri: URI,
+    version: Option[String],
+    filters: Seq[String]
+  ): Future[Option[CodeSystem[Any]]] = {
+
+      import cats.syntax.traverse._
+
+      val fltrs =
+        toFilters(filters)
+
+      (uri,version) match {
+        // Workaround to handle ATC versioning inconsistency: 
+        // If ATC CodeSystem is requested without a specific version,
+        // return a concatenation of all ATC entries distinct by name
+        case (u,None) if u == Coding.System[ATC].uri =>
+          catalogService
+            .codeSystemProvider(u)
+            .flatMap(
+              _.traverse { 
+                atc =>
+                  atc.versions
+                    .toList
+                    .sorted(atc.versionOrdering.reverse)
+                    .traverse(version => catalogService.codeSystem(u,Some(version),fltrs))
+                    .map(    // Future[List[Option[CodeSystem[ATC]]]]
+                      _.flatten
+                       .reduce(
+                         (acc,cs) =>
+                           acc.copy(
+                             version = None,
+                             concepts = (acc.concepts ++ cs.concepts).distinctBy(_.display)
+                           )
+                       )
+                  )
+              }
+            )
+
+        case _ =>
+          catalogService.codeSystem(uri,version,fltrs)
+      }
+
+    }
+
+
   def codeSystem(
     uri: URI,
     version: Option[String],
     filters: Seq[String]
   ): Action[AnyContent] =
     Action.async {
-      catalogService.codeSystem(uri,version,toFilters(filters))
+      getCodeSystem(uri,version,filters)
         .map(_.map(Hyper(_)))
         .map(JsonResult(_))
     }
@@ -80,7 +130,7 @@ with CatalogHypermedia
     filters: Seq[String]
   ): Action[AnyContent] =
     Action.async {
-      catalogService.codeSystem(uri,version,toFilters(filters))
+      getCodeSystem(uri,version,filters)
         .map(_.map(ValueSet.from(_)))
         .map(_.map(Hyper(_)))
         .map(JsonResult(_))
