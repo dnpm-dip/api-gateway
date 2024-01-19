@@ -137,7 +137,7 @@ trait JsonOps
 
   def JsonResult[T: OWrites](
     opt: Option[T],
-    err: => String = ""
+    err: => String = "Resource Not Found"
   ): Result =
     JsonResult(
       opt.toRight(err).toEitherNel,

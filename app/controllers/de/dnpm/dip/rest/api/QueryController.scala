@@ -300,7 +300,7 @@ extends BaseController
         )
       )
       .map(_.map(Hyper(_)))
-      .map(JsonResult(_))
+      .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
 
@@ -326,7 +326,7 @@ extends BaseController
             .pipe(Hyper(_))
         )
       )
-      .map(JsonResult(_))
+      .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
       
     }
 
