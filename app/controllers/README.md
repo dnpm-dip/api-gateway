@@ -180,23 +180,23 @@ This ValueSet structure is *conceptually* equivalent to [FHIR ValueSet](https://
 
 Query Criteria for MTB patient records:
 
-| Block | Attribute Name | Type | Multiplicity | CodeSystem/ValueSet Binding |
+| Block | Attribute Name | Type | Multiplicity | API Binding for CodeSystem/ValueSet (incl. Filters) |
 | ----- | ----           | ---- | ----         | ----                        |
-| Diagnosis Criteria          | Code | Coding[ICD-10-GM] | 0...N | URI: http://fhir.de/CodeSystem/bfarm/icd-10-gm |
-| Tumor-Morphology Criteria   | Code | Coding[ICD-O-3-M] | 0...N | URI: urn:oid:2.16.840.1.113883.6.43.1          |
-| SNV Criteria (0...N)        | Gene | Coding[HGNC]      | 0...1 | URI: https://www.genenames.org/                |
+| Diagnosis Criteria          | Code | Coding[ICD-10-GM] | 0...N | <code>/api/coding/codesystems?uri=http://fhir.de/CodeSystem/bfarm/icd-10-gm&filter=is-a-category</code> |
+| Tumor-Morphology Criteria   | Code | Coding[ICD-O-3-M] | 0...N | <code>/api/coding/codesystems?uri=urn:oid:2.16.840.1.113883.6.43.1&filter=morphology&filter=is-a-category</code> |
+| SNV Criteria (0...N)        | Gene | Coding[HGNC]      | 0...1 | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>                |
 | SNV Criteria (0...N)        | DNA Change     | Coding[HGVS.DNA]     | 0...1 |  |
-| SNV Criteria (0...N)        | Protein Change | Coding[HGVS.Protein] | 0...1 |  |
-| CNV Criteria (0...N)        | Genes  | Coding[HGNC]      | 0...N | URI: https://www.genenames.org/              |
-| CNV Criteria (0...N)        | Type  | Coding[CNV.Type]   | 0...1 | URI: dnpm-dip/mtb/ngs-report/cnv/type        |
-| DNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
-| DNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
-| RNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
-| RNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | URI: https://www.genenames.org/          |
-| Medication Criteria (0...1) | Medication | Coding[ATC]   | 0...N | URI: http://fhir.de/CodeSystem/bfarm/atc  |
-| Medication Criteria (0...1) | Usage Mode | Coding[Usage] | 0...2  | URI: dnpm-dip/mtb/query/medication-usage  |
+| SNV Criteria (0...N)        | Protein Change | Coding[HGVS.Protein] | 0...1 | NOTE: 3-letter amino acid code required |
+| CNV Criteria (0...N)        | Genes  | Coding[HGNC]      | 0...N | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>              |
+| CNV Criteria (0...N)        | Type  | Coding[CNV.Type]   | 0...1 | <code>/api/coding/codesystems?uri=dnpm-dip/mtb/ngs-report/cnv/type</code>        |
+| DNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>          |
+| DNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>          |
+| RNA-Fusion Criteria (0...N) | 5'-Gene  | Coding[HGNC] | 0...1 | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>          |
+| RNA-Fusion Criteria (0...N) | 3'-Gene  | Coding[HGNC] | 0...1 | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>          |
+| Medication Criteria (0...1) | Medication | Coding[ATC]   | 0...N |  <code>/api/coding/codesystems?uri=http://fhir.de/CodeSystem/bfarm/atc</code>  |
+| Medication Criteria (0...1) | Usage Mode | Coding[Usage] | 0...2  | <code>/api/coding/codesystems?uri=dnpm-dip/mtb/query/medication-usage</code>  |
 | Medication Criteria (0...1) | Operator | String | 0...1  | {and, or} Default: or  |
-| Response Criteria | Code  | Coding[RECIST] | 0...N | URI: RECIST |
+| Response Criteria | Code  | Coding[RECIST] | 0...N | <code>/api/coding/codesystems?uri=RECIST</code> |
 
 See [MTBQueryCriteria DTO](https://github.com/KohlbacherLab/dnpm-dip-mtb-query-service/blob/main/api/src/main/scala/de/dnpm/dip/mtb/query/api/MTBQueryCriteria.scala#L113) for structure of the corresponding JSON form.
 
