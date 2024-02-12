@@ -10,25 +10,38 @@ GET /api/coding/codesystems
 
 **Response**
 <details>
-<summary>List of CodeSystem info objects containing name, title and URI</summary>
+<summary>List of CodeSystem info objects containing name, title, URI, and possibly a list of available versions and pre-defined filters applicable to the CodeSystem</summary>
 
 ```javascript
 {
   "entries": [
     {
-        "name": "Diagnosis-Category",
-        "title": "Diagnosis-Category",
-        "uri": "dnpm-dip/rd/diagnosis/category"
-    },
-    {
-        "name": "mode-of-inheritance",
-        "title": "Mode of inheritance",
-        "uri": "dnpm-dip/rd/variant/mode-of-inheritance"
-    },
-    {
-        "name": "ACMG-Class",
-        "title": "ACMG-Class",
-        "uri": "https://www.acmg.net"
+      "filters": [
+          {
+              "description": "Filter ICD classes of kind 'chapter'",
+              "name": "is-a-chapter"
+          },
+          {
+              "description": "Filter ICD classes of kind 'block'",
+              "name": "is-a-block"
+          },
+          {
+              "description": "Filter ICD classes of kind 'category'",
+              "name": "is-a-category"
+          }
+      ],
+      "latestVersion": "2024",
+      "name": "ICD-10",
+      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "versions": [
+          "2019",
+          "2023",
+          "2020",
+          "2024",
+          "2021",
+          "2022"
+      ]
     },
     ...
   ]
@@ -40,7 +53,7 @@ GET /api/coding/codesystems
 ### Get specific CodeSystem
 
 ```
-GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}]
+GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}][&filter=filter-A|filter-B&filter=filter-C]
 ```
 
 **Response**
@@ -49,61 +62,63 @@ GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}]
 
 ```javascript
 {
-    "uri": "https://hpo.jax.org",
-    "name": "Human-Phenotype-Ontology",
-    "title": "Human Phenotype Ontology",
-    "date": "2023-09-01T00:00:00",
-    "version": "2023-09-01",
-    "properties": [
-       // Properties defined on the CodeSystem's concepts, e.g.
-       {
-            "name": "type",
-            "type": "string",
-            "description": "Node type"
-        },
-        {
-            "name": "definition",
-            "type": "string",
-            "description": "Definition of the concept ..."
-        },
-        {
-            "name": "superClasses",
-            "type": "string",
-            "description": "Super-classes, i.e. parent concepts"
-        }
-
-    ],
-    "concepts": [
-        {
-            "code": "HP:...",
-            "display": "...",
-            "version": "2023-09-01",
-            "properties": {
-                "type": [
-                    "CLASS"
-                ],
-                "superClasses": [
-                   HP:...,
-                   HP:...,
-                   HP:...
-                ]
-            },
-            "children": [
-                "HP:000...",
-                "HP:000...",
-                "HP:001...",
-                "HP:003...",
-                "HP:003...",
-                "HP:004..."
-            ]
-        },
-        ...
-    ]
+  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+  "name": "ICD-10",
+  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+  "date": "2023-09-15T00:00:00",
+  "version": "2024",
+  "properties": [
+    {
+      "name": "kind",
+      "type": "enum",
+      "description": "Kind of ICD class",
+      "valueSet": [
+          "block",
+          "category",
+          "chapter"
+      ]
+    }
+  ],
+  "concepts": [
+    {
+      "code": "C25",
+      "display": "Bösartige Neubildung des Pankreas",
+      "version": "2024",
+      "properties": {
+          "kind": [
+              "category"
+          ]
+      },
+      "parent": "C15-C26",
+      "children": [
+        "C25.4",
+        "C25.8",
+        "C25.0",
+        "C25.1",
+        "C25.9",
+        "C25.3",
+        "C25.7",
+        "C25.2"
+      ]
+    },
+    ...
+  ]
 }
 ```
 </details>
 
 This CodeSystem structure is *conceptually* equivalent to [FHIR CodeSystem](https://hl7.org/fhir/R4/codesystem.html), but syntactically slightly different.
+
+#### Applying CodeSystem filters:
+
+CodeSystems can be requested with applied filters on the concepts by including the filter name(s) as URI query parameter "filter".
+The API supports combining filters with AND/OR logic: filter names concatenated into a pipe-separated value list as one "filter" parameter are combined as OR, whereas filters occurring in different "filter" parameter values are combined using AND.
+For instance, the following request represents the query "Get CodeSystem ICD-O-3, picking only concepts from ICD-O-3-M (morphology) and of kind 'block' or 'category'":
+
+```
+GET /api/coding/codesystems?uri=urn:oid:2.16.840.1.113883.6.43.1&filter=morphology&filter=is-a-block|is-a-category
+```
+
 
 ### Get List of ValueSets
 
@@ -119,9 +134,32 @@ GET /api/coding/valuesets
 {
   "entries": [
     {
-        "name": "Diagnosis-Category",
-        "title": "Diagnosis-Category",
-        "uri": "dnpm-dip/rd/diagnosis/category"
+      "filters": [
+          {
+              "description": "Filter ICD classes of kind 'chapter'",
+              "name": "is-a-chapter"
+          },
+          {
+              "description": "Filter ICD classes of kind 'block'",
+              "name": "is-a-block"
+          },
+          {
+              "description": "Filter ICD classes of kind 'category'",
+              "name": "is-a-category"
+          }
+      ],
+      "latestVersion": "2024",
+      "name": "ICD-10",
+      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "versions": [
+          "2019",
+          "2023",
+          "2020",
+          "2024",
+          "2021",
+          "2022"
+      ]
     },
     ...
   ]
@@ -142,33 +180,21 @@ GET /api/coding/valuesets?uri={ValueSet-URI}[&version={Version}]
 
 ```javascript
 {
-    "uri": "https://hpo.jax.org",
-    "name": "Human-Phenotype-Ontology",
-    "title": "Human Phenotype Ontology",
-    "date": "2023-10-12T15:11:25.973661",
-    "codings": [
-        {
-            "code": "HP:0000001",
-            "display": "All",
-            "system": "https://hpo.jax.org",
-            "version": "2023-09-01"
-        },
-        {
-            "code": "HP:0000002",
-            "display": "Abnormality of body height",
-            "system": "https://hpo.jax.org",
-            "version": "2023-09-01"
-        },
-        {
-            "code": "HP:0000003",
-            "display": "Multicystic kidney dysplasia",
-            "system": "https://hpo.jax.org",
-            "version": "2023-09-01"
-        },
-        ...
-    ]
+  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+  "name": "ICD-10",
+  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+  "date": "2023-09-15T00:00:00",
+  "version": "2024",
+  "concepts": [
+    {
+      "code": "C25",
+      "display": "Bösartige Neubildung des Pankreas",
+      "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "version": "2024"
+    },
+    ...
+  ]
 }
-
 ```
 </details>
 
@@ -203,16 +229,18 @@ See [MTBQueryCriteria DTO](https://github.com/KohlbacherLab/dnpm-dip-mtb-query-s
 ----
 ## Rare Disease Query Module
 
-Possible Query Criteria by which to query for RD Patients (all optional):
+Query Criteria for MTB patient records:
 
-| Block  | Attribute Name | Type |
-| -----  | ----      | ---- |
-| HPO       | Term   |  Coding from [Human Phenotype Ontology](https://hpo.jax.org) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://hpo.jax.org</code>) |
-| Diagnosis | Category | Coding from [Orphanet Rare Disease Ontology](https://www.orpha.net) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://www.orpha.net</code>) |
-| Variant   | Gene     | Coding from [HGNC Gene Set](https://www.genenames.org) (ValueSet binding: <code>BASE_URL/api/coding/valuesets?uri=https://www.genenames.org/</code>)  |
-| Variant   | cDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
-| Variant   | gDNA change | Coding where code is a [HGVS DNA Change](https://varnomen.hgvs.org/recommendations/DNA/) text pattern |
-| Variant   | protein change | Coding where code is a [HGVS Protein Change](https://varnomen.hgvs.org/recommendations/protein/) text pattern (using **3-letter amino acid code** ??) |
+| Block | Attribute Name | Type | Multiplicity | API Binding for CodeSystem/ValueSet (incl. Filters) |
+| ----- | ----           | ---- | ----         | ----                        |
+| HPO Term         | Code   | Coding[HPO] | 0...N | <code>/api/coding/codesystems?uri=https://hpo.jax.org</code> |
+| Disease Category | Code   | Coding[Orphanet] | 0...N | <code>/api/coding/codesystems?uri=https://www.orpha.net</code> |
+| Variant  | Gene           | Coding[HGNC] | 0...N | <code>/api/coding/codesystems?uri=https://www.genenames.org/</code>  |
+| Variant  | cDNA change    | Coding[HGVS.DNA] | 0...N |   |
+| Variant  | gDNA change    | Coding[HGVS.DNA] | 0...N |   |
+| Variant  | protein change | Coding[HGVS.Protein] | 0...N | NOTE: 3-letter amino acid code required |
+
+See [RDQueryCriteria DTO](https://github.com/KohlbacherLab/dnpm-dip-rd-query-service/blob/main/api/src/main/scala/de/dnpm/dip/rd/query/api/RDQueryCriteria.scala#L48) for structure of the corresponding JSON form.
 
 
 ### Submit Query
@@ -227,76 +255,39 @@ POST /api/rd/queries
 ```javascript
 {
   "mode": { 
-    "code": "local | federated"  
+    "code": "local"   // {local, federated} 
   },
   "criteria": {
-    "diagnoses" : [
+    "diagnoses": [
       {
-        "code" : "endocrine",
+          "code": "ORPHA:99995",
       }
     ],
-    "hpoTerms" : [ {
-      "code" : "HP:398974",
-    } ],
-    "variants" : [ {
-      "gene" : {
-        "code" : "HGNC:17929",
-      },
-      "cDNAChange" : {
-        "code" : "NG_012232.1(NM_004006.2):c.93+1G>T",
-      },
-      "gDNAChange" : {
-        "code" : "NC_000023.10:g.33038255C>A",
-      },
-      "proteinChange" : {
-        "code" : "LRG_199p1:p.Trp24Ter (p.Trp24*)",
+    "hpoTerms": [
+      {
+          "code": "HP:398974",
       }
-    } ]
+    ],
+    "variants": [
+      {
+        "cDNAChange": {
+            "code": "c.93+1G>T",
+        },
+        "gDNAChange": {
+            "code": "g.33038255C>A",
+        },
+        "gene": {
+            "code": "HGNC:17929",
+        },
+        "proteinChange": {
+            "code": "p.Trp24Ter",
+        }
+      }
+    ]
   }
 }
 ```
 </details>
-
-#### Alternative Query submission
-
-```
-POST /api/rd/queries?mode={local|federated}
-```
-
-**Request Body**
-<details>
-<summary>Partial RD Query Criteria object</summary>
-
-```javascript
-{
-  "criteria": {
-    "diagnoses" : [
-      {
-        "code" : "endocrine"
-      }
-    ],
-    "hpoTerms" : [ {
-      "code" : "HP:398974",
-    } ],
-    "variants" : [ {
-      "gene" : {
-        "code" : "HGNC:17929",
-      },
-      "cDNAChange" : {
-        "code" : "NG_012232.1(NM_004006.2):c.93+1G>T",
-      },
-      "gDNAChange" : {
-        "code" : "NC_000023.10:g.33038255C>A",
-      },
-      "proteinChange" : {
-        "code" : "LRG_199p1:p.Trp24Ter (p.Trp24*)",
-      }
-    } ]
-  }
-}
-```
-</details>
-
 
 **Response**
 <details>
@@ -923,24 +914,6 @@ PUT /api/rd/queries/{Query-ID}
 }
 ```
 </details>
-
-#### Alternative Query Update
-```
-PUT /api/rd/queries/{Query-ID}?mode={local|federated}
-```
-**Request Body**
-<details>
-<summary>Partial Query Update object</summary>
-```javascript
-// Optional here, only if query criteria changed
-{
-  "criteria": {   
-    ...
-  }
-}
-```
-</details>
-
 
 **Response**
 <details>

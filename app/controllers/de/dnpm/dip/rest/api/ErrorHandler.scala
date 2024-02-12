@@ -22,6 +22,7 @@ import play.api.mvc.Results.InternalServerError
 import play.api.routing.Router
 import play.api.libs.json.Json.toJson
 import scala.concurrent.Future
+import de.dnpm.dip.util.Logging
 import de.dnpm.dip.rest.util.Outcome
 
 
@@ -34,6 +35,7 @@ class ErrorHandler @Inject() (
   router: Provider[Router]
 )
 extends DefaultHttpErrorHandler(env,config,sourceMapper,router)
+with Logging
 {
 
   import scala.util.chaining._
@@ -58,5 +60,6 @@ extends DefaultHttpErrorHandler(env,config,sourceMapper,router)
       .pipe(toJson(_))
       .pipe(InternalServerError(_))
       .pipe(Future.successful(_))
+      .tap(_ => log.error("Server error",exception))
 
 }
