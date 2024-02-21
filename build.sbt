@@ -20,12 +20,9 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   guice,
-  "org.scalatestplus.play" %% "scalatestplus-play"     % "5.1.0" % Test,  //TODO: version!
+  "org.scalatestplus.play" %% "scalatestplus-play"     % "7.0.1" % Test,  //TODO: version!
 
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.4",
-
-//  "ch.qos.logback" % "logback-classic" % "1.4.11",
-//  "com.typesafe.play" % "play-logback" % "2.8.20",
+//  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.4",
 
   "de.ekut.tbi"            %% "generators"              % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "catalog-service-api"     % "1.0-SNAPSHOT",
@@ -44,20 +41,16 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "icd-claml-packaged"      % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "atc-impl"                % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"   % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "auth-api"                % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "fake-auth-service"       % "1.0-SNAPSHOT",
+//  "de.dnpm.dip"            %% "standalone-authup-client"           % "1.0-SNAPSHOT",
 
 //  "de.dnpm.dip"            %% "..."  % "1.0-SNAPSHOT",
 )
 
-/*
-dependencyOverrides ++= Seq(
-  "org.scala-lang.modules" %% "scala-xml"          % "2.2.0",
-  "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2",
-)
-*/
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
-//  .disablePlugins(PlayLogback)
   .settings()
 
 

@@ -23,6 +23,7 @@ import de.dnpm.dip.rest.util._
 import de.dnpm.dip.service.query.{
   PatientFilter,
   Query,
+  Querier,
   ResultSet
 }
 import de.dnpm.dip.coding.Coding 
@@ -31,8 +32,14 @@ import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
   DiagnosisFilter,
+  MTBPermissions,
   MTBQueryService,
   MTBResultSet
+}
+import de.dnpm.dip.auth.api.{
+  Authorization,
+  UserPermissions,
+  UserAuthenticationService
 }
 
 
@@ -42,13 +49,35 @@ class MTBQueryController @Inject()(
   implicit ec: ExecutionContext,
 )
 extends QueryController[MTBConfig]
+with QueryAuthorizations[UserPermissions]
 {
 
   override lazy val prefix = "mtb"
 
-
   override val service: MTBQueryService =
     MTBQueryService.getInstance.get
+
+  override implicit val authService: UserAuthenticationService =
+    UserAuthenticationService.getInstance.get
+
+
+  override val SubmitQuery: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case MTBPermissions(p) => p == MTBPermissions.SubmitQuery }
+    )
+
+  override val ReadQueryResult: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case MTBPermissions(p) => p == MTBPermissions.ReadResultSummary }
+    )
+
+  override val ReadPatientRecord: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case MTBPermissions(p) => p == MTBPermissions.ReadPatientRecord }
+    )
 
 
   private val DiagnosisCodes =

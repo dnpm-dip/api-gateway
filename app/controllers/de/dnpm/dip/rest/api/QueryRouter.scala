@@ -76,6 +76,9 @@ extends SimpleRouter
 
   final val baseRoutes: Routes = {
 
+    case GET(p"/sites") => controller.sites
+
+
     // ------------------------------------------------------------------------
     // ETL Routes:
     // ------------------------------------------------------------------------
@@ -101,7 +104,7 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
     // Query Routes:
     // ------------------------------------------------------------------------
-
+/*
     case POST(p"/queries"?q"mode=$mode") =>
       mode match {
         case QueryMode(md) =>
@@ -116,6 +119,7 @@ extends SimpleRouter
             )
           }
       }
+*/
 
     case POST(p"/queries") =>
       controller.submit
@@ -132,6 +136,7 @@ extends SimpleRouter
     case DELETE(p"/queries/${QueryId(id)}") =>
       controller.delete(id)
 
+/*
     case PUT(p"/queries/${QueryId(id)}"?q"mode=$mode") =>
       mode match {
         case QueryMode(md) =>
@@ -146,6 +151,7 @@ extends SimpleRouter
             )
           }
       }
+*/
 
     case PUT(p"/queries/${QueryId(id)}") =>
       controller.update(id)

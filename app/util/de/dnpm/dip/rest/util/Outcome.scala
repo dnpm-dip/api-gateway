@@ -4,10 +4,8 @@ package de.dnpm.dip.rest.util
 
 import play.api.libs.json.{
   Json,
-//  JsValue,
   JsPath,
   JsonValidationError,
-//  Format,
   Writes,
   OWrites,
 }

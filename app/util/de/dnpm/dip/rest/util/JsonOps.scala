@@ -42,7 +42,8 @@ trait JsonOps
   def OutcomeOrJson[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[T] =
-    parse.tolerantJson
+    parse
+      .tolerantJson
       .validate(
         _.validate[T]
          .asEither
@@ -54,7 +55,8 @@ trait JsonOps
   def OutcomeOrJsonOpt[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[Option[T]] =
-    parse.tolerantJson
+    parse
+      .tolerantJson
       .validate(
         _.validateOpt[T]
          .asEither
@@ -106,7 +108,6 @@ trait JsonOps
     }
 
 
-
   def JsonResult[T: OWrites](
     ior: IorNel[String,T],
     err: JsValue => Result,
@@ -114,7 +115,7 @@ trait JsonOps
     ior.leftMap(Outcome(_)) match {
       case Ior.Left(out)   => err(Json.toJson(out))
       case Ior.Right(t)    => Ok(Json.toJson(t))
-      case Ior.Both(out,t) => Ok(Json.toJson(t).as[JsObject] + ("_issues" -> Json.toJson(out.issues)))
+      case Ior.Both(out,t) => Ok(Json.toJsObject(t) + ("_issues" -> Json.toJson(out.issues)))
     }
 
 

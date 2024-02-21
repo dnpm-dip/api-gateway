@@ -34,9 +34,16 @@ import de.dnpm.dip.rd.query.api.{
   RDFilters,
   HPOFilter,
   DiagnosisFilter,
+  RDPermissions,
   RDQueryService,
   RDResultSet
 }
+import de.dnpm.dip.auth.api.{
+  Authorization,
+  UserPermissions,
+  UserAuthenticationService
+}
+
 
 
 class RDQueryController @Inject()(
@@ -45,7 +52,11 @@ class RDQueryController @Inject()(
   implicit ec: ExecutionContext,
 )
 extends QueryController[RDConfig]
+with QueryAuthorizations[UserPermissions]
 {
+
+  import scala.util.chaining._
+
 
   override lazy val prefix = "rd"
 
@@ -53,7 +64,28 @@ extends QueryController[RDConfig]
   override val service: RDQueryService =
     RDQueryService.getInstance.get
 
-  import scala.util.chaining._
+
+  override implicit val authService: UserAuthenticationService =
+    UserAuthenticationService.getInstance.get
+
+
+  override val SubmitQuery: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case RDPermissions(p) => p == RDPermissions.SubmitQuery }
+    )
+
+  override val ReadQueryResult: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case RDPermissions(p) => p == RDPermissions.ReadResultSummary }
+    )
+
+  override val ReadPatientRecord: Authorization[UserPermissions] =
+    Authorization(
+      _.permissions
+       .exists { case RDPermissions(p) => p == RDPermissions.ReadPatientRecord }
+    )
 
   private val HPOTerms =
     Extractor.AsCodingsOf[HPO]
