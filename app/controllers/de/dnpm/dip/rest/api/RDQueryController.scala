@@ -56,6 +56,7 @@ with QueryAuthorizations[UserPermissions]
 {
 
   import scala.util.chaining._
+  import RDPermissions._
 
 
   override lazy val prefix = "rd"
@@ -69,23 +70,27 @@ with QueryAuthorizations[UserPermissions]
     UserAuthenticationService.getInstance.get
 
 
-  override val SubmitQuery: Authorization[UserPermissions] =
+  override val SubmitQueryAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case RDPermissions(p) => p == RDPermissions.SubmitQuery }
+       .collectFirst { case RDPermissions(SubmitQueryAuthorization) => true }
+       .isDefined
     )
 
-  override val ReadQueryResult: Authorization[UserPermissions] =
+  override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case RDPermissions(p) => p == RDPermissions.ReadResultSummary }
+       .collectFirst { case RDPermissions(ReadResultSummary) => true }
+       .isDefined
     )
 
-  override val ReadPatientRecord: Authorization[UserPermissions] =
+  override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case RDPermissions(p) => p == RDPermissions.ReadPatientRecord }
+       .collectFirst { case RDPermissions(ReadPatientRecordAuthorization) => true }
+       .isDefined
     )
+
 
   private val HPOTerms =
     Extractor.AsCodingsOf[HPO]

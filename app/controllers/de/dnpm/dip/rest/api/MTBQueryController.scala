@@ -52,6 +52,9 @@ extends QueryController[MTBConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
+  import MTBPermissions._
+
+
   override lazy val prefix = "mtb"
 
   override val service: MTBQueryService =
@@ -61,22 +64,25 @@ with QueryAuthorizations[UserPermissions]
     UserAuthenticationService.getInstance.get
 
 
-  override val SubmitQuery: Authorization[UserPermissions] =
+  override val SubmitQueryAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case MTBPermissions(p) => p == MTBPermissions.SubmitQuery }
+       .collectFirst { case MTBPermissions(SubmitQuery) => true }
+       .isDefined
     )
 
-  override val ReadQueryResult: Authorization[UserPermissions] =
+  override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case MTBPermissions(p) => p == MTBPermissions.ReadResultSummary }
+       .collectFirst { case MTBPermissions(ReadResultSummary) => true }
+       .isDefined
     )
 
-  override val ReadPatientRecord: Authorization[UserPermissions] =
+  override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .exists { case MTBPermissions(p) => p == MTBPermissions.ReadPatientRecord }
+       .collectFirst { case MTBPermissions(ReadPatientRecord) => true }
+       .isDefined
     )
 
 

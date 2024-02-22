@@ -110,10 +110,6 @@ extends BaseController
   implicit val authService: UserAuthenticationService
 
 
-  //TODO: extract from authenticated request
-//  implicit val querier: Querier =
-//    Querier("Dummy-Querier-ID")
-
   import scala.language.implicitConversions
 
   implicit def querierFromRequest[T](
@@ -127,10 +123,16 @@ extends BaseController
     Querier(user.id)
 
 
-  override def OwnerOf(id: Query.Id): Authorization[UserPermissions] =
+  override def OwnershipOf(id: Query.Id): Authorization[UserPermissions] =
     Authorization.async {
       implicit user =>
         service.get(id).map(_.exists(_.querier.value == user.id))
+    }
+
+  override def OwnershipOfPreparedQuery(id: PreparedQuery.Id): Authorization[UserPermissions] =
+    Authorization.async {
+      implicit user =>
+        (service ? id).map(_.exists(_.querier.value == user.id))
     }
 
 
@@ -177,17 +179,16 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def createPreparedQuery =
-//    JsonAction[PreparedQuery.Create[Criteria]].async { 
-    AuthenticatedAction(OutcomeOrJson[PreparedQuery.Create[Criteria]]).async { 
-      implicit req =>
-        (service ! req.body)
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,InternalServerError(_)))
-
-    }
+    AuthenticatedAction(JsonBody[PreparedQuery.Create[Criteria]])
+      .requiring(SubmitQueryAuthorization)
+      .async { 
+        implicit req =>
+          (service ! req.body)
+            .map(_.map(Hyper(_)))
+            .map(JsonResult(_,InternalServerError(_)))
+      }
 
   def getPreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
-//    Action.async { 
     AuthenticatedAction.async { 
       implicit req =>
       (service ? id)
@@ -196,36 +197,36 @@ extends BaseController
     }
 
   def getPreparedQueries: Action[AnyContent] =
-//    Action.async { 
     AuthenticatedAction.async { 
       implicit req =>
         (service ? PreparedQuery.Query(Some(Querier(req.agent.id))))
-//      (service ? PreparedQuery.Query(Some(querier)))
-        .map(_.map(Hyper(_)))
-        .map(Collection(_))
-        .map(Hyper(_))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+          .map(_.map(Hyper(_)))
+          .map(Collection(_))
+          .map(Hyper(_))
+          .map(Json.toJson(_))
+          .map(Ok(_))
     }
 
   def updatePreparedQuery(id: PreparedQuery.Id) =
-//    JsonAction[QueryPatch[Criteria]].async { 
-    AuthenticatedAction(OutcomeOrJson[QueryPatch[Criteria]]).async { 
-      implicit req =>
-        (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,InternalServerError(_)))
-    }
-
+    AuthenticatedAction(JsonBody[QueryPatch[Criteria]])
+      .requiring(SubmitQueryAuthorization AND OwnershipOfPreparedQuery(id))
+      .async { 
+        implicit req =>
+          (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
+            .map(_.map(Hyper(_)))
+            .map(JsonResult(_,InternalServerError(_)))
+      }
+      
   def deletePreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
-//    Action.async { 
-    AuthenticatedAction.async { 
-      implicit req =>
-      (service ! PreparedQuery.Delete(id))
-       .map(
-         JsonResult(_,_ => BadRequest(s"Invalid PreparedQuery ID ${id.value}"))
-       )
-    }
+    AuthenticatedAction
+      .requiring(SubmitQueryAuthorization AND OwnershipOfPreparedQuery(id))
+      .async { 
+        implicit req =>
+        (service ! PreparedQuery.Delete(id))
+         .map(
+           JsonResult(_,_ => BadRequest(s"Invalid PreparedQuery ID ${id.value}"))
+         )
+      }
 
 
 
@@ -233,10 +234,8 @@ extends BaseController
   // Query Operations
   // --------------------------------------------------------------------------  
 
-//  def submit =
-//    JsonAction[Query.Submit[Criteria]].async { 
   def submit =
-    AuthenticatedAction(SubmitQuery,OutcomeOrJson[Query.Submit[Criteria]]).async { 
+    AuthenticatedAction(JsonBody[Query.Submit[Criteria]]).requiring(SubmitQueryAuthorization).async { 
       implicit req =>
         (service ! req.body)
           .map(_.map(Hyper(_)))
@@ -245,8 +244,7 @@ extends BaseController
 
 
   def get(id: Query.Id): Action[AnyContent] =
-//    Action.async { 
-    AuthenticatedAction(OwnerOf(id)).async {
+    AuthenticatedAction.requiring(OwnershipOf(id)).async {
       implicit req =>
         service.get(id)
           .map(_.map(Hyper(_)))
@@ -255,8 +253,7 @@ extends BaseController
 
 
   def update(id: Query.Id) =
-//    JsonAction[QueryPatch[Criteria]].async{ 
-    AuthenticatedAction(OwnerOf(id), OutcomeOrJson[QueryPatch[Criteria]]).async{ 
+    AuthenticatedAction(JsonBody[QueryPatch[Criteria]]).requiring(OwnershipOf(id)).async{ 
       implicit req =>
         (service ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
           .map(_.map(Hyper(_)))
@@ -265,8 +262,7 @@ extends BaseController
 
 
   def delete(id: Query.Id): Action[AnyContent] =
-//    Action.async { 
-    AuthenticatedAction(OwnerOf(id)).async {
+    AuthenticatedAction.requiring(OwnershipOf(id)).async {
       implicit req =>
         (service ! Query.Delete(id))
           .map(_.toOption)
@@ -305,7 +301,7 @@ extends BaseController
   }
 
 
-  def FilterFrom(
+  protected def FilterFrom(
     req: RequestHeader,
     patientFilter: PatientFilter
   ): Filter 
@@ -314,18 +310,17 @@ extends BaseController
   def summary(
     id: Query.Id
   ): Action[AnyContent] =
-//    Action.async {
-    AuthenticatedAction(OwnerOf(id)).async {
+    AuthenticatedAction.requiring(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
-      service.summary(
-        id,
-        FilterFrom(
-          req,
-          PatientFilterFrom(req)
+        service.summary(
+          id,
+          FilterFrom(
+            req,
+            PatientFilterFrom(req)
+          )
         )
-      )
-      .map(_.map(Hyper(_)))
-      .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+        .map(_.map(Hyper(_)))
+        .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
 
@@ -335,8 +330,7 @@ extends BaseController
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
-//    Action.async {
-    AuthenticatedAction(OwnerOf(id)).async {
+    AuthenticatedAction.requiring(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
         service.patientMatches(
           id,
@@ -362,8 +356,7 @@ extends BaseController
     id: Query.Id,
     patId: Id[Patient]
   ): Action[AnyContent] =
-//    Action.async {
-    AuthenticatedAction(ReadPatientRecord AND OwnerOf(id)).async {
+    AuthenticatedAction.requiring(ReadPatientRecordAuthorization AND OwnershipOf(id)).async {
       implicit req =>
         service.patientRecord(id,patId)
           .map(_.map(Hyper(_)))
@@ -372,7 +365,6 @@ extends BaseController
 
 
   def queries: Action[AnyContent] =
-//    Action.async { 
     AuthenticatedAction.async {
       implicit req =>
         service.queries

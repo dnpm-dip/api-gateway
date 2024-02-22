@@ -39,7 +39,7 @@ trait JsonOps
   import Json.toJson
 
 
-  def OutcomeOrJson[T: Reads](
+  def JsonBody[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[T] =
     parse
@@ -52,7 +52,8 @@ trait JsonOps
          )
        )
 
-  def OutcomeOrJsonOpt[T: Reads](
+
+  def JsonBodyOpt[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[Option[T]] =
     parse
@@ -75,7 +76,7 @@ trait JsonOps
         ec
 
       override val parser: BodyParser[T] =
-        OutcomeOrJson[T]
+        JsonBody[T]
 
       override def invokeBlock[A](
         request: Request[A],
@@ -96,7 +97,7 @@ trait JsonOps
         ec
 
       override val parser =
-        OutcomeOrJsonOpt[T]
+        JsonBodyOpt[T]
 
       override def invokeBlock[A](
         request: Request[A],
