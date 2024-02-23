@@ -55,7 +55,6 @@ extends QueryController[RDConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
-  import scala.util.chaining._
   import RDPermissions._
 
 
@@ -73,7 +72,7 @@ with QueryAuthorizations[UserPermissions]
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .collectFirst { case RDPermissions(SubmitQueryAuthorization) => true }
+       .collectFirst { case RDPermissions(SubmitQuery) => true }
        .isDefined
     )
 
@@ -87,7 +86,7 @@ with QueryAuthorizations[UserPermissions]
   override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
     Authorization(
       _.permissions
-       .collectFirst { case RDPermissions(ReadPatientRecordAuthorization) => true }
+       .collectFirst { case RDPermissions(ReadPatientRecord) => true }
        .isDefined
     )
 
