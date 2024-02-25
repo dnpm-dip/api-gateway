@@ -51,9 +51,10 @@ import de.dnpm.dip.model.{
   Snapshot
 }
 import de.dnpm.dip.auth.api.{
-  Authorization,
   AuthenticatedRequest,
-  AuthenticationOps,
+  Authorization,
+  AuthorizationOps,
+//  AuthenticationOps,
   UserPermissions,
   UserAuthenticationService
 }
@@ -87,7 +88,7 @@ abstract class QueryController[UseCase <: UseCaseConfig]
 extends BaseController
    with JsonOps
    with QueryHypermedia[UseCase]
-   with AuthenticationOps[UserPermissions]
+   with AuthorizationOps[UserPermissions]
 {
 
   this: QueryAuthorizations[UserPermissions] =>
@@ -179,8 +180,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def createPreparedQuery =
-    AuthenticatedAction(JsonBody[PreparedQuery.Create[Criteria]])
-      .requiring(SubmitQueryAuthorization)
+    AuthorizedAction(JsonBody[PreparedQuery.Create[Criteria]])(SubmitQueryAuthorization)
       .async { 
         implicit req =>
           (service ! req.body)
@@ -208,8 +208,7 @@ extends BaseController
     }
 
   def updatePreparedQuery(id: PreparedQuery.Id) =
-    AuthenticatedAction(JsonBody[QueryPatch[Criteria]])
-      .requiring(SubmitQueryAuthorization AND OwnershipOfPreparedQuery(id))
+    AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOfPreparedQuery(id))
       .async { 
         implicit req =>
           (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
@@ -218,8 +217,7 @@ extends BaseController
       }
       
   def deletePreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
-    AuthenticatedAction
-      .requiring(SubmitQueryAuthorization AND OwnershipOfPreparedQuery(id))
+    AuthorizedAction(OwnershipOfPreparedQuery(id))
       .async { 
         implicit req =>
         (service ! PreparedQuery.Delete(id))
@@ -235,7 +233,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def submit =
-    AuthenticatedAction(JsonBody[Query.Submit[Criteria]]).requiring(SubmitQueryAuthorization).async { 
+    AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQueryAuthorization).async { 
       implicit req =>
         (service ! req.body)
           .map(_.map(Hyper(_)))
@@ -244,7 +242,7 @@ extends BaseController
 
 
   def get(id: Query.Id): Action[AnyContent] =
-    AuthenticatedAction.requiring(OwnershipOf(id)).async {
+    AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         service.get(id)
           .map(_.map(Hyper(_)))
@@ -253,7 +251,7 @@ extends BaseController
 
 
   def update(id: Query.Id) =
-    AuthenticatedAction(JsonBody[QueryPatch[Criteria]]).requiring(OwnershipOf(id)).async{ 
+    AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async{ 
       implicit req =>
         (service ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
           .map(_.map(Hyper(_)))
@@ -262,7 +260,7 @@ extends BaseController
 
 
   def delete(id: Query.Id): Action[AnyContent] =
-    AuthenticatedAction.requiring(OwnershipOf(id)).async {
+    AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         (service ! Query.Delete(id))
           .map(_.toOption)
@@ -310,7 +308,7 @@ extends BaseController
   def summary(
     id: Query.Id
   ): Action[AnyContent] =
-    AuthenticatedAction.requiring(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
         service.summary(
           id,
@@ -330,7 +328,7 @@ extends BaseController
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
-    AuthenticatedAction.requiring(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
         service.patientMatches(
           id,
@@ -356,7 +354,7 @@ extends BaseController
     id: Query.Id,
     patId: Id[Patient]
   ): Action[AnyContent] =
-    AuthenticatedAction.requiring(ReadPatientRecordAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadPatientRecordAuthorization AND OwnershipOf(id)).async {
       implicit req =>
         service.patientRecord(id,patId)
           .map(_.map(Hyper(_)))
