@@ -26,8 +26,10 @@ import de.dnpm.dip.service.query.{
   ResultSet
 }
 import de.dnpm.dip.coding.Coding 
-import de.dnpm.dip.rd.model.{ 
-  HPO, Orphanet
+import de.dnpm.dip.rd.model.{
+  HPO,
+  Orphanet,
+  RDDiagnosis
 }
 import de.dnpm.dip.rd.query.api.{
   RDConfig,
@@ -96,6 +98,7 @@ with QueryAuthorizations[UserPermissions]
 
   private val Categories =
     Extractor.AsCodingsOf[Orphanet]
+//    Extractor.AsCodingsOf[RDDiagnosis.Category]
 
 
   override def FilterFrom(
@@ -111,7 +114,8 @@ with QueryAuthorizations[UserPermissions]
       ),
       DiagnosisFilter(
         req.queryString.get("diagnosis[category]") collect {
-          case Categories(orphas) if orphas.nonEmpty => orphas
+          case Categories(orphas) if orphas.nonEmpty => orphas.asInstanceOf[Set[Coding[RDDiagnosis.Category]]]
+//          case Categories(orphas) if orphas.nonEmpty => orphas
         }
       )
     )

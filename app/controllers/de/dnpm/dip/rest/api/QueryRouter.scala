@@ -104,22 +104,6 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
     // Query Routes:
     // ------------------------------------------------------------------------
-/*
-    case POST(p"/queries"?q"mode=$mode") =>
-      mode match {
-        case QueryMode(md) =>
-          controller.submit(md)
-
-        case _ =>
-          controller.Action {
-            BadRequest(
-              Json.toJson(
-                Outcome(s"Invalid Query Mode value, expected one of: {${Query.Mode.values.mkString(",")}}")
-              )
-            )
-          }
-      }
-*/
 
     case POST(p"/queries") =>
       controller.submit
@@ -135,23 +119,6 @@ extends SimpleRouter
 
     case DELETE(p"/queries/${QueryId(id)}") =>
       controller.delete(id)
-
-/*
-    case PUT(p"/queries/${QueryId(id)}"?q"mode=$mode") =>
-      mode match {
-        case QueryMode(md) =>
-          controller.update(id,Some(md))
-
-        case _ =>
-          controller.Action {
-            BadRequest(
-              Json.toJson(
-                Outcome(s"Invalid Query Mode value, expected one of: {${Query.Mode.values.mkString(",")}}")
-              )
-            )
-          }
-      }
-*/
 
     case PUT(p"/queries/${QueryId(id)}") =>
       controller.update(id)
@@ -169,51 +136,6 @@ extends SimpleRouter
              ? q_o"limit=${int(limit)}") =>
       controller.patientMatches(offset,limit)(id)
 
-
-/*
-    case GET(p"/queries/${QueryId(id)}/patient-matches"
-             ? q_o"offset=${int(offset)}"
-             ? q_o"limit=${int(limit)}"
-             ? q_s"gender=${Genders(genders)}"
-             ? q_o"age[min]=${int(ageMin)}"
-             ? q_o"age[max]=${int(ageMax)}"
-             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}"
-             ? q_s"site=${Sites(sites)}") =>
-      controller.patientMatches(
-        offset,
-        limit,
-        PatientFilter(
-          Option(genders),
-          ageMin,
-          ageMax,
-          Option(vitalStatus),
-          Option(sites)
-        )
-      )(id)
-
-
-    // TODO: remove redundant endpoint
-    case GET(p"/queries/${QueryId(id)}/patients"
-             ? q_o"offset=${int(offset)}"
-             ? q_o"limit=${int(limit)}"
-             ? q_s"gender=${Genders(genders)}"
-             ? q_o"age[min]=${int(ageMin)}"
-             ? q_o"age[max]=${int(ageMax)}"
-             ? q_s"vitalStatus=${VitalStatuses(vitalStatus)}"
-             ? q_s"site=${Sites(sites)}") =>
-      controller.patientMatches(
-        offset,
-        limit,
-        PatientFilter(
-          Option(genders),
-          ageMin,
-          ageMax,
-          Option(vitalStatus),
-          Option(sites)
-        )
-      )(id)
-*/
-
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)
 
@@ -222,6 +144,7 @@ extends SimpleRouter
 
     case GET(p"/queries") =>
       controller.queries
+
 
     // ------------------------------------------------------------------------
     // Prepared Query Routes:
