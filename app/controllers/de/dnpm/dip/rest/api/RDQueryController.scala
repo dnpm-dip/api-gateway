@@ -97,8 +97,7 @@ with QueryAuthorizations[UserPermissions]
     Extractor.AsCodingsOf[HPO]
 
   private val Categories =
-    Extractor.AsCodingsOf[Orphanet]
-//    Extractor.AsCodingsOf[RDDiagnosis.Category]
+    Extractor.Codings[RDDiagnosis.Category]
 
 
   override def FilterFrom(
@@ -114,8 +113,7 @@ with QueryAuthorizations[UserPermissions]
       ),
       DiagnosisFilter(
         req.queryString.get("diagnosis[category]") collect {
-          case Categories(orphas) if orphas.nonEmpty => orphas.asInstanceOf[Set[Coding[RDDiagnosis.Category]]]
-//          case Categories(orphas) if orphas.nonEmpty => orphas
+          case Categories(orphas) if orphas.nonEmpty => orphas
         }
       )
     )
