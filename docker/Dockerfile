@@ -1,44 +1,58 @@
-ARG JAVA_VERSION=11
 
-FROM openjdk:${JAVA_VERSION}-jre
+FROM openjdk:11-jre AS builder
 
 ARG BACKEND_APP
 ARG BACKEND_ZIP="$BACKEND_APP.zip"
-
-
-LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/KohlbacherLab/dnpm-dip-api-gateway
-LABEL org.opencontainers.image.description="DNPM:DIP Backend API Gateway"
-
 
 COPY $BACKEND_ZIP /opt/
 WORKDIR /opt
 RUN unzip $BACKEND_ZIP && rm $BACKEND_ZIP
 
 
-ARG CONFIG_DIR=/config
+FROM openjdk:21
 
+COPY --from=builder /opt/$BACKEND_APP /opt/$BACKEND_APP
+
+LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.source=https://github.com/KohlbacherLab/dnpm-dip-api-gateway
+LABEL org.opencontainers.image.description="DNPM:DIP Backend API Gateway"
+
+ARG CONFIG_DIR=/dnpm_config
+ARG DATA_DIR=/dnpm_data
+
+ENV CONFIG_DIR=/dnpm_config
+ENV DATA_DIR=/dnpm_data
+
+ARG BACKEND_APP=$BACKEND_APP
 ENV BACKEND_APP=$BACKEND_APP
 
 ENV PID_FILE=/dev/null
 ENV HTTP_PORT=9000
 ENV HOST_BASEURL=""
 ENV APPLICATION_SECRET="$(head -c 64 /dev/urandom | base64)"
-ENV PLAY_CONFIG=$CONFIG_DIR/production.conf
 ENV RD_RANDOM_DATA=-1
+ENV MTB_RANDOM_DATA=-1
+ENV CONNECTOR_TYPE="broker"
 
 
 USER 999
 
 VOLUME $CONFIG_DIR
+VOLUME $DATA_DIR
 
 EXPOSE 9000
 
 ENTRYPOINT /opt/$BACKEND_APP/bin/dnpm-dip-api-gateway \
     -Dhttp.port="$HTTP_PORT" \
     -Dplay.http.secret.key="$APPLICATION_SECRET" \
-    -Dconfig.file="$PLAY_CONFIG" \
+    -Dconfig.file="$CONFIG_DIR/production.conf" \
     -Dpidfile.path="$PID_FILE" \
+    -Dlogger.file="$CONFIG_DIR/logback.xml" \
     -Ddnpm.dip.rest.api.baseurl="$HOST_BASEURL" \
-    -Ddnpm.dip.rd.query.data.generate="$RD_RANDOM_DATA"
+    -Ddnpm.dip.connector.type="$CONNECTOR_TYPE" \
+    -Ddnpm.dip.connector.config.file="$CONFIG_DIR/config.xml" \
+    -Ddnpm.dip.authup.config.file="$CONFIG_DIR/config.xml" \
+    -Ddnpm.dip.rd.query.data.generate="$RD_RANDOM_DATA" \
+    -Ddnpm.dip.mtb.query.data.generate="$MTB_RANDOM_DATA" \
+    -Ddnpm.dip.query.data.dir="$DATA_DIR" 
 

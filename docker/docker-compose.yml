@@ -4,14 +4,20 @@ services:
   backend:
 
     image: dnpm-dip-backend
-    
+
+    user: "1000" 
+
     ports:
       - 9000:9000
     
     environment:
-      RD_RANDOM_DATA: 50
+      #RD_RANDOM_DATA: 50
+      #MTB_RANDOM_DATA: 50
       HOST_BASEURL: "http://localhost:9000"
+      CONNECTOR_TYPE: "peer2peer"
     
     volumes:
-      - /home/lucien/Downloads/bwhc_config:/config
+      - /home/lucien/dnpm-dip-node:/dnpm_config
+      - /home/lucien/dnpm-dip-node:/dnpm_data
 
+    network_mode: host     
