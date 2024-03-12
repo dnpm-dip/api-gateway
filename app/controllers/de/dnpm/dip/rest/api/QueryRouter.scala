@@ -6,9 +6,13 @@ import play.api.routing.SimpleRouter
 import play.api.routing.sird._
 import play.api.mvc.Results.{
   BadRequest,
+  NotFound,
   Ok
 }
-import play.api.libs.json.Json
+import play.api.libs.json.{
+  Json,
+  JsObject
+}
 import de.dnpm.dip.model.{
   Id,
   Patient,
@@ -71,7 +75,9 @@ extends SimpleRouter
 
 
 
-  val controller: QueryController[UseCase]
+  protected val controller: QueryController[UseCase]
+
+  protected val jsonSchemas: Map[String,JsObject]
 
 
   final val baseRoutes: Routes = {
@@ -82,6 +88,20 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
     // ETL Routes:
     // ------------------------------------------------------------------------
+    case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
+      controller.Action {
+        jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
+          case Some(sch) =>
+            Ok(sch)
+          case None =>
+            NotFound(
+              Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${jsonSchemas.keys.mkString(",")}}"))
+            )
+        }
+      }
+
+    case POST(p"/etl/patient-record:validate") =>
+      controller.validate
 
     case POST(p"/etl/patient-record") =>
       controller.upload

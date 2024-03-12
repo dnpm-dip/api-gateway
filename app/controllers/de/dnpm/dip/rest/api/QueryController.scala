@@ -54,7 +54,6 @@ import de.dnpm.dip.auth.api.{
   AuthenticatedRequest,
   Authorization,
   AuthorizationOps,
-//  AuthenticationOps,
   UserPermissions,
   UserAuthenticationService
 }
@@ -150,6 +149,15 @@ extends BaseController
   // --------------------------------------------------------------------------  
   // Data Operations
   // --------------------------------------------------------------------------  
+
+  def validate =
+    JsonAction[PatientRecord].async {
+      req =>
+        // If this point is reached, the request payload could be successfully deserialized and is thus valid
+        // TODO: add subsequent semantic validation by data handling service
+        Future.successful(Ok("Valid"))
+    }
+
 
   def upload =
     JsonAction[PatientRecord].async { 
