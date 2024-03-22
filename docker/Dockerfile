@@ -28,7 +28,8 @@ ENV BACKEND_APP=$BACKEND_APP
 
 ENV PID_FILE=/dev/null
 ENV HTTP_PORT=9000
-ENV HOST_BASEURL=""
+ENV HATEOAS_HOST=""
+ENV AUTHUP_URL=""
 ENV APPLICATION_SECRET="$(head -c 64 /dev/urandom | base64)"
 ENV RD_RANDOM_DATA=-1
 ENV MTB_RANDOM_DATA=-1
@@ -48,11 +49,10 @@ ENTRYPOINT /opt/$BACKEND_APP/bin/dnpm-dip-api-gateway \
     -Dconfig.file="$CONFIG_DIR/production.conf" \
     -Dpidfile.path="$PID_FILE" \
     -Dlogger.file="$CONFIG_DIR/logback.xml" \
-    -Ddnpm.dip.rest.api.baseurl="$HOST_BASEURL" \
+    -Ddnpm.dip.config.file="$CONFIG_DIR/config.xml" \
+    -Ddnpm.dip.authup.url="$AUTHUP_URL" \
+    -Ddnpm.dip.rest.api.baseurl="$HATEOAS_HOST" \
     -Ddnpm.dip.connector.type="$CONNECTOR_TYPE" \
-    -Ddnpm.dip.connector.config.file="$CONFIG_DIR/config.xml" \
-    -Ddnpm.dip.authup.config.file="$CONFIG_DIR/config.xml" \
+    -Ddnpm.dip.query.data.dir="$DATA_DIR" \
     -Ddnpm.dip.rd.query.data.generate="$RD_RANDOM_DATA" \
-    -Ddnpm.dip.mtb.query.data.generate="$MTB_RANDOM_DATA" \
-    -Ddnpm.dip.query.data.dir="$DATA_DIR" 
-
+    -Ddnpm.dip.mtb.query.data.generate="$MTB_RANDOM_DATA"
