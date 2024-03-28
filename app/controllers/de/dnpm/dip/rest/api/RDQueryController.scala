@@ -57,6 +57,7 @@ extends QueryController[RDConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
+  import de.dnpm.dip.rest.util.AuthorizationConversions._
   import RDPermissions._
 
 
@@ -72,25 +73,13 @@ with QueryAuthorizations[UserPermissions]
 
 
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case RDPermissions(SubmitQuery) => true }
-       .isDefined
-    )
+    SubmitQuery
 
   override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case RDPermissions(ReadResultSummary) => true }
-       .isDefined
-    )
+    ReadResultSummary
 
   override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case RDPermissions(ReadPatientRecord) => true }
-       .isDefined
-    )
+    ReadPatientRecord
 
 
   private val HPOTerms =

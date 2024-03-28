@@ -25,6 +25,8 @@ libraryDependencies ++= Seq(
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"        % "7.0.1" % Test,  //TODO: version!
   "de.ekut.tbi"            %% "generators"                % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "admin-service-api"         % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "admin-service-impl"        % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "catalog-service-api"       % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "catalog-service-impl"      % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "service-base"              % "1.0-SNAPSHOT",
@@ -43,8 +45,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "atc-impl"                  % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"     % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "auth-api"                  % "1.0-SNAPSHOT",
-//  "de.dnpm.dip"            %% "fake-auth-service"         % "1.0-SNAPSHOT",
-  "de.dnpm.dip"            %% "standalone-authup-client"  % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "fake-auth-service"         % "1.0-SNAPSHOT",
+//  "de.dnpm.dip"            %% "standalone-authup-client"  % "1.0-SNAPSHOT",
 
 )
 

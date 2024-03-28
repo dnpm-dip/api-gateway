@@ -42,7 +42,6 @@ import de.dnpm.dip.auth.api.{
   UserAuthenticationService
 }
 
-
 class MTBQueryController @Inject()(
   override val controllerComponents: ControllerComponents,
 )(
@@ -52,6 +51,7 @@ extends QueryController[MTBConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
+  import de.dnpm.dip.rest.util.AuthorizationConversions._
   import MTBPermissions._
 
 
@@ -63,27 +63,14 @@ with QueryAuthorizations[UserPermissions]
   override implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
 
-
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case MTBPermissions(SubmitQuery) => true }
-       .isDefined
-    )
+    SubmitQuery
 
   override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case MTBPermissions(ReadResultSummary) => true }
-       .isDefined
-    )
+    ReadResultSummary
 
   override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst { case MTBPermissions(ReadPatientRecord) => true }
-       .isDefined
-    )
+    ReadPatientRecord
 
 
   private val DiagnosisCodes =
