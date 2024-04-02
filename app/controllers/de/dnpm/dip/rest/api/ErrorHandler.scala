@@ -40,7 +40,6 @@ with Logging
 
   import scala.util.chaining._
 
-
   override def onClientError(
     request: RequestHeader,
     statusCode: Int,
