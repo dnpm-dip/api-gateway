@@ -26,8 +26,16 @@ import de.dnpm.dip.service.query.{
   Querier,
   ResultSet
 }
-import de.dnpm.dip.coding.Coding 
+import de.dnpm.dip.coding.{
+  Coding,
+  CodeSystem
+}
+import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
+import de.dnpm.dip.mtb.model.MTBPatientRecord
+import de.dnpm.dip.mtb.model.v1
+import v1.mappings._
+import de.dnpm.dip.util.mapping.syntax._
 import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
@@ -88,5 +96,25 @@ with QueryAuthorizations[UserPermissions]
         }
       )
     )
-  
+
+
+
+
+  implicit val hgnc: CodeSystem[HGNC] =
+    HGNC.GeneSet
+      .getInstance[cats.Id]
+      .get
+      .latest
+
+  override val patientRecordParser =
+    parse.using(
+      _.contentType match {
+        case Some("application/json+v2") =>
+          JsonBody[MTBPatientRecord]
+
+        case _ =>
+          JsonBody[v1.MTBPatientRecord].map(_.mapTo[MTBPatientRecord])
+      }
+    )
+
 }

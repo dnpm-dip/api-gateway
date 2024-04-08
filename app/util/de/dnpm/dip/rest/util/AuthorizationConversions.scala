@@ -14,20 +14,6 @@ trait AuthorizationConversions
 
   import scala.language.implicitConversions
 
-/*
-  implicit def permissionValueToAuthorization[E <: PermissionEnumeration](
-    v: E#Value
-  )(
-    implicit w: Witness.Aux[E]
-  ): Authorization[UserPermissions] =
-    Authorization(
-      _.permissions
-       .collectFirst {
-         case w.value(p) if p == v => p
-       }
-       .isDefined
-    )
-*/
 
   implicit def permissionValueToAuthorization[E <: PermissionEnumeration](
     v: E#Value

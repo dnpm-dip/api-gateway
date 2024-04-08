@@ -159,8 +159,11 @@ extends BaseController
     }
 
 
+  protected val patientRecordParser =
+    JsonBody[PatientRecord]
+
   def upload =
-    JsonAction[PatientRecord].async { 
+    Action.async(patientRecordParser){ 
       req =>
         (service ! Save(req.body))
           .map {
