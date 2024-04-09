@@ -106,6 +106,7 @@ with QueryAuthorizations[UserPermissions]
       .get
       .latest
 
+
   override val patientRecordParser =
     parse.using(
       _.contentType match {

@@ -34,11 +34,14 @@ extends QueryRouter[RDConfig](
 
   override val jsonSchemas =
     Map(
-      "draft-12" -> Schema[RDPatientRecord].asPlay(Draft12("RD-Patient-Record")),
-      "draft-09" -> Schema[RDPatientRecord].asPlay(Draft09("RD-Patient-Record")),
-      "draft-07" -> Schema[RDPatientRecord].asPlay(Draft07("RD-Patient-Record")),
-      "draft-04" -> Schema[RDPatientRecord].asPlay(Draft04())
-    )
+      "application/json" -> Map(
+        "draft-12" -> Schema[RDPatientRecord].asPlay(Draft12("RD-Patient-Record")),
+        "draft-09" -> Schema[RDPatientRecord].asPlay(Draft09("RD-Patient-Record")),
+        "draft-07" -> Schema[RDPatientRecord].asPlay(Draft07("RD-Patient-Record")),
+        "draft-04" -> Schema[RDPatientRecord].asPlay(Draft04())
+      )
+  )
+
 
   override val additionalRoutes = {
 

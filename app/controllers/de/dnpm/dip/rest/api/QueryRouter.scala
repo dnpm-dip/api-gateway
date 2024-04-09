@@ -77,7 +77,7 @@ extends SimpleRouter
 
   protected val controller: QueryController[UseCase]
 
-  protected val jsonSchemas: Map[String,JsObject]
+  protected val jsonSchemas: Map[String,Map[String,JsObject]]
 
 
   final val baseRoutes: Routes = {
@@ -88,9 +88,11 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
     // ETL Routes:
     // ------------------------------------------------------------------------
-    case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
+    case GET(p"/etl/patient-record/schema"
+      ? q_o"version=$version"
+      & q_o"format=$format") =>
       controller.Action {
-        jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
+        jsonSchemas(format.getOrElse("application/json")).get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
             Ok(sch)
           case None =>
