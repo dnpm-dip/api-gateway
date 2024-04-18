@@ -20,6 +20,7 @@ import play.api.libs.json.{
   Writes
 }
 import de.dnpm.dip.rest.util._
+import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.{
   PatientFilter,
   Query,
@@ -32,7 +33,10 @@ import de.dnpm.dip.coding.{
 }
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
-import de.dnpm.dip.mtb.model.MTBPatientRecord
+import de.dnpm.dip.mtb.model.{
+  MTBPatientRecord,
+  Completers
+}
 import de.dnpm.dip.mtb.model.v1
 import v1.mappings._
 import de.dnpm.dip.util.mapping.syntax._
@@ -64,6 +68,10 @@ with QueryAuthorizations[UserPermissions]
 
 
   override lazy val prefix = "mtb"
+
+  override implicit val completer: Completer[MTBPatientRecord] =
+    Completers.mtbPatientRecordCompleter
+
 
   override val service: MTBQueryService =
     MTBQueryService.getInstance.get

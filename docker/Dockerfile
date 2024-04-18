@@ -54,6 +54,6 @@ ENTRYPOINT /opt/$BACKEND_APP/bin/dnpm-dip-api-gateway \
     -Ddnpm.dip.authup.url="$AUTHUP_URL" \
     -Ddnpm.dip.rest.api.baseurl="$HATEOAS_HOST" \
     -Ddnpm.dip.connector.type="$CONNECTOR_TYPE" \
-    -Ddnpm.dip.query.data.dir="$DATA_DIR" \
+    -Ddnpm.dip.data.dir="$DATA_DIR" \
     -Ddnpm.dip.rd.query.data.generate="$RD_RANDOM_DATA" \
     -Ddnpm.dip.mtb.query.data.generate="$MTB_RANDOM_DATA"

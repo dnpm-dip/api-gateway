@@ -74,8 +74,9 @@ extends SimpleRouter
       s"/$pref"
 
 
-
   protected val controller: QueryController[UseCase]
+
+  protected val APPLICATION_JSON = "application/json"
 
   protected val jsonSchemas: Map[String,Map[String,JsObject]]
 
@@ -92,7 +93,7 @@ extends SimpleRouter
       ? q_o"version=$version"
       & q_o"format=$format") =>
       controller.Action {
-        jsonSchemas(format.getOrElse("application/json")).get(version.getOrElse("draft-12").toLowerCase) match {
+        jsonSchemas(format.getOrElse(APPLICATION_JSON)).get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
             Ok(sch)
           case None =>

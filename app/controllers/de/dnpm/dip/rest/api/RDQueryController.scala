@@ -20,6 +20,7 @@ import play.api.libs.json.{
   Writes
 }
 import de.dnpm.dip.rest.util._
+import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.{
   PatientFilter,
   Query,
@@ -29,7 +30,9 @@ import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.rd.model.{
   HPO,
   Orphanet,
-  RDDiagnosis
+  RDDiagnosis,
+  RDPatientRecord,
+  Completers
 }
 import de.dnpm.dip.rd.query.api.{
   RDConfig,
@@ -63,6 +66,8 @@ with QueryAuthorizations[UserPermissions]
 
   override lazy val prefix = "rd"
 
+  override implicit val completer: Completer[RDPatientRecord] =
+    Completers.rdPatientRecordCompleter
 
   override val service: RDQueryService =
     RDQueryService.getInstance.get

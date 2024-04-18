@@ -34,7 +34,7 @@ extends QueryRouter[MTBConfig]("mtb")
 
   override val jsonSchemas =
     Map(
-      "application/json" -> {
+      APPLICATION_JSON -> {
         import de.dnpm.dip.mtb.model.v1.json.Schemas._
         Map(
           "draft-12" -> Schema[v1.MTBPatientRecord].asPlay(Draft12("MTB-Patient-Record")),
@@ -42,8 +42,8 @@ extends QueryRouter[MTBConfig]("mtb")
           "draft-07" -> Schema[v1.MTBPatientRecord].asPlay(Draft07("MTB-Patient-Record")),
           "draft-04" -> Schema[v1.MTBPatientRecord].asPlay(Draft04())
         )
-      },
-      "application/json+v2" -> {
+      },      
+      s"$APPLICATION_JSON+v2" -> {
         import de.dnpm.dip.mtb.model.json.Schemas._
         Map(
           "draft-12" -> Schema[MTBPatientRecord].asPlay(Draft12("MTB-Patient-Record")),

@@ -25,8 +25,17 @@ import play.api.libs.json.{
   OWrites
 }
 import cats.Monad
+import de.dnpm.dip.util.Completer
+import de.dnpm.dip.service.Data.{
+  Save,
+  Saved,
+  Delete,
+  Deleted,
+  FatalIssuesDetected,
+  UnacceptableIssuesDetected,
+  GenericError
+}
 import de.dnpm.dip.service.query.{
-  Data,
   PatientFilter,
   PatientMatch,
   PeerToPeerQuery,
@@ -96,7 +105,7 @@ extends BaseController
   import scala.util.chaining._
   import cats.data.NonEmptyList
   import cats.syntax.either._
-  import Data.{Outcome,Save,Saved,Delete,Deleted}
+  import Completer.syntax._
 
 
   type PatientRecord = UseCase#PatientRecord
@@ -162,14 +171,19 @@ extends BaseController
   protected val patientRecordParser =
     JsonBody[PatientRecord]
 
+  protected implicit val completer: Completer[PatientRecord]
+
   def upload =
     Action.async(patientRecordParser){ 
       req =>
-        (service ! Save(req.body))
+        (service ! Save(req.body.complete))
           .map {
-            case Right(Saved(snp)) => Created(Json.toJson(snp))
-            case Right(_)          => InternalServerError("Unexpected data upload outcome")
-            case Left(err)         => InternalServerError(err)
+            case Right(Saved(snp))                        => Created(Json.toJson(snp))
+//            case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
+            case Left(FatalIssuesDetected(report))        => UnprocessableEntity(Json.toJson(report))
+            case Left(UnacceptableIssuesDetected(report)) => Conflict(Json.toJson(report))
+            case Left(GenericError(err))                  => InternalServerError(err)
+            case _                                        => InternalServerError("Unexpected data upload outcome")
           }
     }
 
@@ -178,9 +192,9 @@ extends BaseController
     Action.async { 
       (service ! Delete(patId))
         .map {
-          case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
-          case Right(_)           => InternalServerError("Unexpected data deletion outcome")
-          case Left(err)          => InternalServerError(err)
+          case Right(Deleted(id))      => Ok(s"Deleted data of Patient ${id.value}")
+          case Left(GenericError(err)) => InternalServerError(err)
+          case _                       => InternalServerError("Unexpected data deletion outcome")
         }
          
     }
