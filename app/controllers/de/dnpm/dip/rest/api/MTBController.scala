@@ -40,6 +40,7 @@ import de.dnpm.dip.mtb.model.{
 import de.dnpm.dip.mtb.model.v1
 import v1.mappings._
 import de.dnpm.dip.util.mapping.syntax._
+import de.dnpm.dip.mtb.validation.api.MTBValidationService
 import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
@@ -54,12 +55,12 @@ import de.dnpm.dip.auth.api.{
   UserAuthenticationService
 }
 
-class MTBQueryController @Inject()(
+class MTBController @Inject()(
   override val controllerComponents: ControllerComponents,
 )(
   implicit ec: ExecutionContext,
 )
-extends QueryController[MTBConfig]
+extends UseCaseController[MTBConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
@@ -73,11 +74,15 @@ with QueryAuthorizations[UserPermissions]
     Completers.mtbPatientRecordCompleter
 
 
-  override val service: MTBQueryService =
+  override val validationService: MTBValidationService =
+    MTBValidationService.getInstance.get
+
+  override val queryService: MTBQueryService =
     MTBQueryService.getInstance.get
 
   override implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
+
 
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
     SubmitQuery

@@ -21,10 +21,10 @@ import de.ekut.tbi.generators.Gen
 
 
 
-class MTBQueryRouter @Inject()(
-  override val controller: MTBQueryController
+class MTBRouter @Inject()(
+  override val controller: MTBController
 )
-extends QueryRouter[MTBConfig]("mtb")
+extends UseCaseRouter[MTBConfig]("mtb")
 {
 
   private implicit val rnd: Random =

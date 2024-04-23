@@ -20,14 +20,18 @@ import de.dnpm.dip.service.query.{
   ResultSet,
   UseCaseConfig
 }
+import de.dnpm.dip.service.validation.{
+  DataValidationInfo,
+  ValidationReport
+}
 import scala.util.chaining._
 
 
 
-trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
+trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 {
 
-  self: QueryController[UseCase] =>
+  self: UseCaseController[UseCase] =>
 
 
   type QueryType = Query[UseCase#Criteria,UseCase#Filter]
@@ -52,6 +56,9 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   protected val BASE_URI =
     s"$BASE_URL/api/$prefix"
 
+  private val VALIDATION_BASE_URI =
+    s"$BASE_URI/validation"
+
   private val QUERY_BASE_URI =
     s"$BASE_URI/queries"
 
@@ -71,6 +78,26 @@ trait QueryHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   protected def Uri(query: PreparedQueryType) =
     PreparedQueryUri(query.id)
 
+
+  implicit def HyperDataValidationInfo: Hyper.Mapper[DataValidationInfo] =
+    Hyper.Mapper {
+      info =>
+        info.withLinks(
+          COLLECTION          -> Link(s"$VALIDATION_BASE_URI"),
+          "validation-report" -> Link(s"$VALIDATION_BASE_URI/report/${info.id}"),
+          "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${info.id}")
+        ) 
+    }
+
+
+  implicit def HyperValidationReport: Hyper.Mapper[ValidationReport] =
+    Hyper.Mapper {
+      report =>
+        report.withLinks(
+          "infos"             -> Link(s"$VALIDATION_BASE_URI/infos"),
+          "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${report.patient}")
+        ) 
+    }
 
 
   implicit def HyperQuery: Hyper.Mapper[QueryType] =

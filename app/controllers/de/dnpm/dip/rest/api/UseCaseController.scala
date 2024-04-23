@@ -26,14 +26,21 @@ import play.api.libs.json.{
 }
 import cats.Monad
 import de.dnpm.dip.util.Completer
+import de.dnpm.dip.service.Orchestrator
 import de.dnpm.dip.service.Data.{
   Save,
   Saved,
+  SavedWithIssues,
   Delete,
   Deleted,
   FatalIssuesDetected,
   UnacceptableIssuesDetected,
   GenericError
+}
+import de.dnpm.dip.service.validation.ValidationService
+import ValidationService.{
+  Validate,
+  DataAcceptableWithIssues
 }
 import de.dnpm.dip.service.query.{
   PatientFilter,
@@ -84,7 +91,7 @@ object QueryPatch
 }
 
 
-abstract class QueryController[UseCase <: UseCaseConfig]
+abstract class UseCaseController[UseCase <: UseCaseConfig]
 (
   implicit
   ec: ExecutionContext,
@@ -95,7 +102,7 @@ abstract class QueryController[UseCase <: UseCaseConfig]
 )
 extends BaseController
    with JsonOps
-   with QueryHypermedia[UseCase]
+   with UseCaseHypermedia[UseCase]
    with AuthorizationOps[UserPermissions]
 {
 
@@ -114,9 +121,16 @@ extends BaseController
   type Results       = UseCase#Results
 
 
-  val service: QueryService[Future,Monad[Future],UseCase,String]
+  protected implicit val completer: Completer[PatientRecord]
 
-  implicit val authService: UserAuthenticationService
+  protected implicit val authService: UserAuthenticationService
+
+  protected val validationService: ValidationService[Future,Monad[Future],PatientRecord]
+
+  protected val queryService: QueryService[Future,Monad[Future],UseCase,String]
+
+  protected final lazy val orchestrator: Orchestrator[Future,PatientRecord] =
+    new Orchestrator(validationService,queryService)
 
 
   import scala.language.implicitConversions
@@ -135,13 +149,13 @@ extends BaseController
   override def OwnershipOf(id: Query.Id): Authorization[UserPermissions] =
     Authorization.async {
       implicit user =>
-        service.get(id).map(_.exists(_.querier.value == user.id))
+        queryService.get(id).map(_.exists(_.querier.value == user.id))
     }
 
   override def OwnershipOfPreparedQuery(id: PreparedQuery.Id): Authorization[UserPermissions] =
     Authorization.async {
       implicit user =>
-        (service ? id).map(_.exists(_.querier.value == user.id))
+        (queryService ? id).map(_.exists(_.querier.value == user.id))
     }
 
 
@@ -149,7 +163,7 @@ extends BaseController
 
   def sites: Action[AnyContent] =
     Action.async {
-      service.sites
+      queryService.sites
         .map(Json.toJson(_))
         .map(Ok(_))
     }
@@ -163,23 +177,29 @@ extends BaseController
     JsonAction[PatientRecord].async {
       req =>
         // If this point is reached, the request payload could be successfully deserialized and is thus valid
-        // TODO: add subsequent semantic validation by data handling service
-        Future.successful(Ok("Valid"))
+        // TODO: add subsequent semantic validation by data handling queryService
+        (validationService ! Validate(req.body)).map {
+          case Right(DataAcceptableWithIssues(_,report)) => Conflict(Json.toJson(report))
+          case Right(_)                                  => Ok("Valid")
+          case Left(FatalIssuesDetected(report))         => UnprocessableEntity(Json.toJson(report))
+          case Left(UnacceptableIssuesDetected(report))  => Conflict(Json.toJson(report))
+          case Left(GenericError(err))                   => InternalServerError(err)
+          case _                                         => InternalServerError("Unexpected data upload outcome")
+        }
     }
 
 
   protected val patientRecordParser =
     JsonBody[PatientRecord]
 
-  protected implicit val completer: Completer[PatientRecord]
-
   def upload =
     Action.async(patientRecordParser){ 
       req =>
-        (service ! Save(req.body.complete))
+        (orchestrator ! Save(req.body))
           .map {
             case Right(Saved(snp))                        => Created(Json.toJson(snp))
-//            case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
+            case Right(SavedWithIssues(snp,report))       => Created(Json.toJson(report))
+            //case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
             case Left(FatalIssuesDetected(report))        => UnprocessableEntity(Json.toJson(report))
             case Left(UnacceptableIssuesDetected(report)) => Conflict(Json.toJson(report))
             case Left(GenericError(err))                  => InternalServerError(err)
@@ -188,9 +208,9 @@ extends BaseController
     }
 
 
-  def deletePatient(patId: Id[Patient]): Action[AnyContent] =
+  def deleteData(patId: Id[Patient]): Action[AnyContent] =
     Action.async { 
-      (service ! Delete(patId))
+      (orchestrator ! Delete(patId))
         .map {
           case Right(Deleted(id))      => Ok(s"Deleted data of Patient ${id.value}")
           case Left(GenericError(err)) => InternalServerError(err)
@@ -198,6 +218,35 @@ extends BaseController
         }
          
     }
+
+  // --------------------------------------------------------------------------  
+  // Validation Result Operations
+  // --------------------------------------------------------------------------  
+
+  def validationInfos =
+    AuthenticatedAction.async { //TODO: Permissions
+      req =>
+        (validationService ? ValidationService.Filter.empty)
+          .map(_.map(Hyper(_)).toSeq)  
+          .map(Collection(_))
+          .map(Json.toJson(_))
+          .map(Ok(_))
+    }  
+
+  def validationReport(id: Id[Patient]) =
+    AuthenticatedAction.async { //TODO: Permissions
+      req =>
+        (validationService.dataQualityReport(id))
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
+    }  
+
+  def validationPatientRecord(id: Id[Patient]) =
+    AuthenticatedAction.async { //TODO: Permissions
+      req =>
+        (validationService.patientRecord(id))
+          .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
+    }  
 
 
   // --------------------------------------------------------------------------  
@@ -208,7 +257,7 @@ extends BaseController
     AuthorizedAction(JsonBody[PreparedQuery.Create[Criteria]])(SubmitQueryAuthorization)
       .async { 
         implicit req =>
-          (service ! req.body)
+          (queryService ! req.body)
             .map(_.map(Hyper(_)))
             .map(JsonResult(_,InternalServerError(_)))
       }
@@ -216,15 +265,15 @@ extends BaseController
   def getPreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
     AuthenticatedAction.async { 
       implicit req =>
-      (service ? id)
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_,s"Invalid PreparedQuery ID ${id.value}"))
+        (queryService ? id)
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,s"Invalid PreparedQuery ID ${id.value}"))
     }
 
   def getPreparedQueries: Action[AnyContent] =
     AuthenticatedAction.async { 
       implicit req =>
-        (service ? PreparedQuery.Query(Some(Querier(req.agent.id))))
+        (queryService ? PreparedQuery.Query(Some(Querier(req.agent.id))))
           .map(_.map(Hyper(_)))
           .map(Collection(_))
           .map(Hyper(_))
@@ -236,7 +285,7 @@ extends BaseController
     AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOfPreparedQuery(id))
       .async { 
         implicit req =>
-          (service ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
+          (queryService ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
             .map(_.map(Hyper(_)))
             .map(JsonResult(_,InternalServerError(_)))
       }
@@ -245,7 +294,7 @@ extends BaseController
     AuthorizedAction(OwnershipOfPreparedQuery(id))
       .async { 
         implicit req =>
-        (service ! PreparedQuery.Delete(id))
+        (queryService ! PreparedQuery.Delete(id))
          .map(
            JsonResult(_,_ => BadRequest(s"Invalid PreparedQuery ID ${id.value}"))
          )
@@ -260,7 +309,7 @@ extends BaseController
   def submit =
     AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQueryAuthorization).async { 
       implicit req =>
-        (service ! req.body)
+        (queryService ! req.body)
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
@@ -269,7 +318,7 @@ extends BaseController
   def get(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
-        service.get(id)
+        queryService.get(id)
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
@@ -278,7 +327,7 @@ extends BaseController
   def update(id: Query.Id) =
     AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async{ 
       implicit req =>
-        (service ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
+        (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,InternalServerError(_)))
     }
@@ -287,7 +336,7 @@ extends BaseController
   def delete(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
-        (service ! Query.Delete(id))
+        (queryService ! Query.Delete(id))
           .map(_.toOption)
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
@@ -335,7 +384,7 @@ extends BaseController
   ): Action[AnyContent] =
     AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
-        service.summary(
+        queryService.summary(
           id,
           FilterFrom(
             req,
@@ -355,7 +404,7 @@ extends BaseController
   ): Action[AnyContent] =
     AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
       implicit req =>
-        service.patientMatches(
+        queryService.patientMatches(
           id,
           FilterFrom(
             req,
@@ -381,7 +430,7 @@ extends BaseController
   ): Action[AnyContent] =
     AuthorizedAction(ReadPatientRecordAuthorization AND OwnershipOf(id)).async {
       implicit req =>
-        service.patientRecord(id,patId)
+        queryService.patientRecord(id,patId)
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,s"Invalid Query ID ${id.value} or Patient ID ${patId.value}"))
     }
@@ -390,7 +439,7 @@ extends BaseController
   def queries: Action[AnyContent] =
     AuthenticatedAction.async {
       implicit req =>
-        service.queries
+        queryService.queries
           .map(_.map(Hyper(_)))
           .map(Collection(_))
           .map(Hyper(_))
@@ -406,7 +455,7 @@ extends BaseController
   def peerToPeerQuery =
     JsonAction[PeerToPeerQuery[Criteria,PatientRecord]].async { 
       req =>
-        (service ! req.body)
+        (queryService ! req.body)
           .map {
             case Right(resultSet) => Ok(Json.toJson(resultSet))
             case Left(err)        => InternalServerError(err)
@@ -417,7 +466,7 @@ extends BaseController
   def patientRecordRequest =
     JsonAction[PatientRecordRequest[PatientRecord]].async { 
       req =>
-        (service ! req.body)
+        (queryService ! req.body)
           .map(JsonResult(_))
     }
 

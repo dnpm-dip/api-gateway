@@ -10,8 +10,8 @@ import play.api.routing.sird._
 class Router @Inject()(
   catalogRouter: CatalogRouter,
   adminRouter: AdminRouter,
-  mtbRouter: MTBQueryRouter,
-  rdRouter: RDQueryRouter
+  mtbRouter: MTBRouter,
+  rdRouter: RDRouter
 )
 extends SimpleRouter
 {

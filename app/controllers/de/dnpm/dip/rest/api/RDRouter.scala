@@ -21,12 +21,10 @@ import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.rest.util.Outcome
 
 
-class RDQueryRouter @Inject()(
-  override val controller: RDQueryController
+class RDRouter @Inject()(
+  override val controller: RDController
 )
-extends QueryRouter[RDConfig](
-  "rd"
-)
+extends UseCaseRouter[RDConfig]("rd")
 {
 
   private implicit val rnd: Random =

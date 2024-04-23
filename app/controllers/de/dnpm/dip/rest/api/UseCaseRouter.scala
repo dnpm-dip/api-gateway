@@ -36,7 +36,7 @@ import de.dnpm.dip.rest.util.{
 }
 
 
-abstract class QueryRouter[UseCase <: UseCaseConfig]
+abstract class UseCaseRouter[UseCase <: UseCaseConfig]
 (
   private val pref: String
 )
@@ -74,7 +74,7 @@ extends SimpleRouter
       s"/$pref"
 
 
-  protected val controller: QueryController[UseCase]
+  protected val controller: UseCaseController[UseCase]
 
   protected val APPLICATION_JSON = "application/json"
 
@@ -110,7 +110,21 @@ extends SimpleRouter
       controller.upload
 
     case DELETE(p"/etl/patient/${PatId(patId)}") =>
-      controller.deletePatient(patId)
+      controller.deleteData(patId)
+
+
+    // ------------------------------------------------------------------------
+    // Data Validation Result Routes:
+    // ------------------------------------------------------------------------
+
+    case GET(p"/validation/infos") =>
+      controller.validationInfos
+
+    case GET(p"/validation/report/${PatId(patId)}") =>
+      controller.validationReport(patId)
+
+    case GET(p"/validation/patient-record/${PatId(patId)}") =>
+      controller.validationPatientRecord(patId)
 
 
     // ------------------------------------------------------------------------

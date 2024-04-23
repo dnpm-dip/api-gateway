@@ -34,6 +34,7 @@ import de.dnpm.dip.rd.model.{
   RDPatientRecord,
   Completers
 }
+import de.dnpm.dip.rd.validation.api.RDValidationService
 import de.dnpm.dip.rd.query.api.{
   RDConfig,
   RDFilters,
@@ -51,12 +52,12 @@ import de.dnpm.dip.auth.api.{
 
 
 
-class RDQueryController @Inject()(
+class RDController @Inject()(
   override val controllerComponents: ControllerComponents,
 )(
   implicit ec: ExecutionContext,
 )
-extends QueryController[RDConfig]
+extends UseCaseController[RDConfig]
 with QueryAuthorizations[UserPermissions]
 {
 
@@ -69,9 +70,12 @@ with QueryAuthorizations[UserPermissions]
   override implicit val completer: Completer[RDPatientRecord] =
     Completers.rdPatientRecordCompleter
 
-  override val service: RDQueryService =
-    RDQueryService.getInstance.get
 
+  override val validationService: RDValidationService =
+    RDValidationService.getInstance.get
+
+  override val queryService: RDQueryService =
+    RDQueryService.getInstance.get
 
   override implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
