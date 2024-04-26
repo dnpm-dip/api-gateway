@@ -34,7 +34,10 @@ import de.dnpm.dip.rd.model.{
   RDPatientRecord,
   Completers
 }
-import de.dnpm.dip.rd.validation.api.RDValidationService
+import de.dnpm.dip.rd.validation.api.{
+  RDValidationPermissions,
+  RDValidationService
+}
 import de.dnpm.dip.rd.query.api.{
   RDConfig,
   RDFilters,
@@ -58,6 +61,7 @@ class RDController @Inject()(
   implicit ec: ExecutionContext,
 )
 extends UseCaseController[RDConfig]
+with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 {
 
@@ -82,13 +86,22 @@ with QueryAuthorizations[UserPermissions]
 
 
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
-    SubmitQuery
+    RDPermissions.SubmitQuery
 
   override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
-    ReadResultSummary
+    RDPermissions.ReadResultSummary
 
   override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
-    ReadPatientRecord
+    RDPermissions.ReadPatientRecord
+
+  override val ViewValidationInfosAuthorization: Authorization[UserPermissions] =
+    RDValidationPermissions.ViewValidationInfos
+
+  override val ViewValidationReportAuthorization: Authorization[UserPermissions] =
+    RDValidationPermissions.ViewValidationReport
+
+  override val ViewInvalidPatientRecordAuthorization: Authorization[UserPermissions] =
+    RDValidationPermissions.ViewInvalidPatientRecord
 
 
   private val HPOTerms =

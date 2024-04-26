@@ -40,7 +40,10 @@ import de.dnpm.dip.mtb.model.{
 import de.dnpm.dip.mtb.model.v1
 import v1.mappings._
 import de.dnpm.dip.util.mapping.syntax._
-import de.dnpm.dip.mtb.validation.api.MTBValidationService
+import de.dnpm.dip.mtb.validation.api.{
+  MTBValidationPermissions,
+  MTBValidationService
+}
 import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
@@ -61,11 +64,11 @@ class MTBController @Inject()(
   implicit ec: ExecutionContext,
 )
 extends UseCaseController[MTBConfig]
+with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 {
 
   import de.dnpm.dip.rest.util.AuthorizationConversions._
-  import MTBPermissions._
 
 
   override lazy val prefix = "mtb"
@@ -85,13 +88,22 @@ with QueryAuthorizations[UserPermissions]
 
 
   override val SubmitQueryAuthorization: Authorization[UserPermissions] =
-    SubmitQuery
+    MTBPermissions.SubmitQuery
 
   override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
-    ReadResultSummary
+    MTBPermissions.ReadResultSummary
 
   override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
-    ReadPatientRecord
+    MTBPermissions.ReadPatientRecord
+
+  override val ViewValidationInfosAuthorization: Authorization[UserPermissions] =
+    MTBValidationPermissions.ViewValidationInfos
+
+  override val ViewValidationReportAuthorization: Authorization[UserPermissions] =
+    MTBValidationPermissions.ViewValidationReport
+
+  override val ViewInvalidPatientRecordAuthorization: Authorization[UserPermissions] =
+    MTBValidationPermissions.ViewInvalidPatientRecord
 
 
   private val DiagnosisCodes =

@@ -106,7 +106,7 @@ extends BaseController
    with AuthorizationOps[UserPermissions]
 {
 
-  this: QueryAuthorizations[UserPermissions] =>
+  this: QueryAuthorizations[UserPermissions] with ValidationAuthorizations[UserPermissions] =>
 
 
   import scala.util.chaining._
@@ -176,13 +176,11 @@ extends BaseController
   def validate =
     JsonAction[PatientRecord].async {
       req =>
-        // If this point is reached, the request payload could be successfully deserialized and is thus valid
-        // TODO: add subsequent semantic validation by data handling queryService
         (validationService ! Validate(req.body)).map {
-          case Right(DataAcceptableWithIssues(_,report)) => Conflict(Json.toJson(report))
+          case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
-          case Left(FatalIssuesDetected(report))         => UnprocessableEntity(Json.toJson(report))
-          case Left(UnacceptableIssuesDetected(report))  => Conflict(Json.toJson(report))
+          case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
+          case Left(FatalIssuesDetected(report))         => BadRequest(Json.toJson(report))
           case Left(GenericError(err))                   => InternalServerError(err)
           case _                                         => InternalServerError("Unexpected data upload outcome")
         }
@@ -197,11 +195,10 @@ extends BaseController
       req =>
         (orchestrator ! Save(req.body))
           .map {
-            case Right(Saved(snp))                        => Created(Json.toJson(snp))
+            case Right(Saved(snp))                        => Ok(Json.toJson(snp))
             case Right(SavedWithIssues(snp,report))       => Created(Json.toJson(report))
-            //case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
-            case Left(FatalIssuesDetected(report))        => UnprocessableEntity(Json.toJson(report))
-            case Left(UnacceptableIssuesDetected(report)) => Conflict(Json.toJson(report))
+            case Left(UnacceptableIssuesDetected(report)) => UnprocessableEntity(Json.toJson(report))
+            case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
             case Left(GenericError(err))                  => InternalServerError(err)
             case _                                        => InternalServerError("Unexpected data upload outcome")
           }
@@ -224,7 +221,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def validationInfos =
-    AuthenticatedAction.async { //TODO: Permissions
+    AuthorizedAction(ViewValidationInfosAuthorization).async { //TODO: Permissions
       req =>
         (validationService ? ValidationService.Filter.empty)
           .map(_.map(Hyper(_)).toSeq)  
@@ -234,7 +231,7 @@ extends BaseController
     }  
 
   def validationReport(id: Id[Patient]) =
-    AuthenticatedAction.async { //TODO: Permissions
+    AuthorizedAction(ViewValidationReportAuthorization).async { //TODO: Permissions
       req =>
         (validationService.dataQualityReport(id))
           .map(_.map(Hyper(_)))
@@ -242,7 +239,7 @@ extends BaseController
     }  
 
   def validationPatientRecord(id: Id[Patient]) =
-    AuthenticatedAction.async { //TODO: Permissions
+    AuthorizedAction(ViewInvalidPatientRecordAuthorization).async { //TODO: Permissions
       req =>
         (validationService.patientRecord(id))
           .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
