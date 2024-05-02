@@ -50,10 +50,12 @@ import de.dnpm.dip.service.query.{
   Query,
   Querier,
   QueryService,
+         QueryPermissions,
   PreparedQuery,
   ResultSet,
   UseCaseConfig
 }
+          import de.dnpm.dip.service.validation.ValidationPermissions
 import de.dnpm.dip.coding.{
   Coding,
   CodeSystem
@@ -101,9 +103,9 @@ abstract class UseCaseController[UseCase <: UseCaseConfig]
   jsSummary: OWrites[UseCase#Results#SummaryType],
 )
 extends BaseController
-   with JsonOps
-   with UseCaseHypermedia[UseCase]
-   with AuthorizationOps[UserPermissions]
+with JsonOps
+with UseCaseHypermedia[UseCase]
+with AuthorizationOps[UserPermissions]
 {
 
   this: QueryAuthorizations[UserPermissions] with ValidationAuthorizations[UserPermissions] =>
@@ -123,7 +125,8 @@ extends BaseController
 
   protected implicit val completer: Completer[PatientRecord]
 
-  protected implicit val authService: UserAuthenticationService
+  protected implicit val authService: UserAuthenticationService =
+    UserAuthenticationService.getInstance.get
 
   protected val validationService: ValidationService[Future,Monad[Future],PatientRecord]
 
@@ -160,7 +163,6 @@ extends BaseController
 
 
 
-
   def sites: Action[AnyContent] =
     Action.async {
       queryService.sites
@@ -173,8 +175,11 @@ extends BaseController
   // Data Operations
   // --------------------------------------------------------------------------  
 
+  protected val patientRecordParser =
+    JsonBody[PatientRecord]
+
   def validate =
-    JsonAction[PatientRecord].async {
+    Action.async(patientRecordParser){ 
       req =>
         (validationService ! Validate(req.body)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
@@ -186,9 +191,6 @@ extends BaseController
         }
     }
 
-
-  protected val patientRecordParser =
-    JsonBody[PatientRecord]
 
   def upload =
     Action.async(patientRecordParser){ 
@@ -221,7 +223,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def validationInfos =
-    AuthorizedAction(ViewValidationInfosAuthorization).async { //TODO: Permissions
+    AuthorizedAction(ReadValidationInfos).async {
       req =>
         (validationService ? ValidationService.Filter.empty)
           .map(_.map(Hyper(_)).toSeq)  
@@ -231,7 +233,7 @@ extends BaseController
     }  
 
   def validationReport(id: Id[Patient]) =
-    AuthorizedAction(ViewValidationReportAuthorization).async { //TODO: Permissions
+    AuthorizedAction(ReadValidationReport).async {
       req =>
         (validationService.dataQualityReport(id))
           .map(_.map(Hyper(_)))
@@ -239,7 +241,7 @@ extends BaseController
     }  
 
   def validationPatientRecord(id: Id[Patient]) =
-    AuthorizedAction(ViewInvalidPatientRecordAuthorization).async { //TODO: Permissions
+    AuthorizedAction(ReadInvalidPatientRecord).async {
       req =>
         (validationService.patientRecord(id))
           .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
@@ -251,7 +253,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def createPreparedQuery =
-    AuthorizedAction(JsonBody[PreparedQuery.Create[Criteria]])(SubmitQueryAuthorization)
+    AuthorizedAction(JsonBody[PreparedQuery.Create[Criteria]])(SubmitQuery)
       .async { 
         implicit req =>
           (queryService ! req.body)
@@ -304,7 +306,7 @@ extends BaseController
   // --------------------------------------------------------------------------  
 
   def submit =
-    AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQueryAuthorization).async { 
+    AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
       implicit req =>
         (queryService ! req.body)
           .map(_.map(Hyper(_)))
@@ -379,7 +381,7 @@ extends BaseController
   def summary(
     id: Query.Id
   ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
       implicit req =>
         queryService.summary(
           id,
@@ -399,7 +401,7 @@ extends BaseController
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResultAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
       implicit req =>
         queryService.patientMatches(
           id,
@@ -425,7 +427,7 @@ extends BaseController
     id: Query.Id,
     patId: Id[Patient]
   ): Action[AnyContent] =
-    AuthorizedAction(ReadPatientRecordAuthorization AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadPatientRecord AND OwnershipOf(id)).async {
       implicit req =>
         queryService.patientRecord(id,patId)
           .map(_.map(Hyper(_)))

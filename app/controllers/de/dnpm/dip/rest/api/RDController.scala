@@ -81,27 +81,24 @@ with QueryAuthorizations[UserPermissions]
   override val queryService: RDQueryService =
     RDQueryService.getInstance.get
 
-  override implicit val authService: UserAuthenticationService =
-    UserAuthenticationService.getInstance.get
 
-
-  override val SubmitQueryAuthorization: Authorization[UserPermissions] =
+  override val SubmitQuery =
     RDPermissions.SubmitQuery
 
-  override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
+  override val ReadQueryResult =
     RDPermissions.ReadResultSummary
 
-  override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
+  override val ReadPatientRecord =
     RDPermissions.ReadPatientRecord
 
-  override val ViewValidationInfosAuthorization: Authorization[UserPermissions] =
-    RDValidationPermissions.ViewValidationInfos
+  override val ReadValidationInfos =
+    RDValidationPermissions.ReadValidationInfos
 
-  override val ViewValidationReportAuthorization: Authorization[UserPermissions] =
-    RDValidationPermissions.ViewValidationReport
+  override val ReadValidationReport =
+    RDValidationPermissions.ReadValidationReport
 
-  override val ViewInvalidPatientRecordAuthorization: Authorization[UserPermissions] =
-    RDValidationPermissions.ViewInvalidPatientRecord
+  override val ReadInvalidPatientRecord =
+    RDValidationPermissions.ReadInvalidPatientRecord
 
 
   private val HPOTerms =

@@ -83,27 +83,24 @@ with QueryAuthorizations[UserPermissions]
   override val queryService: MTBQueryService =
     MTBQueryService.getInstance.get
 
-  override implicit val authService: UserAuthenticationService =
-    UserAuthenticationService.getInstance.get
 
-
-  override val SubmitQueryAuthorization: Authorization[UserPermissions] =
+  override val SubmitQuery =
     MTBPermissions.SubmitQuery
 
-  override val ReadQueryResultAuthorization: Authorization[UserPermissions] =
+  override val ReadQueryResult =
     MTBPermissions.ReadResultSummary
 
-  override val ReadPatientRecordAuthorization: Authorization[UserPermissions] =
+  override val ReadPatientRecord =
     MTBPermissions.ReadPatientRecord
 
-  override val ViewValidationInfosAuthorization: Authorization[UserPermissions] =
-    MTBValidationPermissions.ViewValidationInfos
+  override val ReadValidationInfos =
+    MTBValidationPermissions.ReadValidationInfos
 
-  override val ViewValidationReportAuthorization: Authorization[UserPermissions] =
-    MTBValidationPermissions.ViewValidationReport
+  override val ReadValidationReport =
+    MTBValidationPermissions.ReadValidationReport
 
-  override val ViewInvalidPatientRecordAuthorization: Authorization[UserPermissions] =
-    MTBValidationPermissions.ViewInvalidPatientRecord
+  override val ReadInvalidPatientRecord =
+    MTBValidationPermissions.ReadInvalidPatientRecord
 
 
   private val DiagnosisCodes =
@@ -124,13 +121,11 @@ with QueryAuthorizations[UserPermissions]
 
 
 
-
   implicit val hgnc: CodeSystem[HGNC] =
     HGNC.GeneSet
       .getInstance[cats.Id]
       .get
       .latest
-
 
   override val patientRecordParser =
     parse.using(

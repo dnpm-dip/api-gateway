@@ -21,7 +21,7 @@ import de.dnpm.dip.service.query.{
   UseCaseConfig
 }
 import de.dnpm.dip.service.validation.{
-  DataValidationInfo,
+  ValidationInfo,
   ValidationReport
 }
 import scala.util.chaining._
@@ -79,7 +79,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     PreparedQueryUri(query.id)
 
 
-  implicit def HyperDataValidationInfo: Hyper.Mapper[DataValidationInfo] =
+  implicit def HyperDataValidationInfo: Hyper.Mapper[ValidationInfo] =
     Hyper.Mapper {
       info =>
         info.withLinks(

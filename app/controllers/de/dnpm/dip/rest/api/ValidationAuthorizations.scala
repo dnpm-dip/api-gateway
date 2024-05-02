@@ -7,10 +7,10 @@ import de.dnpm.dip.auth.api.Authorization
 trait ValidationAuthorizations[Agent]
 {
 
-  val ViewValidationInfosAuthorization: Authorization[Agent]
+  val ReadValidationInfos: Authorization[Agent]
 
-  val ViewValidationReportAuthorization: Authorization[Agent]
+  val ReadValidationReport: Authorization[Agent]
 
-  val ViewInvalidPatientRecordAuthorization: Authorization[Agent]
+  val ReadInvalidPatientRecord: Authorization[Agent]
 
 }

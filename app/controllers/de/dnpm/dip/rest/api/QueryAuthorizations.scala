@@ -12,11 +12,11 @@ import de.dnpm.dip.service.query.{
 trait QueryAuthorizations[Agent]
 {
 
-  val SubmitQueryAuthorization: Authorization[Agent]
+  val SubmitQuery: Authorization[Agent]
 
-  val ReadQueryResultAuthorization: Authorization[Agent]
+  val ReadQueryResult: Authorization[Agent]
 
-  val ReadPatientRecordAuthorization: Authorization[Agent]
+  val ReadPatientRecord: Authorization[Agent]
 
   def OwnershipOf(id: Query.Id): Authorization[Agent]
 
