@@ -46,9 +46,9 @@ with CatalogHypermedia
       .get
 
 
-  def infos: Action[AnyContent] =
+  def codeSystemInfos: Action[AnyContent] =
     Action.async {
-      catalogService.infos
+      catalogService.codeSystemInfos
         .map(_.map(Hyper(_)))
         .map(Collection(_))
         .map(toJson(_))
@@ -124,14 +124,29 @@ with CatalogHypermedia
     }
 
 
+
+  def valueSetInfos: Action[AnyContent] =
+    Action.async {
+      catalogService.valueSetInfos
+        .map(_.map(Hyper(_)))
+        .map(Collection(_))
+        .map(toJson(_))
+        .map(Ok(_))
+    }
+
+
   def valueSet(
     uri: URI,
     version: Option[String],
     filters: Seq[String]
   ): Action[AnyContent] =
     Action.async {
-      getCodeSystem(uri,version,filters)
-        .map(_.map(ValueSet.from(_)))
+      catalogService.valueSet(uri,version)
+        .filter(_.isDefined)
+        .fallbackTo(
+          getCodeSystem(uri,version,filters)
+            .map(_.map(ValueSet.from(_)))
+        )
         .map(_.map(Hyper(_)))
         .map(JsonResult(_))
     }

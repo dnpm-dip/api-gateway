@@ -11,7 +11,8 @@ import de.dnpm.dip.rest.util.sapphyre.{
 import de.dnpm.dip.coding.{
   CodeSystem,
   CodeSystemProvider,
-  ValueSet
+  ValueSet,
+  ValueSetProvider
 }
 
 
@@ -29,8 +30,11 @@ trait CatalogHypermedia extends HypermediaBase
   protected val BASE_URI =
     s"$BASE_URL/api/coding"
 
-  private val collectionLink =
+  private val codeSystemsLink =
     Link(s"$BASE_URI/codesystems")
+
+  private val valueSetsLink =
+    Link(s"$BASE_URI/valuesets")
 
   private def codeSystemLink(
     uri: URI,
@@ -45,13 +49,11 @@ trait CatalogHypermedia extends HypermediaBase
     Link(s"$BASE_URI/valuesets?uri=${uri}${version.map(v => s"&version=$v").getOrElse("")}")
 
 
-
-
   implicit val HyperCodeSystemProviderInfo: Hyper.Mapper[CodeSystemProvider.Info[Any]] =
     Hyper.Mapper(
       info =>
         info.withLinks(
-          COLLECTION   -> collectionLink,
+          COLLECTION   -> codeSystemsLink,
           "codesystem" -> codeSystemLink(info.uri),
           "valueset"   -> valueSetLink(info.uri)
         )
@@ -61,19 +63,27 @@ trait CatalogHypermedia extends HypermediaBase
     Hyper.Mapper(
       cs =>
         cs.withLinks(
-          COLLECTION  -> collectionLink,
+          COLLECTION  -> codeSystemsLink,
           SELF        -> codeSystemLink(cs.uri,cs.version),
           "valueset"   -> valueSetLink(cs.uri,cs.version)
         )
     )
 
 
+  implicit val HyperValueSetProviderInfo: Hyper.Mapper[ValueSetProvider.Info] =
+    Hyper.Mapper(
+      info =>
+        info.withLinks(
+          COLLECTION   -> valueSetsLink,
+          "valueset"   -> valueSetLink(info.uri)
+        )
+    )
+
   implicit def HyperValueSet[S]: Hyper.Mapper[ValueSet[S]] =
     Hyper.Mapper(
       vs =>
         vs.withLinks(
-          COLLECTION   -> collectionLink,
-          "codesystem" -> codeSystemLink(vs.uri,vs.version),
+          COLLECTION   -> valueSetsLink,
           SELF         -> valueSetLink(vs.uri,vs.version)
         )
     )

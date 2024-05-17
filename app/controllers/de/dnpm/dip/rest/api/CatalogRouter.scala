@@ -29,7 +29,7 @@ extends SimpleRouter
               & q_o"version=$version"
               & q_s"filter=$filters")  => catalogController.codeSystem(uri,version,filters) 
 
-    case GET(p"/coding/codesystems")   => catalogController.infos
+    case GET(p"/coding/codesystems")   => catalogController.codeSystemInfos
 
 
     case GET(p"/coding/valuesets"
@@ -37,7 +37,7 @@ extends SimpleRouter
               & q_o"version=$version"
               & q_s"filter=$filters")  => catalogController.valueSet(uri,version,filters) 
 
-    case GET(p"/coding/valuesets")     => catalogController.infos
+    case GET(p"/coding/valuesets")     => catalogController.valueSetInfos
 
   }
 
