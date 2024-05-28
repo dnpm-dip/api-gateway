@@ -24,6 +24,7 @@ import play.api.libs.json.{
   Writes,
   OWrites
 }
+import cats.data.Ior
 import cats.Monad
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.Orchestrator
@@ -50,12 +51,12 @@ import de.dnpm.dip.service.query.{
   Query,
   Querier,
   QueryService,
-         QueryPermissions,
+//  QueryPermissions,
   PreparedQuery,
   ResultSet,
   UseCaseConfig
 }
-          import de.dnpm.dip.service.validation.ValidationPermissions
+//import de.dnpm.dip.service.validation.ValidationPermissions
 import de.dnpm.dip.coding.{
   Coding,
   CodeSystem
@@ -130,7 +131,7 @@ with AuthorizationOps[UserPermissions]
 
   protected val validationService: ValidationService[Future,Monad[Future],PatientRecord]
 
-  protected val queryService: QueryService[Future,Monad[Future],UseCase,String]
+  protected val queryService: QueryService[Future,Monad[Future],UseCase]
 
   protected final lazy val orchestrator: Orchestrator[Future,PatientRecord] =
     new Orchestrator(validationService,queryService)
@@ -300,7 +301,6 @@ with AuthorizationOps[UserPermissions]
       }
 
 
-
   // --------------------------------------------------------------------------  
   // Query Operations
   // --------------------------------------------------------------------------  
@@ -309,8 +309,37 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
       implicit req =>
         (queryService ! req.body)
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,InternalServerError(_)))
+          .map { 
+            _.leftMap(Outcome(_)) match {
+              case Ior.Right(out)    =>
+                out match {
+                  case query: Query[Criteria,Filter] => Ok(Json.toJson(Hyper(query)))
+                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
+                }
+              case Ior.Both(errs,out) =>
+                out match {
+                  case query: Query[Criteria,Filter] => Ok(Json.toJsObject(Hyper(query)) + ("_issues" -> Json.toJson(errs.issues)))
+                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
+                }
+              case Ior.Left(out) =>
+                InternalServerError(Json.toJson(out))
+            }
+          }
+/*        
+          .map(
+            _.leftMap(_ => Outcome("Query returned no results"))
+             .bimap(
+               Json.toJson(_),
+               _.map(Hyper(_))
+             )
+             .fold( 
+               NotFound(_),
+               JsonResult(_,InternalServerError(_))
+             )
+          )
+*/          
+//          .map(_.map(Hyper(_)))
+//          .map(JsonResult(_,InternalServerError(_)))
     }
 
 
@@ -327,8 +356,37 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async{ 
       implicit req =>
         (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,InternalServerError(_)))
+          .map { 
+            _.leftMap(Outcome(_)) match {
+              case Ior.Right(out)    =>
+                out match {
+                  case query: Query[Criteria,Filter] => Ok(Json.toJson(Hyper(query)))
+                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
+                }
+              case Ior.Both(errs,out) =>
+                out match {
+                  case query: Query[Criteria,Filter] => Ok(Json.toJsObject(Hyper(query)) + ("_issues" -> Json.toJson(errs.issues)))
+                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
+                }
+              case Ior.Left(out) =>
+                InternalServerError(Json.toJson(out))
+            }
+          }
+/*          
+          .map(
+            _.leftMap(_ => Outcome("Query returned no results"))
+             .bimap(
+               Json.toJson(_),
+               _.map(Hyper(_))
+             )
+             .fold( 
+               NotFound(_),
+               JsonResult(_,InternalServerError(_))
+             )
+          )
+*/          
+//          .map(_.map(Hyper(_)))
+//          .map(JsonResult(_,InternalServerError(_)))
     }
 
 
@@ -336,10 +394,10 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         (queryService ! Query.Delete(id))
-          .map(_.toOption)
+          .map(_.toOption.map(_.asInstanceOf[Query[Criteria,Filter]]))
+//          .map(_.toOption)
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
-
 
   private val Genders =
     Extractor.AsCodings[Gender.Value]
