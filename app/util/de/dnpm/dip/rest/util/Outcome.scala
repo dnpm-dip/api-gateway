@@ -62,9 +62,10 @@ object Outcome
   }
 
 
-//  implicit val writes: Writes[Outcome] =
-//    Json.writes[Outcome]
+  implicit val writes: Writes[Outcome] =
+    Json.writes[Outcome]
 
+/*
   // Define Custom Writes so that field "issues" be called "_issues",
   // in order to maintain convention that field "_issues" will also occur
   // on resources in case of partial success
@@ -73,7 +74,7 @@ object Outcome
       out =>
         Json.obj("_issues" -> Json.toJson(out.issues))
     )
-
+*/
 
 
   def apply(

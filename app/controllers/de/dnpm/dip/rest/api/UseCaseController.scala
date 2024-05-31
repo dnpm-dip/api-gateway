@@ -51,12 +51,10 @@ import de.dnpm.dip.service.query.{
   Query,
   Querier,
   QueryService,
-//  QueryPermissions,
   PreparedQuery,
   ResultSet,
   UseCaseConfig
 }
-//import de.dnpm.dip.service.validation.ValidationPermissions
 import de.dnpm.dip.coding.{
   Coding,
   CodeSystem
@@ -309,37 +307,18 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
       implicit req =>
         (queryService ! req.body)
-          .map { 
-            _.leftMap(Outcome(_)) match {
-              case Ior.Right(out)    =>
-                out match {
-                  case query: Query[Criteria,Filter] => Ok(Json.toJson(Hyper(query)))
-                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
-                }
-              case Ior.Both(errs,out) =>
-                out match {
-                  case query: Query[Criteria,Filter] => Ok(Json.toJsObject(Hyper(query)) + ("_issues" -> Json.toJson(errs.issues)))
-                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
-                }
-              case Ior.Left(out) =>
-                InternalServerError(Json.toJson(out))
-            }
+          .map {
+            case Right(query) =>
+              Ok(Json.toJson(Hyper(query)))
+           
+            case Left(err) =>
+              err match {
+                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
+                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
+                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
+                case Query.InvalidId              => InternalServerError(Json.toJson(Outcome("Unexpected Query error")))
+              }
           }
-/*        
-          .map(
-            _.leftMap(_ => Outcome("Query returned no results"))
-             .bimap(
-               Json.toJson(_),
-               _.map(Hyper(_))
-             )
-             .fold( 
-               NotFound(_),
-               JsonResult(_,InternalServerError(_))
-             )
-          )
-*/          
-//          .map(_.map(Hyper(_)))
-//          .map(JsonResult(_,InternalServerError(_)))
     }
 
 
@@ -356,37 +335,18 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async{ 
       implicit req =>
         (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
-          .map { 
-            _.leftMap(Outcome(_)) match {
-              case Ior.Right(out)    =>
-                out match {
-                  case query: Query[Criteria,Filter] => Ok(Json.toJson(Hyper(query)))
-                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
-                }
-              case Ior.Both(errs,out) =>
-                out match {
-                  case query: Query[Criteria,Filter] => Ok(Json.toJsObject(Hyper(query)) + ("_issues" -> Json.toJson(errs.issues)))
-                  case Query.NoResults               => NotFound(Json.toJson(Outcome("Query returned no results")))
-                }
-              case Ior.Left(out) =>
-                InternalServerError(Json.toJson(out))
-            }
+          .map {
+            case Right(query) =>
+              Ok(Json.toJson(Hyper(query)))
+            
+            case Left(err) =>
+              err match {
+                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
+                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
+                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
+                case Query.InvalidId              => NotFound(Json.toJson(Outcome(s"Invalid Query ID ${id.value}")))
+              }
           }
-/*          
-          .map(
-            _.leftMap(_ => Outcome("Query returned no results"))
-             .bimap(
-               Json.toJson(_),
-               _.map(Hyper(_))
-             )
-             .fold( 
-               NotFound(_),
-               JsonResult(_,InternalServerError(_))
-             )
-          )
-*/          
-//          .map(_.map(Hyper(_)))
-//          .map(JsonResult(_,InternalServerError(_)))
     }
 
 
@@ -394,8 +354,7 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         (queryService ! Query.Delete(id))
-          .map(_.toOption.map(_.asInstanceOf[Query[Criteria,Filter]]))
-//          .map(_.toOption)
+          .map(_.toOption)
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
