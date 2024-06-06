@@ -43,7 +43,7 @@ import de.dnpm.dip.rd.query.api.{
   RDFilters,
   HPOFilter,
   DiagnosisFilter,
-  RDPermissions,
+  RDQueryPermissions,
   RDQueryService,
   RDResultSet
 }
@@ -66,7 +66,6 @@ with QueryAuthorizations[UserPermissions]
 {
 
   import de.dnpm.dip.rest.util.AuthorizationConversions._
-  import RDPermissions._
 
 
   override lazy val prefix = "rd"
@@ -83,13 +82,13 @@ with QueryAuthorizations[UserPermissions]
 
 
   override val SubmitQuery =
-    RDPermissions.SubmitQuery
+    RDQueryPermissions.SubmitQuery
 
   override val ReadQueryResult =
-    RDPermissions.ReadResultSummary
+    RDQueryPermissions.ReadResultSummary
 
   override val ReadPatientRecord =
-    RDPermissions.ReadPatientRecord
+    RDQueryPermissions.ReadPatientRecord
 
   override val ReadValidationInfos =
     RDValidationPermissions.ReadValidationInfos

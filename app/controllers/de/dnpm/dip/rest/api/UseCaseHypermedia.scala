@@ -108,9 +108,11 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           Link(Uri(query))
 
         query.withLinks(
-          SELF              -> selfLink,
-          "summary"         -> Link(s"${Uri(query)}/summary"),
-          "patient-matches" -> Link(s"${Uri(query)}/patient-matches")
+          SELF                  -> selfLink,
+          "summary"             -> Link(s"${Uri(query)}/summary"),
+          "patient-matches"     -> Link(s"${Uri(query)}/patient-matches"),
+          "kaplan-meier-config" -> Link(s"$BASE_URI/kaplan-meier/config"),
+          "kaplan-meier-stats"  -> Link(s"${Uri(query)}/survival-statistics[?type={type}&grouping={grouping}]")
         )
         .withOperations(
           UPDATE   -> Operation(PUT, selfLink)

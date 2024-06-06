@@ -45,10 +45,10 @@ extends SimpleRouter
 
   import scala.util.chaining._
 
-  private val QueryId =
+  protected val QueryId =
     Extractor(Query.Id(_))
 
-  private val PreparedQueryId =
+  protected val PreparedQueryId =
     Extractor(PreparedQuery.Id(_))
 
   private val PatId =
@@ -165,12 +165,12 @@ extends SimpleRouter
 
     case GET(p"/queries/${QueryId(id)}/patient-matches"
              ? q_o"offset=${int(offset)}"
-             ? q_o"limit=${int(limit)}") =>
+             & q_o"limit=${int(limit)}") =>
       controller.patientMatches(offset,limit)(id)
 
     case GET(p"/queries/${QueryId(id)}/patients"
              ? q_o"offset=${int(offset)}"
-             ? q_o"limit=${int(limit)}") =>
+             & q_o"limit=${int(limit)}") =>
       controller.patientMatches(offset,limit)(id)
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>

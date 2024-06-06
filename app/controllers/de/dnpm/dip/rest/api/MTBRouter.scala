@@ -18,6 +18,8 @@ import de.dnpm.dip.mtb.model.MTBPatientRecord
 import de.dnpm.dip.mtb.model.v1
 import de.dnpm.dip.mtb.gens.Generators._
 import de.ekut.tbi.generators.Gen
+import de.dnpm.dip.mtb.query.api.KaplanMeier
+import de.dnpm.dip.rest.util.Extractor
 
 
 
@@ -55,7 +57,41 @@ extends UseCaseRouter[MTBConfig]("mtb")
     )
 
 
+
+/*
+  private val SurvivalType: Extractor[Option[String],Option[KaplanMeier.SurvivalType.Value]] =
+    _.map(KaplanMeier.SurvivalType.unapply(_))
+
+  private val Grouping: Extractor[Option[String],Option[KaplanMeier.Grouping.Value]] =
+    _.map(KaplanMeier.Grouping.unapply(_))
+*/
+
+  private val SurvivalType: Extractor[String,KaplanMeier.SurvivalType.Value] =
+   KaplanMeier.SurvivalType.unapply(_)
+
+  private val Grouping: Extractor[String,KaplanMeier.Grouping.Value] =
+    KaplanMeier.Grouping.unapply(_)
+
   override val additionalRoutes = {
+
+    case GET(p"/kaplan-meier/config") =>
+      controller.kaplanMeierConfig
+
+/*
+    case GET(p"/queries/${QueryId(id)}/survival-statistics"
+      ? q_o"type=${SurvivalType(typ)}"
+      & q_o"grouping=${Grouping(grp)}") =>
+      controller.survivalStatistics(id,typ,grp)
+*/
+
+    case GET(p"/queries/${QueryId(id)}/survival-statistics"
+      ? q"type=${SurvivalType(typ)}"
+      & q"grouping=${Grouping(grp)}") =>
+      controller.survivalStatistics(id,Some(typ),Some(grp))
+
+    case GET(p"/queries/${QueryId(id)}/survival-statistics") =>
+      controller.survivalStatistics(id,None,None)
+
 
     case GET(p"/fake/data/patient-record") =>
       controller.Action {

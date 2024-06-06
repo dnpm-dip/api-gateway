@@ -40,6 +40,7 @@ import de.dnpm.dip.mtb.model.{
 import de.dnpm.dip.mtb.model.v1
 import v1.mappings._
 import de.dnpm.dip.util.mapping.syntax._
+import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
   MTBValidationService
@@ -48,9 +49,14 @@ import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
   DiagnosisFilter,
-  MTBPermissions,
+  KaplanMeier,
+  MTBQueryPermissions,
   MTBQueryService,
   MTBResultSet
+}
+import de.dnpm.dip.mtb.query.api.KaplanMeier.{
+  SurvivalType,
+  Grouping
 }
 import de.dnpm.dip.auth.api.{
   Authorization,
@@ -68,6 +74,7 @@ with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 {
 
+  import scala.util.chaining._
   import de.dnpm.dip.rest.util.AuthorizationConversions._
 
 
@@ -85,13 +92,13 @@ with QueryAuthorizations[UserPermissions]
 
 
   override val SubmitQuery =
-    MTBPermissions.SubmitQuery
+    MTBQueryPermissions.SubmitQuery
 
   override val ReadQueryResult =
-    MTBPermissions.ReadResultSummary
+    MTBQueryPermissions.ReadResultSummary
 
   override val ReadPatientRecord =
-    MTBPermissions.ReadPatientRecord
+    MTBQueryPermissions.ReadPatientRecord
 
   override val ReadValidationInfos =
     MTBValidationPermissions.ReadValidationInfos
@@ -137,5 +144,28 @@ with QueryAuthorizations[UserPermissions]
           JsonBody[v1.MTBPatientRecord].map(_.mapTo[MTBPatientRecord])
       }
     )
+
+
+  def kaplanMeierConfig: Action[AnyContent] =
+    Action {
+      queryService.survivalConfig
+        .pipe(Json.toJson(_))
+        .pipe(Ok(_))
+    }
+
+
+  def survivalStatistics(
+    id: Query.Id,
+    typ: Option[SurvivalType.Value],
+    grp: Option[Grouping.Value]
+  ): Action[AnyContent] =
+    AuthorizedAction(OwnershipOf(id)).async { 
+      implicit req =>
+        queryService.survivalStatistics(id,typ,grp)
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+
+    }
+
+
 
 }
