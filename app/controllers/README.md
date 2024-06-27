@@ -59,6 +59,12 @@ POST /api/{use-case}/etl/patient-record:validate
 | Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
 
 
+### Delete All of a Patient's Data
+
+```
+DELETE /api/{use-case}/etl/patient/{Patient-ID}
+```
+
 
 ----
 ## Query API
