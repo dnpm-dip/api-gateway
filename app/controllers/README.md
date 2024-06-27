@@ -9,7 +9,7 @@ In the following: `use-case` in `{mtb,rd}`
 
 ### JSON Schema of Patient Record Payloads
 
-To request a JSON Schema description of the respective patient record payloads, with optional indication of the desired JSON Schema version
+Request a JSON Schema description of the patient record, with optional indication of the desired JSON Schema version
 
 ```
 GET /api/{use-case}/etl/patient-record/schema[?version={version}]
@@ -19,7 +19,7 @@ with `version` in `{draft-12, draft-09, draft-07, draft-04}`, Default: `draft-12
 
 ### Synthetic JSON Data
 
-There is an API endpoint to request random generated, structurally/syntactically correct JSON examples of patient records for both RD and MTB
+API endpoint to request random generated, structurally/syntactically correct JSON examples of patient records
 
 ```
 GET /api/{use-case}/fake/data/patient-record
@@ -41,7 +41,7 @@ POST /api/{use-case}/etl/patient-record
 | Unacceptable Issues                  | `422 Unprocessable Content` with JSON issue report | Data Set was saved in the validation module with a corresponding issue report |
 | Fatal Issues Detected                | `400 Bad Request` with JSON issue report | Import transaction aborted | 
 
-### Validate a Patient Record payload
+### Validate a Patient Record
 
 This endpoint allows to simply _validate_ a patient record, without actually importing it in the system
 
@@ -59,8 +59,9 @@ POST /api/{use-case}/etl/patient-record:validate
 | Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
 
 
+
 ----
-## Query Modules
+## Query API
 
 
 ### MTB Query Criteria
