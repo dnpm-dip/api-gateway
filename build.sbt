@@ -50,8 +50,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "atc-impl"                    % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "auth-api"                    % "1.0-SNAPSHOT",
-  "de.dnpm.dip"            %% "fake-auth-service"           % "1.0-SNAPSHOT",
-//  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.0-SNAPSHOT",
+//  "de.dnpm.dip"            %% "fake-auth-service"           % "1.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.0-SNAPSHOT",
 
 )
 
