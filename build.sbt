@@ -18,9 +18,6 @@ scalacOptions ++= Seq(
 )
 
 
-
-//  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.4",
-
 libraryDependencies ++= Seq(
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.1" % Test,  //TODO: version!

@@ -70,6 +70,9 @@ extends UseCaseRouter[MTBConfig]("mtb")
     case GET(p"/kaplan-meier/config") =>
       controller.kaplanMeierConfig
 
+    case GET(p"/queries/${QueryId(id)}/therapy-responses") =>
+      controller.therapyResponses(id)
+
 
     case GET(p"/queries/${QueryId(id)}/survival-statistics"
       ? q"type=${SurvivalType(typ)}"

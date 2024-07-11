@@ -27,7 +27,6 @@ GET /api/{use-case}/fake/data/patient-record
 
 ### Upload a Patient Record
 
-**Request**
 ```
 POST /api/{use-case}/etl/patient-record
 ```
@@ -53,8 +52,8 @@ POST /api/{use-case}/etl/patient-record:validate
 
 | Case | Response |
 | ---- | -------- |
-| Data Acceptable with Issues  | `200 OK` with JSON issue report |
 | Data fully acceptable        | `200 OK` |
+| Data Acceptable with Issues  | `200 OK` with JSON issue report |
 | Unacceptable Issues          | `422 Unprocessable Content` with JSON issue report |
 | Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
 
@@ -64,6 +63,207 @@ POST /api/{use-case}/etl/patient-record:validate
 ```
 DELETE /api/{use-case}/etl/patient/{Patient-ID}
 ```
+
+-------
+## Catalogs (CodeSystems/ValueSets)
+
+### Get List of CodeSystems
+
+```
+GET /api/coding/codesystems
+```
+
+**Response**
+<details>
+<summary>List of CodeSystem info objects containing name, title, URI, and possibly a list of available versions and pre-defined filters applicable to the CodeSystem</summary>
+
+```javascript
+{
+  "entries": [
+    {
+      "filters": [
+          {
+              "description": "Filter ICD classes of kind 'chapter'",
+              "name": "is-a-chapter"
+          },
+          {
+              "description": "Filter ICD classes of kind 'block'",
+              "name": "is-a-block"
+          },
+          {
+              "description": "Filter ICD classes of kind 'category'",
+              "name": "is-a-category"
+          }
+      ],
+      "latestVersion": "2024",
+      "name": "ICD-10",
+      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "versions": [
+          "2019",
+          "2023",
+          "2020",
+          "2024",
+          "2021",
+          "2022"
+      ]
+    },
+    ...
+  ]
+}
+```
+</details>
+
+
+### Get specific CodeSystem
+
+```
+GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}][&filter=filter-A|filter-B&filter=filter-C]
+```
+
+**Response**
+<details>
+<summary>CodeSystem object </summary>
+
+```javascript
+{
+  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+  "name": "ICD-10",
+  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+  "date": "2023-09-15T00:00:00",
+  "version": "2024",
+  "properties": [
+    {
+      "name": "kind",
+      "type": "enum",
+      "description": "Kind of ICD class",
+      "valueSet": [
+          "block",
+          "category",
+          "chapter"
+      ]
+    }
+  ],
+  "concepts": [
+    {
+      "code": "C25",
+      "display": "Bösartige Neubildung des Pankreas",
+      "version": "2024",
+      "properties": {
+          "kind": [
+              "category"
+          ]
+      },
+      "parent": "C15-C26",
+      "children": [
+        "C25.4",
+        "C25.8",
+        "C25.0",
+        "C25.1",
+        "C25.9",
+        "C25.3",
+        "C25.7",
+        "C25.2"
+      ]
+    },
+    ...
+  ]
+}
+```
+</details>
+
+This CodeSystem structure is *conceptually* equivalent to [FHIR CodeSystem](https://hl7.org/fhir/R4/codesystem.html), but syntactically slightly different.
+
+#### Applying CodeSystem filters:
+
+CodeSystems can be requested with applied filters on the concepts by including the filter name(s) as URI query parameter "filter".
+The API supports combining filters with AND/OR logic: filter names concatenated into a pipe-separated value list as one "filter" parameter are combined as OR, whereas filters occurring in different "filter" parameter values are combined using AND.
+For instance, the following request represents the query "Get CodeSystem ICD-O-3, picking only concepts from ICD-O-3-M (morphology) and of kind 'block' or 'category'":
+
+```
+GET /api/coding/codesystems?uri=urn:oid:2.16.840.1.113883.6.43.1&filter=morphology&filter=is-a-block|is-a-category
+```
+
+
+### Get List of ValueSets
+
+```
+GET /api/coding/valuesets
+```
+
+**Response**
+<details>
+<summary>List of ValueSet info objects containing name, title and URI (currently identical to CodeSystem Info objects)</summary>
+
+```javascript
+{
+  "entries": [
+    {
+      "filters": [
+          {
+              "description": "Filter ICD classes of kind 'chapter'",
+              "name": "is-a-chapter"
+          },
+          {
+              "description": "Filter ICD classes of kind 'block'",
+              "name": "is-a-block"
+          },
+          {
+              "description": "Filter ICD classes of kind 'category'",
+              "name": "is-a-category"
+          }
+      ],
+      "latestVersion": "2024",
+      "name": "ICD-10",
+      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "versions": [
+          "2019",
+          "2023",
+          "2020",
+          "2024",
+          "2021",
+          "2022"
+      ]
+    },
+    ...
+  ]
+}
+```
+</details>
+
+
+### Get specific ValueSet
+
+```
+GET /api/coding/valuesets?uri={ValueSet-URI}[&version={Version}]
+```
+
+**Response**
+<details>
+<summary>ValueSet object</summary>
+
+```javascript
+{
+  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+  "name": "ICD-10",
+  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
+  "date": "2023-09-15T00:00:00",
+  "version": "2024",
+  "concepts": [
+    {
+      "code": "C25",
+      "display": "Bösartige Neubildung des Pankreas",
+      "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+      "version": "2024"
+    },
+    ...
+  ]
+}
+```
+</details>
+
+This ValueSet structure is *conceptually* equivalent to [FHIR ValueSet](https://hl7.org/fhir/R4/valueset.html), but syntactically slightly different.
 
 
 ----
@@ -343,206 +543,5 @@ DELETE /api/rd/queries/{Query-ID}
 ```
 </details>
 
-
-
-## Catalogs (CodeSystems/ValueSets)
-
-### Get List of CodeSystems
-
-```
-GET /api/coding/codesystems
-```
-
-**Response**
-<details>
-<summary>List of CodeSystem info objects containing name, title, URI, and possibly a list of available versions and pre-defined filters applicable to the CodeSystem</summary>
-
-```javascript
-{
-  "entries": [
-    {
-      "filters": [
-          {
-              "description": "Filter ICD classes of kind 'chapter'",
-              "name": "is-a-chapter"
-          },
-          {
-              "description": "Filter ICD classes of kind 'block'",
-              "name": "is-a-block"
-          },
-          {
-              "description": "Filter ICD classes of kind 'category'",
-              "name": "is-a-category"
-          }
-      ],
-      "latestVersion": "2024",
-      "name": "ICD-10",
-      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
-      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
-      "versions": [
-          "2019",
-          "2023",
-          "2020",
-          "2024",
-          "2021",
-          "2022"
-      ]
-    },
-    ...
-  ]
-}
-```
-</details>
-
-
-### Get specific CodeSystem
-
-```
-GET /api/coding/codesystems?uri={CodeSystem-URI}[&version={Version}][&filter=filter-A|filter-B&filter=filter-C]
-```
-
-**Response**
-<details>
-<summary>CodeSystem object </summary>
-
-```javascript
-{
-  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
-  "name": "ICD-10",
-  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
-  "date": "2023-09-15T00:00:00",
-  "version": "2024",
-  "properties": [
-    {
-      "name": "kind",
-      "type": "enum",
-      "description": "Kind of ICD class",
-      "valueSet": [
-          "block",
-          "category",
-          "chapter"
-      ]
-    }
-  ],
-  "concepts": [
-    {
-      "code": "C25",
-      "display": "Bösartige Neubildung des Pankreas",
-      "version": "2024",
-      "properties": {
-          "kind": [
-              "category"
-          ]
-      },
-      "parent": "C15-C26",
-      "children": [
-        "C25.4",
-        "C25.8",
-        "C25.0",
-        "C25.1",
-        "C25.9",
-        "C25.3",
-        "C25.7",
-        "C25.2"
-      ]
-    },
-    ...
-  ]
-}
-```
-</details>
-
-This CodeSystem structure is *conceptually* equivalent to [FHIR CodeSystem](https://hl7.org/fhir/R4/codesystem.html), but syntactically slightly different.
-
-#### Applying CodeSystem filters:
-
-CodeSystems can be requested with applied filters on the concepts by including the filter name(s) as URI query parameter "filter".
-The API supports combining filters with AND/OR logic: filter names concatenated into a pipe-separated value list as one "filter" parameter are combined as OR, whereas filters occurring in different "filter" parameter values are combined using AND.
-For instance, the following request represents the query "Get CodeSystem ICD-O-3, picking only concepts from ICD-O-3-M (morphology) and of kind 'block' or 'category'":
-
-```
-GET /api/coding/codesystems?uri=urn:oid:2.16.840.1.113883.6.43.1&filter=morphology&filter=is-a-block|is-a-category
-```
-
-
-### Get List of ValueSets
-
-```
-GET /api/coding/valuesets
-```
-
-**Response**
-<details>
-<summary>List of ValueSet info objects containing name, title and URI (currently identical to CodeSystem Info objects)</summary>
-
-```javascript
-{
-  "entries": [
-    {
-      "filters": [
-          {
-              "description": "Filter ICD classes of kind 'chapter'",
-              "name": "is-a-chapter"
-          },
-          {
-              "description": "Filter ICD classes of kind 'block'",
-              "name": "is-a-block"
-          },
-          {
-              "description": "Filter ICD classes of kind 'category'",
-              "name": "is-a-category"
-          }
-      ],
-      "latestVersion": "2024",
-      "name": "ICD-10",
-      "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
-      "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
-      "versions": [
-          "2019",
-          "2023",
-          "2020",
-          "2024",
-          "2021",
-          "2022"
-      ]
-    },
-    ...
-  ]
-}
-```
-</details>
-
-
-### Get specific ValueSet
-
-```
-GET /api/coding/valuesets?uri={ValueSet-URI}[&version={Version}]
-```
-
-**Response**
-<details>
-<summary>ValueSet object</summary>
-
-```javascript
-{
-  "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
-  "name": "ICD-10",
-  "title": "Internationale statistische Klassifikation der Krankheiten und verwandter Gesundheitsprobleme",
-  "date": "2023-09-15T00:00:00",
-  "version": "2024",
-  "concepts": [
-    {
-      "code": "C25",
-      "display": "Bösartige Neubildung des Pankreas",
-      "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
-      "version": "2024"
-    },
-    ...
-  ]
-}
-```
-</details>
-
-This ValueSet structure is *conceptually* equivalent to [FHIR ValueSet](https://hl7.org/fhir/R4/valueset.html), but syntactically slightly different.
 
 

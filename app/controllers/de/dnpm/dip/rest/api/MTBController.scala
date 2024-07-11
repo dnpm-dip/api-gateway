@@ -90,6 +90,11 @@ with QueryAuthorizations[UserPermissions]
   override val queryService: MTBQueryService =
     MTBQueryService.getInstance.get
 
+//  import scala.language.implicitConversions
+
+  // For implicit conversion of Filter DTO to predicate function
+  import queryService.filterToPredicate
+
 
   override val SubmitQuery =
     MTBQueryPermissions.SubmitQuery
@@ -113,12 +118,13 @@ with QueryAuthorizations[UserPermissions]
   private val DiagnosisCodes =
     Extractor.AsCodingsOf[ICD10GM]
 
+
+
   override def FilterFrom(
     req: RequestHeader,
-    patientFilter: PatientFilter
   ): MTBFilters = 
     MTBFilters(
-      patientFilter,
+      PatientFilterFrom(req),
       DiagnosisFilter(
         req.queryString.get("diagnosis[code]") collect {
           case DiagnosisCodes(icd10s) if icd10s.nonEmpty => icd10s
@@ -154,6 +160,21 @@ with QueryAuthorizations[UserPermissions]
     }
 
 
+  def therapyResponses(id: Query.Id): Action[AnyContent] =
+    AuthorizedAction(OwnershipOf(id)).async { 
+      implicit req =>
+
+        queryService.resultSet(id)
+          .map(
+            _.map(
+              _.medicationStats(FilterFrom(req))
+            )
+          )
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+
+    }
+
+
   def survivalStatistics(
     id: Query.Id,
     typ: Option[SurvivalType.Value],
@@ -161,7 +182,10 @@ with QueryAuthorizations[UserPermissions]
   ): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async { 
       implicit req =>
-        queryService.survivalStatistics(id,typ,grp)
+        queryService.resultSet(id)
+          .map(
+            _.map(_.survivalStatistics(typ,grp))
+          )
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
 
     }

@@ -109,10 +109,9 @@ with QueryAuthorizations[UserPermissions]
 
   override def FilterFrom(
     req: RequestHeader,
-    patientFilter: PatientFilter
   ): RDFilters = 
     RDFilters(
-      patientFilter,
+      PatientFilterFrom(req),
       HPOFilter(
         req.queryString.get("hpo[value]") collect {
           case HPOTerms(hpos) if hpos.nonEmpty => hpos

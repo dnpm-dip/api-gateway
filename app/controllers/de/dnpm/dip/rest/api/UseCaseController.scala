@@ -96,10 +96,10 @@ abstract class UseCaseController[UseCase <: UseCaseConfig]
 (
   implicit
   ec: ExecutionContext,
-  jsCriteria: OFormat[UseCase#Criteria],
-  jsFilters: Writes[UseCase#Filter],
-  jsPatRec: OFormat[UseCase#PatientRecord],
-  jsSummary: OWrites[UseCase#Results#SummaryType],
+  formatPatRec: OFormat[UseCase#PatientRecord],
+  formatCriteria: OFormat[UseCase#Criteria],
+  writesFilters: Writes[UseCase#Filter],
+  writesSummary: OWrites[UseCase#Results#SummaryType],
 )
 extends BaseController
 with JsonOps
@@ -118,8 +118,8 @@ with AuthorizationOps[UserPermissions]
 
   type PatientRecord = UseCase#PatientRecord
   type Criteria      = UseCase#Criteria
-  type Filter        = UseCase#Filter
   type Results       = UseCase#Results
+  type Filter        = UseCase#Filter
 
 
   protected implicit val completer: Completer[PatientRecord]
@@ -136,6 +136,10 @@ with AuthorizationOps[UserPermissions]
 
 
   import scala.language.implicitConversions
+
+  // For implicit conversion of Filter DTO to predicate function
+  import queryService.filterToPredicate
+
 
   implicit def querierFromRequest[T](
     implicit req: AuthenticatedRequest[UserPermissions,T]
@@ -271,7 +275,7 @@ with AuthorizationOps[UserPermissions]
   def getPreparedQueries: Action[AnyContent] =
     AuthenticatedAction.async { 
       implicit req =>
-        (queryService ? PreparedQuery.Query(Some(Querier(req.agent.id))))
+        (queryService ? PreparedQuery.Filter(Some(Querier(req.agent.id))))
           .map(_.map(Hyper(_)))
           .map(Collection(_))
           .map(Hyper(_))
@@ -368,9 +372,7 @@ with AuthorizationOps[UserPermissions]
     Extractor.AsCodingsOf[Site]
 
   
-  def PatientFilterFrom(
-    req: RequestHeader
-  ): PatientFilter = {
+  def PatientFilterFrom(req: RequestHeader): PatientFilter = {
 
     PatientFilter(
       req.queryString.get("gender").collect {
@@ -388,12 +390,11 @@ with AuthorizationOps[UserPermissions]
 
   }
 
-
+/*
   protected def FilterFrom(
     req: RequestHeader,
     patientFilter: PatientFilter
   ): Filter 
-
 
   def summary(
     id: Query.Id
@@ -402,10 +403,7 @@ with AuthorizationOps[UserPermissions]
       implicit req =>
         queryService.summary(
           id,
-          FilterFrom(
-            req,
-            PatientFilterFrom(req)
-          )
+          FilterFrom(req)
         )
         .map(_.map(Hyper(_)))
         .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
@@ -422,10 +420,7 @@ with AuthorizationOps[UserPermissions]
       implicit req =>
         queryService.patientMatches(
           id,
-          FilterFrom(
-            req,
-            PatientFilterFrom(req)
-          )
+          FilterFrom(req)
         )
         .map(
           _.map(
@@ -435,6 +430,46 @@ with AuthorizationOps[UserPermissions]
           )
         )
         .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+      
+    }
+
+*/
+
+  protected def FilterFrom(req: RequestHeader): Filter 
+
+
+  def summary(
+    id: Query.Id
+  ): Action[AnyContent] =
+    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+      implicit req =>
+        queryService
+          .resultSet(id)
+          .map(_.map(_.summary(FilterFrom(req))))
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
+
+  def patientMatches(
+    offset: Option[Int],
+    limit: Option[Int]
+  )(
+    implicit id: Query.Id
+  ): Action[AnyContent] =
+    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+      implicit req =>
+        queryService
+          .resultSet(id)
+          .map(_.map(_.patientMatches(FilterFrom(req)).asInstanceOf[Seq[PatientMatch[Criteria]]]))
+          .map(
+            _.map(
+              Collection(_,offset,limit)
+                .map(Hyper(_))
+                .pipe(Hyper(_))
+            )
+          )
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
       
     }
 
