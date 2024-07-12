@@ -1,6 +1,7 @@
 package de.dnpm.dip.rest.util.sapphyre
 
 
+import scala.util.chaining._
 import play.api.libs.json.{
   Json,
   JsObject,
@@ -97,8 +98,6 @@ object Hyper
     }
 
   }
-
-  import scala.util.chaining._
 
   implicit def writesHyper[T: OWrites]: OWrites[Hyper[T]] =
     OWrites {

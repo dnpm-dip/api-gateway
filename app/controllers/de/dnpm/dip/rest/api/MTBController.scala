@@ -72,6 +72,7 @@ class MTBController @Inject()(
 extends UseCaseController[MTBConfig]
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
+with MTBHypermedia
 {
 
   import scala.util.chaining._
@@ -89,8 +90,6 @@ with QueryAuthorizations[UserPermissions]
 
   override val queryService: MTBQueryService =
     MTBQueryService.getInstance.get
-
-//  import scala.language.implicitConversions
 
   // For implicit conversion of Filter DTO to predicate function
   import queryService.filterToPredicate

@@ -63,6 +63,7 @@ class RDController @Inject()(
 extends UseCaseController[RDConfig]
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
+with UseCaseHypermedia[RDConfig]
 {
 
   import de.dnpm.dip.rest.util.AuthorizationConversions._

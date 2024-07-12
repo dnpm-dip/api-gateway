@@ -103,13 +103,16 @@ abstract class UseCaseController[UseCase <: UseCaseConfig]
 )
 extends BaseController
 with JsonOps
-with UseCaseHypermedia[UseCase]
 with AuthorizationOps[UserPermissions]
 {
 
-  this: QueryAuthorizations[UserPermissions] with ValidationAuthorizations[UserPermissions] =>
+  this: 
+    QueryAuthorizations[UserPermissions]
+    with ValidationAuthorizations[UserPermissions]
+    with UseCaseHypermedia[UseCase] =>
 
 
+  import scala.language.implicitConversions
   import scala.util.chaining._
   import cats.data.NonEmptyList
   import cats.syntax.either._
@@ -134,8 +137,6 @@ with AuthorizationOps[UserPermissions]
   protected final lazy val orchestrator: Orchestrator[Future,PatientRecord] =
     new Orchestrator(validationService,queryService)
 
-
-  import scala.language.implicitConversions
 
   // For implicit conversion of Filter DTO to predicate function
   import queryService.filterToPredicate
@@ -390,53 +391,8 @@ with AuthorizationOps[UserPermissions]
 
   }
 
-/*
-  protected def FilterFrom(
-    req: RequestHeader,
-    patientFilter: PatientFilter
-  ): Filter 
-
-  def summary(
-    id: Query.Id
-  ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
-      implicit req =>
-        queryService.summary(
-          id,
-          FilterFrom(req)
-        )
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-    }
-
-
-  def patientMatches(
-    offset: Option[Int],
-    limit: Option[Int]
-  )(
-    implicit id: Query.Id
-  ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
-      implicit req =>
-        queryService.patientMatches(
-          id,
-          FilterFrom(req)
-        )
-        .map(
-          _.map(
-            Collection(_,offset,limit)
-              .map(Hyper(_))
-              .pipe(Hyper(_))
-          )
-        )
-        .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-      
-    }
-
-*/
 
   protected def FilterFrom(req: RequestHeader): Filter 
-
 
   def summary(
     id: Query.Id

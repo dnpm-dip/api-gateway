@@ -31,9 +31,6 @@ import scala.util.chaining._
 trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 {
 
-  self: UseCaseController[UseCase] =>
-
-
   type QueryType = Query[UseCase#Criteria,UseCase#Filter]
 
   type PreparedQueryType = PreparedQuery[UseCase#Criteria]
@@ -111,8 +108,6 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
           SELF                  -> selfLink,
           "summary"             -> Link(s"${Uri(query)}/summary"),
           "patient-matches"     -> Link(s"${Uri(query)}/patient-matches"),
-          "kaplan-meier-config" -> Link(s"$BASE_URI/kaplan-meier/config"),
-          "kaplan-meier-stats"  -> Link(s"${Uri(query)}/survival-statistics[?type={type}&grouping={grouping}]")
         )
         .withOperations(
           UPDATE   -> Operation(PUT, selfLink)
