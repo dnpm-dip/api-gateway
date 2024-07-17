@@ -166,7 +166,8 @@ with MTBHypermedia
         queryService.resultSet(id)
           .map(
             _.map(
-              _.medicationStats(FilterFrom(req))
+              _.therapyResponses(FilterFrom(req))
+               .pipe(Collection(_))
             )
           )
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))

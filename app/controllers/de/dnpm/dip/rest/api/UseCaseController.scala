@@ -417,7 +417,12 @@ with AuthorizationOps[UserPermissions]
       implicit req =>
         queryService
           .resultSet(id)
-          .map(_.map(_.patientMatches(FilterFrom(req)).asInstanceOf[Seq[PatientMatch[Criteria]]]))
+          .map(
+            _.map(
+              _.patientMatches(FilterFrom(req))
+               .asInstanceOf[Seq[PatientMatch[Criteria]]]
+            )
+          )
           .map(
             _.map(
               Collection(_,offset,limit)
