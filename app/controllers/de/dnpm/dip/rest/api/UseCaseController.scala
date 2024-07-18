@@ -407,6 +407,18 @@ with AuthorizationOps[UserPermissions]
     }
 
 
+  def demographics(
+    id: Query.Id
+  ): Action[AnyContent] =
+    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+      implicit req =>
+        queryService
+          .resultSet(id)
+          .map(_.map(_.demographics(FilterFrom(req))))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
+
   def patientMatches(
     offset: Option[Int],
     limit: Option[Int]

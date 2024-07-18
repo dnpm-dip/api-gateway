@@ -158,6 +158,24 @@ with MTBHypermedia
         .pipe(Ok(_))
     }
 
+  def tumorDiagnostics(id: Query.Id): Action[AnyContent] =
+    AuthorizedAction(OwnershipOf(id)).async { 
+      implicit req =>
+
+        queryService.resultSet(id)
+          .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
+
+  def medication(id: Query.Id): Action[AnyContent] =
+    AuthorizedAction(OwnershipOf(id)).async { 
+      implicit req =>
+
+        queryService.resultSet(id)
+          .map(_.map(_.medication(FilterFrom(req))))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
 
   def therapyResponses(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async { 

@@ -17,6 +17,8 @@ trait MTBHypermedia extends UseCaseHypermedia[MTBConfig]
         h => h.addLinks(
           "kaplan-meier-config" -> Link(s"$BASE_URI/kaplan-meier/config"),
           "kaplan-meier-stats"  -> Link(s"${Uri(h.data)}/survival-statistics[?type={type}&grouping={grouping}]"),
+          "tumor-diagnostics"   -> Link(s"${Uri(h.data)}/tumor-diagnostics"),
+          "medication"          -> Link(s"${Uri(h.data)}/medication"),
           "therapy-responses"   -> Link(s"${Uri(h.data)}/therapy-responses")
         )
       )
