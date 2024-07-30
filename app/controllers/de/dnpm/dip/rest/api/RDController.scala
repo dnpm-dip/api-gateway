@@ -63,7 +63,8 @@ class RDController @Inject()(
 extends UseCaseController[RDConfig]
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
-with UseCaseHypermedia[RDConfig]
+with RDHypermedia
+//with UseCaseHypermedia[RDConfig]
 {
 
   import de.dnpm.dip.rest.util.AuthorizationConversions._
@@ -125,4 +126,17 @@ with UseCaseHypermedia[RDConfig]
       )
     )
   
+  
+  // For implicit conversion of Filter DTO to predicate function
+  import queryService.filterToPredicate
+
+  def diagnostics(id: Query.Id): Action[AnyContent] =
+    AuthorizedAction(OwnershipOf(id)).async { 
+      implicit req =>
+
+        queryService.resultSet(id)
+          .map(_.map(_.diagnostics(FilterFrom(req))))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
 }

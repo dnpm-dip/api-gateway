@@ -43,6 +43,9 @@ extends UseCaseRouter[RDConfig]("rd")
 
   override val additionalRoutes = {
 
+    case GET(p"/queries/${QueryId(id)}/diagnostics") =>
+      controller.diagnostics(id)
+
     case GET(p"/fake/data/patient-record") =>
       controller.Action {
         Gen.of[RDPatientRecord].next
