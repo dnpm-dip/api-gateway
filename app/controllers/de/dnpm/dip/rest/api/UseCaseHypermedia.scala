@@ -106,7 +106,6 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
         query.withLinks(
           SELF                  -> selfLink,
-          "summary"             -> Link(s"${Uri(query)}/summary"),
           "demographics"        -> Link(s"${Uri(query)}/demographics"),
           "patient-matches"     -> Link(s"${Uri(query)}/patient-matches"),
         )
@@ -125,16 +124,6 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
          "submit" -> Operation(POST, Link(QUERY_BASE_URI))
        )
 
-    }
-
-
-  implicit def HyperSummary: Hyper.Mapper[UseCase#Results#SummaryType] =
-    Hyper.Mapper {
-      summary =>
-        summary.withLinks(
-          "query"           -> Link(QueryUri(summary.id)),
-          "patient-matches" -> Link(s"${QueryUri(summary.id)}/patient-matches")
-        )
     }
 
 

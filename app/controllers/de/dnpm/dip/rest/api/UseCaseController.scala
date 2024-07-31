@@ -99,7 +99,6 @@ abstract class UseCaseController[UseCase <: UseCaseConfig]
   formatPatRec: OFormat[UseCase#PatientRecord],
   formatCriteria: OFormat[UseCase#Criteria],
   writesFilters: Writes[UseCase#Filter],
-  writesSummary: OWrites[UseCase#Results#SummaryType],
 )
 extends BaseController
 with JsonOps
@@ -393,19 +392,6 @@ with AuthorizationOps[UserPermissions]
 
 
   protected def FilterFrom(req: RequestHeader): Filter 
-
-  def summary(
-    id: Query.Id
-  ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
-      implicit req =>
-        queryService
-          .resultSet(id)
-          .map(_.map(_.summary(FilterFrom(req))))
-          .map(_.map(Hyper(_)))
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-    }
-
 
   def demographics(
     id: Query.Id

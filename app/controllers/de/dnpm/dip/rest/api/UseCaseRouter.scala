@@ -160,9 +160,6 @@ extends SimpleRouter
     case PUT(p"/queries/${QueryId(id)}") =>
       controller.update(id)
 
-    case GET(p"/queries/${QueryId(id)}/summary") =>
-      controller.summary(id)
-
     case GET(p"/queries/${QueryId(id)}/demographics") =>
       controller.demographics(id)
 
