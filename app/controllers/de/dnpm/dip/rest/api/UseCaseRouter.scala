@@ -107,7 +107,7 @@ extends SimpleRouter
       controller.validate
 
     case POST(p"/etl/patient-record") =>
-      controller.upload
+      controller.processUpload
 
     case DELETE(p"/etl/patient/${PatId(patId)}") =>
       controller.deleteData(patId)

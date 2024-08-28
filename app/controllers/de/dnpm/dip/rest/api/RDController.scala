@@ -47,6 +47,7 @@ import de.dnpm.dip.rd.query.api.{
   RDQueryService,
   RDResultSet
 }
+import de.dnpm.dip.rd.mvh.api.RDMVHService
 import de.dnpm.dip.auth.api.{
   Authorization,
   UserPermissions,
@@ -64,7 +65,6 @@ extends UseCaseController[RDConfig]
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with RDHypermedia
-//with UseCaseHypermedia[RDConfig]
 {
 
   import de.dnpm.dip.rest.util.AuthorizationConversions._
@@ -81,6 +81,9 @@ with RDHypermedia
 
   override val queryService: RDQueryService =
     RDQueryService.getInstance.get
+
+  override val mvhService: RDMVHService =
+    RDMVHService.getInstance.get
 
 
   override val SubmitQuery =

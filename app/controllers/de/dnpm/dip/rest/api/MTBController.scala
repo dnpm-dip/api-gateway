@@ -40,6 +40,7 @@ import de.dnpm.dip.mtb.model.{
 import de.dnpm.dip.mtb.model.v1
 import v1.mappings._
 import de.dnpm.dip.util.mapping.syntax._
+import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
@@ -54,6 +55,7 @@ import de.dnpm.dip.mtb.query.api.{
   MTBQueryService,
   MTBResultSet
 }
+import de.dnpm.dip.mtb.mvh.api.MTBMVHService
 import de.dnpm.dip.mtb.query.api.KaplanMeier.{
   SurvivalType,
   Grouping
@@ -90,6 +92,10 @@ with MTBHypermedia
 
   override val queryService: MTBQueryService =
     MTBQueryService.getInstance.get
+
+  override val mvhService: MTBMVHService =
+    MTBMVHService.getInstance.get
+
 
   // For implicit conversion of Filter DTO to predicate function
   import queryService.filterToPredicate
@@ -143,10 +149,16 @@ with MTBHypermedia
     parse.using(
       _.contentType match {
         case Some("application/json+v2") =>
-          JsonBody[MTBPatientRecord]
+          JsonBody[DataUpload[MTBPatientRecord]]
 
         case _ =>
-          JsonBody[v1.MTBPatientRecord].map(_.mapTo[MTBPatientRecord])
+          JsonBody[DataUpload[v1.MTBPatientRecord]].map {
+            case DataUpload(record,meta) =>
+              DataUpload(
+                record.mapTo[MTBPatientRecord],
+                meta
+              )
+          }
       }
     )
 

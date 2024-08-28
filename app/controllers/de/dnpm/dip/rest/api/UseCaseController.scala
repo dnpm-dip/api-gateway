@@ -27,21 +27,23 @@ import play.api.libs.json.{
 import cats.data.Ior
 import cats.Monad
 import de.dnpm.dip.util.Completer
-import de.dnpm.dip.service.Orchestrator
-import de.dnpm.dip.service.Data.{
-  Save,
+import de.dnpm.dip.service.{
+  DataUpload,
+  Orchestrator
+}
+import Orchestrator.{
+  Process,
   Saved,
   SavedWithIssues,
   Delete,
-  Deleted,
-  FatalIssuesDetected,
-  UnacceptableIssuesDetected,
-  GenericError
+  Deleted
 }
 import de.dnpm.dip.service.validation.ValidationService
 import ValidationService.{
   Validate,
-  DataAcceptableWithIssues
+  DataAcceptableWithIssues,
+  FatalIssuesDetected,
+  UnacceptableIssuesDetected,
 }
 import de.dnpm.dip.service.query.{
   PatientFilter,
@@ -54,6 +56,10 @@ import de.dnpm.dip.service.query.{
   PreparedQuery,
   ResultSet,
   UseCaseConfig
+}
+import de.dnpm.dip.service.mvh.{
+  MVHService,
+  Metadata
 }
 import de.dnpm.dip.coding.{
   Coding,
@@ -90,7 +96,6 @@ object QueryPatch
   implicit def format[Criteria: Reads]: Reads[QueryPatch[Criteria]] =
     Json.reads[QueryPatch[Criteria]]
 }
-
 
 abstract class UseCaseController[UseCase <: UseCaseConfig]
 (
@@ -133,8 +138,14 @@ with AuthorizationOps[UserPermissions]
 
   protected val queryService: QueryService[Future,Monad[Future],UseCase]
 
+  protected val mvhService: MVHService[Future,Monad[Future],PatientRecord]
+
   protected final lazy val orchestrator: Orchestrator[Future,PatientRecord] =
-    new Orchestrator(validationService,queryService)
+    new Orchestrator(
+      validationService,
+      mvhService,
+      queryService
+    )
 
 
   // For implicit conversion of Filter DTO to predicate function
@@ -179,48 +190,52 @@ with AuthorizationOps[UserPermissions]
   // --------------------------------------------------------------------------  
 
   protected val patientRecordParser =
-    JsonBody[PatientRecord]
+    JsonBody[DataUpload[PatientRecord]]
 
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        (validationService ! Validate(req.body)).map {
+        (validationService ! Validate(req.body.record)).collect {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
           case Left(FatalIssuesDetected(report))         => BadRequest(Json.toJson(report))
-          case Left(GenericError(err))                   => InternalServerError(err)
-          case _                                         => InternalServerError("Unexpected data upload outcome")
+          case Left(ValidationService.GenericError(err)) => InternalServerError(err)
         }
     }
 
 
-  def upload =
+  def processUpload =
     Action.async(patientRecordParser){ 
       req =>
-        (orchestrator ! Save(req.body))
-          .map {
-            case Right(Saved(snp))                        => Ok(Json.toJson(snp))
-            case Right(SavedWithIssues(snp,report))       => Created(Json.toJson(report))
-            case Left(UnacceptableIssuesDetected(report)) => UnprocessableEntity(Json.toJson(report))
-            case Left(FatalIssuesDetected(report))        => BadRequest(Json.toJson(report))
-            case Left(GenericError(err))                  => InternalServerError(err)
-            case _                                        => InternalServerError("Unexpected data upload outcome")
-          }
+        (orchestrator ! Process(req.body)).collect {
+          case Right(Saved(snp))                  => Ok(Json.toJson(snp))
+          case Right(SavedWithIssues(snp,report)) => Created(Json.toJson(report))
+          case Left(err) =>
+            err match {
+              case Left(UnacceptableIssuesDetected(report))   => UnprocessableEntity(Json.toJson(report))
+              case Left(FatalIssuesDetected(report))          => BadRequest(Json.toJson(report))
+              case Left(ValidationService.GenericError(msg))  => InternalServerError(msg)
+              case Right(QueryService.GenericError(msg))      => InternalServerError(msg)
+            }
+        }
     }
-
 
   def deleteData(patId: Id[Patient]): Action[AnyContent] =
     Action.async { 
       (orchestrator ! Delete(patId))
-        .map {
-          case Right(Deleted(id))      => Ok(s"Deleted data of Patient ${id.value}")
-          case Left(GenericError(err)) => InternalServerError(err)
-          case _                       => InternalServerError("Unexpected data deletion outcome")
+        .collect {
+          case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
+          case Left(err) =>
+            err match {
+              case Left(ValidationService.GenericError(msg)) => InternalServerError(msg)
+              case Right(QueryService.GenericError(msg))     => InternalServerError(msg)
+              case Left(_)                                   => InternalServerError("Unexpected data deletion outcome")
+            }
         }
-         
     }
 
+         
   // --------------------------------------------------------------------------  
   // Validation Result Operations
   // --------------------------------------------------------------------------  
