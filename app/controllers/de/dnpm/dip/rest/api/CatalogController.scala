@@ -14,6 +14,7 @@ import play.api.mvc.{
   BaseController,
   ControllerComponents
 }
+import play.api.cache.Cached
 import play.api.libs.json.Json.toJson
 import de.dnpm.dip.coding.{
   Coding,
@@ -31,6 +32,7 @@ import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
 class CatalogController @Inject()(
+  val cached: Cached,
   override val controllerComponents: ControllerComponents
 )(
   implicit ec: ExecutionContext
@@ -92,7 +94,7 @@ with CatalogHypermedia
                     .toList
                     .sorted(atc.versionOrdering.reverse)
                     .traverse(version => catalogService.codeSystem(u,Some(version),fltrs))
-                    .map(    // Future[List[Option[CodeSystem[ATC]]]]
+                    .map( 
                       _.flatten
                        .reduce(
                          (acc,cs) =>
@@ -116,13 +118,14 @@ with CatalogHypermedia
     uri: URI,
     version: Option[String],
     filters: Seq[String]
-  ): Action[AnyContent] =
-    Action.async {
-      getCodeSystem(uri,version,filters)
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_))
+  ) =
+    cached.status(_.uri,OK){
+      Action.async {
+        getCodeSystem(uri,version,filters)
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_))
+      }
     }
-
 
 
   def valueSetInfos: Action[AnyContent] =
@@ -139,6 +142,35 @@ with CatalogHypermedia
     uri: URI,
     version: Option[String],
     filters: Seq[String]
+  ) =
+    cached.status(_.uri,OK){
+      Action.async {
+        catalogService.valueSet(uri,version)
+          .filter(_.isDefined)
+          .fallbackTo(
+            getCodeSystem(uri,version,filters)
+              .map(_.map(ValueSet.from(_)))
+          )
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_))
+      }
+    }
+
+/*
+  def codeSystem(
+    uri: URI,
+    version: Option[String],
+    filters: Seq[String]
+  ): Action[AnyContent] =
+    Action.async {
+      getCodeSystem(uri,version,filters)
+        .map(_.map(Hyper(_)))
+        .map(JsonResult(_))
+    }
+  def valueSet(
+    uri: URI,
+    version: Option[String],
+    filters: Seq[String]
   ): Action[AnyContent] =
     Action.async {
       catalogService.valueSet(uri,version)
@@ -150,5 +182,5 @@ with CatalogHypermedia
         .map(_.map(Hyper(_)))
         .map(JsonResult(_))
     }
-
+*/
 }

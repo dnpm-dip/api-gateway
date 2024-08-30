@@ -19,6 +19,10 @@ import play.api.libs.json.{
   Reads,
   Writes
 }
+import play.api.cache.{
+  Cached,
+  SyncCacheApi => Cache
+}
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.{
@@ -57,6 +61,8 @@ import de.dnpm.dip.auth.api.{
 
 
 class RDController @Inject()(
+  override val cache: Cache,
+  override val cached: Cached,
   override val controllerComponents: ControllerComponents,
 )(
   implicit ec: ExecutionContext,
@@ -131,7 +137,7 @@ with RDHypermedia
   
   
   // For implicit conversion of Filter DTO to predicate function
-  import queryService.filterToPredicate
+//  import queryService.filterToPredicate
 
   def diagnostics(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async { 

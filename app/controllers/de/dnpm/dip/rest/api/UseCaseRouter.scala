@@ -1,6 +1,8 @@
 package de.dnpm.dip.rest.api
 
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
@@ -65,6 +67,10 @@ extends SimpleRouter
 
   private val Sites =
     Extractor.AsCodingsOf[Site]
+
+  private val dateTime =
+    Extractor.optional((s: String) => LocalDateTime.parse(s,ISO_LOCAL_DATE_TIME)) 
+//    Extractor((s: Option[String]) => s.map(LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME))) 
 
 
   val prefix =
@@ -136,6 +142,16 @@ extends SimpleRouter
 
     case POST(p"/peer2peer/patient-record") =>
       controller.patientRecordRequest
+
+
+    // ------------------------------------------------------------------------
+    // MVH Endpoints  
+    // ------------------------------------------------------------------------
+
+    case GET(p"/peer2peer/mvh/submission-reports"
+      ? q_o"created-after=${dateTime(start)}"
+      & q_o"created-before=${dateTime(end)}") =>
+      controller.mvhSubmissionReports(start,end)
 
 
     // ------------------------------------------------------------------------

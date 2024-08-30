@@ -7,6 +7,7 @@ import scala.concurrent.{
   Future,
   ExecutionContext
 }
+import scala.util.Success
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -18,6 +19,10 @@ import play.api.libs.json.{
   Format,
   Reads,
   Writes
+}
+import play.api.cache.{
+  Cached,
+  SyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -67,6 +72,8 @@ import de.dnpm.dip.auth.api.{
 }
 
 class MTBController @Inject()(
+  override val cache: Cache,
+  override val cached: Cached,
   override val controllerComponents: ControllerComponents,
 )(
   implicit ec: ExecutionContext,
@@ -95,10 +102,6 @@ with MTBHypermedia
 
   override val mvhService: MTBMVHService =
     MTBMVHService.getInstance.get
-
-
-  // For implicit conversion of Filter DTO to predicate function
-  import queryService.filterToPredicate
 
 
   override val SubmitQuery =
@@ -170,38 +173,52 @@ with MTBHypermedia
         .pipe(Ok(_))
     }
 
-  def tumorDiagnostics(id: Query.Id): Action[AnyContent] =
-    AuthorizedAction(OwnershipOf(id)).async { 
-      implicit req =>
-
-        queryService.resultSet(id)
-          .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+  def tumorDiagnostics(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen {
+              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+            }
+      }
     }
 
 
-  def medication(id: Query.Id): Action[AnyContent] =
-    AuthorizedAction(OwnershipOf(id)).async { 
-      implicit req =>
-
-        queryService.resultSet(id)
-          .map(_.map(_.medication(FilterFrom(req))))
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+  def medication(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+      
+          queryService.resultSet(id)
+            .map(_.map(_.medication(FilterFrom(req))))
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen {
+              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+            }
+      }
     }
 
-  def therapyResponses(id: Query.Id): Action[AnyContent] =
-    AuthorizedAction(OwnershipOf(id)).async { 
-      implicit req =>
-
-        queryService.resultSet(id)
-          .map(
-            _.map(
-              _.therapyResponses(FilterFrom(req))
-               .pipe(Collection(_))
+  def therapyResponses(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.therapyResponses(FilterFrom(req))
+                 .pipe(Collection(_))
+              )
             )
-          )
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen {
+              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+            }
+      }
     }
 
 
@@ -209,16 +226,19 @@ with MTBHypermedia
     id: Query.Id,
     typ: Option[SurvivalType.Value],
     grp: Option[Grouping.Value]
-  ): Action[AnyContent] =
-    AuthorizedAction(OwnershipOf(id)).async { 
-      implicit req =>
-        queryService.resultSet(id)
-          .map(
-            _.map(_.survivalStatistics(typ,grp))
-          )
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-
+  ) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+          queryService.resultSet(id)
+            .map(
+              _.map(_.survivalStatistics(typ,grp))
+            )
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen {
+              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+            }
+      }
     }
-
 
 }

@@ -40,6 +40,10 @@ object Extractor
     }
 
 
+  def optional[S,T](f: S => T): Extractor[Option[S],Option[T]] =
+    apply((opt: Option[S]) => opt.map(f))
+
+
   def AsCoding[T: CodeSystem]: Extractor[String,Coding[T]] =
     CodeSystem[T].codingWithCode(_)
   

@@ -19,6 +19,7 @@ scalacOptions ++= Seq(
 
 
 libraryDependencies ++= Seq(
+  caffeine,
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.1" % Test,  //TODO: version!
   "de.ekut.tbi"            %% "generators"                  % "1.0-SNAPSHOT",

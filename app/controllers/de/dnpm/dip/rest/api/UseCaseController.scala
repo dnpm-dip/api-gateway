@@ -1,15 +1,18 @@
 package de.dnpm.dip.rest.api
 
 
+import java.time.LocalDateTime
 import javax.inject.Inject
 import scala.util.{
   Left,
-  Right
+  Right,
+  Success
 }
 import scala.concurrent.{
   Future,
   ExecutionContext
 }
+import scala.concurrent.duration._
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -23,6 +26,10 @@ import play.api.libs.json.{
   Reads,
   Writes,
   OWrites
+}
+import play.api.cache.{
+  Cached,
+  SyncCacheApi
 }
 import cats.data.Ior
 import cats.Monad
@@ -59,7 +66,8 @@ import de.dnpm.dip.service.query.{
 }
 import de.dnpm.dip.service.mvh.{
   MVHService,
-  Metadata
+  Metadata,
+  SubmissionReport
 }
 import de.dnpm.dip.coding.{
   Coding,
@@ -70,6 +78,7 @@ import de.dnpm.dip.model.{
   Gender,
   VitalStatus,
   Patient,
+  OpenEndPeriod => Period,
   Site,
   Snapshot
 }
@@ -97,8 +106,9 @@ object QueryPatch
     Json.reads[QueryPatch[Criteria]]
 }
 
-abstract class UseCaseController[UseCase <: UseCaseConfig]
-(
+
+
+abstract class UseCaseController[UseCase <: UseCaseConfig](
   implicit
   ec: ExecutionContext,
   formatPatRec: OFormat[UseCase#PatientRecord],
@@ -129,6 +139,11 @@ with AuthorizationOps[UserPermissions]
   type Filter        = UseCase#Filter
 
 
+  protected val cache: SyncCacheApi
+  protected val cached: Cached
+  protected val cachingDuration: Duration = 10 minutes
+
+
   protected implicit val completer: Completer[PatientRecord]
 
   protected implicit val authService: UserAuthenticationService =
@@ -146,10 +161,6 @@ with AuthorizationOps[UserPermissions]
       mvhService,
       queryService
     )
-
-
-  // For implicit conversion of Filter DTO to predicate function
-  import queryService.filterToPredicate
 
 
   implicit def querierFromRequest[T](
@@ -174,6 +185,34 @@ with AuthorizationOps[UserPermissions]
       implicit user =>
         (queryService ? id).map(_.exists(_.querier.value == user.id))
     }
+
+
+  // -------------------------------------------------------------------------- 
+  // Cache Management 
+  // -------------------------------------------------------------------------- 
+
+  // Keep track of which Result keys are cached for a given Query,
+  // in order to be able to remove them when the Query is updated or deleted (see below)
+  protected def updateCachedResultUris(
+    query: Query.Id,
+    key: String
+  ) =
+    cache.get[Set[String]](query.toString)
+      .orElse(Some(Set.empty[String]))
+      .foreach(
+        keys => cache.set(
+          query.toString,
+          keys + key,
+          cachingDuration*2.0  // ensure this info is cached longer than results
+        )
+      )
+
+  protected def clearCachedResults(query: Query.Id) =
+    cache.get[Set[String]](query.toString)
+      .foreach(
+        _.foreach(cache.remove)
+      )
+  // --------------------------------------------------------------------------  
 
 
 
@@ -351,7 +390,7 @@ with AuthorizationOps[UserPermissions]
 
 
   def update(id: Query.Id) =
-    AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async{ 
+    AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async { 
       implicit req =>
         (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
           .map {
@@ -366,6 +405,9 @@ with AuthorizationOps[UserPermissions]
                 case Query.InvalidId              => NotFound(Json.toJson(Outcome(s"Invalid Query ID ${id.value}")))
               }
           }
+          .andThen { 
+            case Success(res) if res.header.status == OK => clearCachedResults(id)
+          }
     }
 
 
@@ -375,7 +417,11 @@ with AuthorizationOps[UserPermissions]
         (queryService ! Query.Delete(id))
           .map(_.toOption)
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+          .andThen { 
+            case Success(res) if res.header.status == OK => clearCachedResults(id)
+          }
     }
+
 
   private val Genders =
     Extractor.AsCodings[Gender.Value]
@@ -387,8 +433,7 @@ with AuthorizationOps[UserPermissions]
     Extractor.AsCodingsOf[Site]
 
   
-  def PatientFilterFrom(req: RequestHeader): PatientFilter = {
-
+  def PatientFilterFrom(req: RequestHeader): PatientFilter = 
     PatientFilter(
       req.queryString.get("gender").collect {
         case Genders(gender) if gender.nonEmpty => gender
@@ -403,20 +448,24 @@ with AuthorizationOps[UserPermissions]
       }
     )
 
-  }
-
 
   protected def FilterFrom(req: RequestHeader): Filter 
 
+
   def demographics(
     id: Query.Id
-  ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
-      implicit req =>
-        queryService
-          .resultSet(id)
-          .map(_.map(_.demographics(FilterFrom(req))))
-          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+  ) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+        implicit req =>
+          queryService
+            .resultSet(id)
+            .map(_.map(_.demographics(FilterFrom(req))))
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen { 
+              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri) 
+            }
+      }
     }
 
 
@@ -495,5 +544,15 @@ with AuthorizationOps[UserPermissions]
           .map(JsonResult(_))
     }
 
+
+  def mvhSubmissionReports(
+    start: Option[LocalDateTime],
+    end: Option[LocalDateTime]
+  ) = Action.async {
+    (mvhService ? SubmissionReport.Filter(start.map(Period(_,end))))
+      .map(rs => Collection(rs.toSeq))
+      .map(Json.toJson(_))
+      .map(Ok(_))
+  }
 
 }
