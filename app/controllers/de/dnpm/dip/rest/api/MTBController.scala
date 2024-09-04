@@ -7,7 +7,10 @@ import scala.concurrent.{
   Future,
   ExecutionContext
 }
-import scala.util.Success
+import scala.util.{
+  Success,
+  Try
+}
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -22,7 +25,7 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  SyncCacheApi => Cache
+  AsyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -33,11 +36,15 @@ import de.dnpm.dip.service.query.{
   ResultSet
 }
 import de.dnpm.dip.coding.{
+  Code,
   Coding,
   CodeSystem
 }
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
+import de.dnpm.dip.coding.atc.ATC
+import de.dnpm.dip.coding.UnregisteredMedication
+import de.dnpm.dip.model.Medications
 import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
@@ -55,6 +62,8 @@ import de.dnpm.dip.mtb.query.api.{
   MTBConfig,
   MTBFilters,
   DiagnosisFilter,
+  RecommendationFilter,
+  TherapyFilter,
   KaplanMeier,
   MTBQueryPermissions,
   MTBQueryService,
@@ -127,6 +136,48 @@ with MTBHypermedia
     Extractor.AsCodingsOf[ICD10GM]
 
 
+  private val MedicationCodes = {
+
+    import scala.util.matching.Regex
+    import cats.syntax.traverse._
+ 
+    val atc = "(?i)atc".r.unanchored
+
+    Extractor.unlift[Seq[String],Set[Set[Coding[Medications]]]](
+      params =>
+        Option(
+          params
+            .map(_ split ",")
+            .flatMap(
+              _.toList
+               .map(_ split "\\|")
+               .map {
+                 vals =>
+                   for {
+                     code <- Try(vals(0))
+                     system =
+                       Try(vals(1)).collect {
+                         case uri if atc matches uri => Coding.System[ATC].uri
+                       }
+                       .getOrElse(Coding.System[UnregisteredMedication].uri)
+                     version = Try(vals(2)).toOption
+                   } yield
+                     Coding[Medications](
+                       Code(code),
+                       None,
+                       system,
+                       version
+                     )
+               }
+               .sequence
+               .toOption
+               .map(_.toSet)
+             )
+             .toSet
+        )
+    )
+  }
+
 
   override def FilterFrom(
     req: RequestHeader,
@@ -136,6 +187,16 @@ with MTBHypermedia
       DiagnosisFilter(
         req.queryString.get("diagnosis[code]") collect {
           case DiagnosisCodes(icd10s) if icd10s.nonEmpty => icd10s
+        }
+      ),
+      RecommendationFilter(
+        req.queryString.get("recommendation[medication]") collect { 
+          case MedicationCodes(codes) if codes.nonEmpty => codes
+        }
+      ),
+      TherapyFilter(
+        req.queryString.get("therapy[medication]") collect { 
+          case MedicationCodes(codes) if codes.nonEmpty => codes
         }
       )
     )
@@ -182,7 +243,7 @@ with MTBHypermedia
             .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
             .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
             .andThen {
-              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
       }
     }
@@ -197,7 +258,7 @@ with MTBHypermedia
             .map(_.map(_.medication(FilterFrom(req))))
             .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
             .andThen {
-              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
       }
     }
@@ -216,7 +277,7 @@ with MTBHypermedia
             )
             .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
             .andThen {
-              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
       }
     }
@@ -236,7 +297,7 @@ with MTBHypermedia
             )
             .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
             .andThen {
-              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri)
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
       }
     }

@@ -29,7 +29,8 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  SyncCacheApi
+  AsyncCacheApi
+//  SyncCacheApi
 }
 import cats.data.Ior
 import cats.Monad
@@ -139,7 +140,8 @@ with AuthorizationOps[UserPermissions]
   type Filter        = UseCase#Filter
 
 
-  protected val cache: SyncCacheApi
+  protected val cache: AsyncCacheApi
+//  protected val cache: SyncCacheApi
   protected val cached: Cached
   protected val cachingDuration: Duration = 10 minutes
 
@@ -193,7 +195,32 @@ with AuthorizationOps[UserPermissions]
 
   // Keep track of which Result keys are cached for a given Query,
   // in order to be able to remove them when the Query is updated or deleted (see below)
-  protected def updateCachedResultUris(
+  protected def addCachedResult(
+    query: Query.Id,
+    key: String
+  ) =
+    cache.get[Set[String]](query.toString)
+      .foreach(
+        _.orElse(Some(Set.empty[String]))
+         .foreach(keys =>
+           cache.set(
+             query.toString,
+             keys + key,
+             cachingDuration * 2.0  // ensure this info is cached longer than results
+           )
+         )
+      )
+
+  protected def clearCachedResults(query: Query.Id) =
+    cache.get[Set[String]](query.toString)
+      .foreach(
+        _.foreach(
+          _.foreach(cache.remove)
+        )
+      )
+
+/*
+  protected def addCachedResult(
     query: Query.Id,
     key: String
   ) =
@@ -212,6 +239,7 @@ with AuthorizationOps[UserPermissions]
       .foreach(
         _.foreach(cache.remove)
       )
+*/      
   // --------------------------------------------------------------------------  
 
 
@@ -463,7 +491,7 @@ with AuthorizationOps[UserPermissions]
             .map(_.map(_.demographics(FilterFrom(req))))
             .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
             .andThen { 
-              case Success(res) if res.header.status == OK => updateCachedResultUris(id,req.uri) 
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri) 
             }
       }
     }
