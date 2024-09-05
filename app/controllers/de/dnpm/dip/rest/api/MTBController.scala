@@ -133,7 +133,7 @@ with MTBHypermedia
 
 
   private val DiagnosisCodes =
-    Extractor.AsCodingsOf[ICD10GM]
+    CodingExtractor[ICD10GM].set
 
 
   private val MedicationCodes = {

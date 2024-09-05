@@ -30,7 +30,6 @@ import play.api.libs.json.{
 import play.api.cache.{
   Cached,
   AsyncCacheApi
-//  SyncCacheApi
 }
 import cats.data.Ior
 import cats.Monad
@@ -141,7 +140,6 @@ with AuthorizationOps[UserPermissions]
 
 
   protected val cache: AsyncCacheApi
-//  protected val cache: SyncCacheApi
   protected val cached: Cached
   protected val cachingDuration: Duration = 10 minutes
 
@@ -452,13 +450,13 @@ with AuthorizationOps[UserPermissions]
 
 
   private val Genders =
-    Extractor.AsCodings[Gender.Value]
+    CodingExtractor[Gender.Value].set
 
   private val VitalStatuses =
-    Extractor.AsCodings[VitalStatus.Value]
+    CodingExtractor[VitalStatus.Value].set
 
   private val Sites =
-    Extractor.AsCodingsOf[Site]
+    CodingExtractor[Site].set
 
   
   def PatientFilterFrom(req: RequestHeader): PatientFilter = 

@@ -53,24 +53,13 @@ extends SimpleRouter
   protected val PreparedQueryId =
     Extractor(PreparedQuery.Id(_))
 
-  private val PatId =
+  protected val PatId =
     Extractor(Id[Patient](_))
 
-  private val QueryMode =
-    Extractor.AsCoding[Query.Mode.Value]
-
-  private val Genders =
-    Extractor.AsCodings[Gender.Value]
-
-  private val VitalStatuses =
-    Extractor.AsCodings[VitalStatus.Value]
-
-  private val Sites =
-    Extractor.AsCodingsOf[Site]
-
-  private val dateTime =
-    Extractor.optional((s: String) => LocalDateTime.parse(s,ISO_LOCAL_DATE_TIME)) 
-//    Extractor((s: Option[String]) => s.map(LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME))) 
+  protected val dateTime =
+    Extractor.optional(
+      (s: String) => LocalDateTime.parse(s,ISO_LOCAL_DATE_TIME)
+    ) 
 
 
   val prefix =

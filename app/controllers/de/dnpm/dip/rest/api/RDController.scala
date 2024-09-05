@@ -22,7 +22,6 @@ import play.api.libs.json.{
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
-//  SyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -113,10 +112,10 @@ with RDHypermedia
 
 
   private val HPOTerms =
-    Extractor.AsCodingsOf[HPO]
+    CodingExtractor[HPO].set
 
   private val Categories =
-    Extractor.Codings[RDDiagnosis.Category]
+    CodingExtractor.on[RDDiagnosis.Category].set
 
 
   override def FilterFrom(
@@ -136,10 +135,8 @@ with RDHypermedia
       )
     )
   
-  
-  // For implicit conversion of Filter DTO to predicate function
-//  import queryService.filterToPredicate
-
+ 
+  //TODO: Caching
   def diagnostics(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async { 
       implicit req =>
