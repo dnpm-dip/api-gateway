@@ -26,6 +26,7 @@ import play.api.libs.json.{
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
+//  SyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -132,51 +133,39 @@ with MTBHypermedia
     MTBValidationPermissions.ReadInvalidPatientRecord
 
 
+  import CodingExtractors._
+
   private val DiagnosisCodes =
-    CodingExtractor[ICD10GM].set
+    Extractor.seq[Coding[ICD10GM]]
 
-
-  private val MedicationCodes = {
-
-    import scala.util.matching.Regex
-    import cats.syntax.traverse._
+  import scala.util.matching.Regex
+  private val atc = "(?i)(atc)".r.unanchored
  
-    val atc = "(?i)atc".r.unanchored
 
-    Extractor.unlift[Seq[String],Set[Set[Coding[Medications]]]](
-      params =>
-        Option(
-          params
-            .map(_ split ",")
-            .flatMap(
-              _.toList
-               .map(_ split "\\|")
-               .map {
-                 vals =>
-                   for {
-                     code <- Try(vals(0))
-                     system =
-                       Try(vals(1)).collect {
-                         case uri if atc matches uri => Coding.System[ATC].uri
-                       }
-                       .getOrElse(Coding.System[UnregisteredMedication].uri)
-                     version = Try(vals(2)).toOption
-                   } yield
-                     Coding[Medications](
-                       Code(code),
-                       None,
-                       system,
-                       version
-                     )
-               }
-               .sequence
-               .toOption
-               .map(_.toSet)
-             )
-             .toSet
-        )
+  private val MedicationCodes =
+    Extractor.seq(
+      Extractor.csvSet {
+        param =>
+          val csv = param split "\\|"
+
+          {
+            for {
+            code <- Try(csv(0))
+            system =
+              Try(csv(1)).collect { case atc(_) => Coding.System[ATC].uri }
+                .getOrElse(Coding.System[UnregisteredMedication].uri)
+            version = Try(csv(2)).toOption
+          } yield
+            Coding[Medications](
+              Code(code),
+              None,
+              system,
+              version
+            )
+          }
+          .toOption
+      }    
     )
-  }
 
 
   override def FilterFrom(
@@ -186,17 +175,17 @@ with MTBHypermedia
       PatientFilterFrom(req),
       DiagnosisFilter(
         req.queryString.get("diagnosis[code]") collect {
-          case DiagnosisCodes(icd10s) if icd10s.nonEmpty => icd10s
+          case DiagnosisCodes(icd10s) if icd10s.nonEmpty => icd10s.toSet
         }
       ),
       RecommendationFilter(
         req.queryString.get("recommendation[medication]") collect { 
-          case MedicationCodes(codes) if codes.nonEmpty => codes
+          case MedicationCodes(codes) if codes.nonEmpty => codes.toSet
         }
       ),
       TherapyFilter(
         req.queryString.get("therapy[medication]") collect { 
-          case MedicationCodes(codes) if codes.nonEmpty => codes
+          case MedicationCodes(codes) if codes.nonEmpty => codes.toSet
         }
       )
     )
@@ -262,6 +251,7 @@ with MTBHypermedia
             }
       }
     }
+
 
   def therapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){

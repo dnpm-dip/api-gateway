@@ -111,11 +111,14 @@ with RDHypermedia
     RDValidationPermissions.ReadInvalidPatientRecord
 
 
+  import CodingExtractors._
+
+
   private val HPOTerms =
-    CodingExtractor[HPO].set
+    Extractor.seq[Coding[HPO]]
 
   private val Categories =
-    CodingExtractor.on[RDDiagnosis.Category].set
+    Extractor.seq[Coding[RDDiagnosis.Category]]
 
 
   override def FilterFrom(
@@ -125,12 +128,12 @@ with RDHypermedia
       PatientFilterFrom(req),
       HPOFilter(
         req.queryString.get("hpo[value]") collect {
-          case HPOTerms(hpos) if hpos.nonEmpty => hpos
+          case HPOTerms(hpos) if hpos.nonEmpty => hpos.toSet
         }
       ),
       DiagnosisFilter(
         req.queryString.get("diagnosis[category]") collect {
-          case Categories(orphas) if orphas.nonEmpty => orphas
+          case Categories(orphas) if orphas.nonEmpty => orphas.toSet
         }
       )
     )

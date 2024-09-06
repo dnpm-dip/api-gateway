@@ -29,7 +29,8 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  AsyncCacheApi
+  AsyncCacheApi => Cache
+//  SyncCacheApi => Cache
 }
 import cats.data.Ior
 import cats.Monad
@@ -139,9 +140,9 @@ with AuthorizationOps[UserPermissions]
   type Filter        = UseCase#Filter
 
 
-  protected val cache: AsyncCacheApi
+  protected val cache: Cache
   protected val cached: Cached
-  protected val cachingDuration: Duration = 10 minutes
+  protected val cachingDuration: Duration = 15 minutes
 
 
   protected implicit val completer: Completer[PatientRecord]
@@ -193,6 +194,7 @@ with AuthorizationOps[UserPermissions]
 
   // Keep track of which Result keys are cached for a given Query,
   // in order to be able to remove them when the Query is updated or deleted (see below)
+   
   protected def addCachedResult(
     query: Query.Id,
     key: String
@@ -224,19 +226,18 @@ with AuthorizationOps[UserPermissions]
   ) =
     cache.get[Set[String]](query.toString)
       .orElse(Some(Set.empty[String]))
+      .map(_ + key)
       .foreach(
-        keys => cache.set(
+        cache.set(
           query.toString,
-          keys + key,
-          cachingDuration*2.0  // ensure this info is cached longer than results
+          _,
+          cachingDuration * 1.5  // ensure this info is cached longer than results
         )
       )
 
   protected def clearCachedResults(query: Query.Id) =
     cache.get[Set[String]](query.toString)
-      .foreach(
-        _.foreach(cache.remove)
-      )
+      .foreach(_ foreach cache.remove)
 */      
   // --------------------------------------------------------------------------  
 
@@ -449,28 +450,30 @@ with AuthorizationOps[UserPermissions]
     }
 
 
+  import CodingExtractors._
+
   private val Genders =
-    CodingExtractor[Gender.Value].set
+    Extractor.seq[Coding[Gender.Value]]
 
   private val VitalStatuses =
-    CodingExtractor[VitalStatus.Value].set
+    Extractor.seq[Coding[VitalStatus.Value]]
 
   private val Sites =
-    CodingExtractor[Site].set
+    Extractor.seq[Coding[Site]]
 
   
   def PatientFilterFrom(req: RequestHeader): PatientFilter = 
     PatientFilter(
       req.queryString.get("gender").collect {
-        case Genders(gender) if gender.nonEmpty => gender
+        case Genders(gender) if gender.nonEmpty => gender.toSet
       },
       req.queryString.get("age[min]").flatMap(_.headOption).map(_.toInt),
       req.queryString.get("age[max]").flatMap(_.headOption).map(_.toInt),
       req.queryString.get("vitalStatus").collect {
-        case VitalStatuses(vs) if vs.nonEmpty => vs
+        case VitalStatuses(vs) if vs.nonEmpty => vs.toSet
       },
       req.queryString.get("site").collect {
-        case Sites(sites) if sites.nonEmpty => sites
+        case Sites(sites) if sites.nonEmpty => sites.toSet
       }
     )
 
@@ -519,7 +522,6 @@ with AuthorizationOps[UserPermissions]
             )
           )
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
-      
     }
 
 
