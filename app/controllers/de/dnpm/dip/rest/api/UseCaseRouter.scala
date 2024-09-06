@@ -55,8 +55,8 @@ extends SimpleRouter
   protected val PatId =
     Extractor(Id[Patient](_))
 
-  protected val optDateTime =
-    Extractor.optional[LocalDateTime]
+  protected val dateTime =
+    Extractor.option[LocalDateTime]
 
 
   val prefix =
@@ -135,8 +135,8 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
 
     case GET(p"/peer2peer/mvh/submission-reports"
-      ? q_o"created-after=${optDateTime(start)}"
-      & q_o"created-before=${optDateTime(end)}") =>
+      ? q_o"created-after=${dateTime(start)}"
+      & q_o"created-before=${dateTime(end)}") =>
       controller.mvhSubmissionReports(start,end)
 
 

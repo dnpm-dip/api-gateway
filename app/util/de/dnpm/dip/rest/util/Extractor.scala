@@ -13,7 +13,12 @@ import java.time.format.DateTimeFormatter.{
 
 abstract class Extractor[S,T]
 {
+  self =>
+
   def unapply(s: S): Option[T]
+
+  def map[U](f: T => U): Extractor[S,U] =
+    self.unapply(_).map(f)
 }
 
 object Extractor
@@ -47,21 +52,37 @@ object Extractor
       LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME)
     )
 
-
-  def optional[T](
+  implicit def option[T](
     implicit ext: Extractor[String,T]
   ): Extractor[Option[String],Option[T]] =
-    Extractor(_.map { case ext(t) => t })
+    Extractor(
+      _.map { case ext(t) => t }
+    )
 
+
+  def csv[T](del: String)(
+    implicit ext: Extractor[String,T]
+  ): Extractor[String,Seq[T]] =
+    Extractor(
+      _.split(del)
+       .toSeq
+       .map { case ext(t) => t }
+    )
+
+  def csv[T](
+    implicit ext: Extractor[String,T]
+  ): Extractor[String,Seq[T]] =
+    csv(",")
+
+  def csvSet[T](del: String)(
+    implicit ext: Extractor[String,T]
+  ): Extractor[String,Set[T]] =
+    csv[T](del).map(_.toSet)
 
   def csvSet[T](
     implicit ext: Extractor[String,T]
   ): Extractor[String,Set[T]] =
-    Extractor(
-      _.split(",")
-       .toSet[String]
-       .map { case ext(t) => t }
-    )
+   csvSet(",")
 
 
   def seq[T](
@@ -70,5 +91,10 @@ object Extractor
     Extractor(
       _.map { case ext(t) => t }
     )
+
+  def set[T](
+    implicit ext: Extractor[String,T]
+  ): Extractor[Seq[String],Set[T]] =
+    seq[T].map(_.toSet)
 
 }

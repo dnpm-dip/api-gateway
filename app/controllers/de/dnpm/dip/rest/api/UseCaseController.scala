@@ -452,27 +452,27 @@ with AuthorizationOps[UserPermissions]
   import CodingExtractors._
 
   private val Genders =
-    Extractor.seq[Coding[Gender.Value]]
+    Extractor.set[Coding[Gender.Value]]
 
   private val VitalStatuses =
-    Extractor.seq[Coding[VitalStatus.Value]]
+    Extractor.set[Coding[VitalStatus.Value]]
 
   private val Sites =
-    Extractor.seq[Coding[Site]]
+    Extractor.set[Coding[Site]]
 
   
   def PatientFilterFrom(req: RequestHeader): PatientFilter = 
     PatientFilter(
       req.queryString.get("gender").collect {
-        case Genders(gender) if gender.nonEmpty => gender.toSet
+        case Genders(gender) if gender.nonEmpty => gender
       },
       req.queryString.get("age[min]").flatMap(_.headOption).map(_.toInt),
       req.queryString.get("age[max]").flatMap(_.headOption).map(_.toInt),
       req.queryString.get("vitalStatus").collect {
-        case VitalStatuses(vs) if vs.nonEmpty => vs.toSet
+        case VitalStatuses(vs) if vs.nonEmpty => vs
       },
       req.queryString.get("site").collect {
-        case Sites(sites) if sites.nonEmpty => sites.toSet
+        case Sites(sites) if sites.nonEmpty => sites
       }
     )
 

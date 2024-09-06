@@ -21,7 +21,7 @@ import de.dnpm.dip.rest.util.Extractor
 object CodingExtractors
 {
 
-  implicit def fixedSystem[T](
+  implicit def fixed[T](
     implicit cs: Coding.System[T]
   ): Extractor[String,Coding[T]] =
     Extractor {
@@ -37,7 +37,7 @@ object CodingExtractors
     }
 
 
-  implicit def systemCoproduct[T <: Coproduct](
+  implicit def systems[T <: Coproduct](
     implicit uris: Coding.System.UriSet[T]
   ): Extractor[String,Coding[T]] =
     Extractor {
@@ -60,7 +60,7 @@ object CodingExtractors
         .recoverWith {
           case t =>
             Failure(
-              new Exception(s"Invalid 'system', expected one of {${uris.values.mkString(",")}}")
+              new IllegalArgumentException(s"Invalid or missing 'system', expected one of {${uris.values.mkString(",")}}")
             )
         }
         .get
@@ -70,7 +70,7 @@ object CodingExtractors
   import scala.util.matching.Regex
   private val atc = "(?i)(atc)".r.unanchored
 
-  val MedicationCoding: Extractor[String,Coding[Medications]] = {
+  implicit val MedicationCoding: Extractor[String,Coding[Medications]] = {
     param =>
       val csv = param split "\\|"
 
@@ -78,7 +78,8 @@ object CodingExtractors
         for {
         code <- Try(csv(0))
         system =
-          Try(csv(1)).collect { case atc(_) => Coding.System[ATC].uri }
+          Try(csv(1))
+            .collect { case atc(_) => Coding.System[ATC].uri }
             .getOrElse(Coding.System[UnregisteredMedication].uri)
         version = Try(csv(2)).toOption
       } yield

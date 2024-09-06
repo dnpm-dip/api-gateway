@@ -42,9 +42,7 @@ import de.dnpm.dip.coding.{
 }
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
-//import de.dnpm.dip.coding.atc.ATC
-//import de.dnpm.dip.coding.UnregisteredMedication
-//import de.dnpm.dip.model.Medications
+import de.dnpm.dip.model.Medications
 import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
@@ -132,14 +130,15 @@ with MTBHypermedia
     MTBValidationPermissions.ReadInvalidPatientRecord
 
 
+  import Extractor._
   import CodingExtractors._
 
   private val DiagnosisCodings =
-    Extractor.seq[Coding[ICD10GM]]
+    Extractor.set[Coding[ICD10GM]]
 
   private val MedicationCodings =
-    Extractor.seq(
-      Extractor.csvSet(MedicationCoding)
+    Extractor.set(
+      Extractor.csvSet[Coding[Medications]]
     )
 
 
@@ -150,17 +149,17 @@ with MTBHypermedia
       PatientFilterFrom(req),
       DiagnosisFilter(
         req.queryString.get("diagnosis[code]") collect {
-          case DiagnosisCodings(codings) if codings.nonEmpty => codings.toSet
+          case DiagnosisCodings(codings) if codings.nonEmpty => codings
         }
       ),
       RecommendationFilter(
         req.queryString.get("recommendation[medication]") collect { 
-          case MedicationCodings(codings) if codings.nonEmpty => codings.toSet
+          case MedicationCodings(codings) if codings.nonEmpty => codings
         }
       ),
       TherapyFilter(
         req.queryString.get("therapy[medication]") collect { 
-          case MedicationCodings(codings) if codings.nonEmpty => codings.toSet
+          case MedicationCodings(codings) if codings.nonEmpty => codings
         }
       )
     )

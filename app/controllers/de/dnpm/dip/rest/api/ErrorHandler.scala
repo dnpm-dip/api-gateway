@@ -18,7 +18,11 @@ import play.api.mvc.{
   Result,
   Results
 }
-import play.api.mvc.Results.InternalServerError
+import play.api.mvc.ControllerHelpers.BAD_REQUEST
+import play.api.mvc.Results.{
+  BadRequest,
+  InternalServerError
+}
 import play.api.routing.Router
 import play.api.libs.json.Json.toJson
 import scala.concurrent.Future
@@ -45,7 +49,7 @@ with Logging
     statusCode: Int,
     message: String
   ): Future[Result] = 
-    Outcome(s"For request '${request.method} ${request.path}' Status: $statusCode")
+    Outcome(s"Error for request '${request.method} ${request.path}' Status: $statusCode, Message: $message")
       .pipe(toJson(_))
       .pipe(Results.Status(statusCode)(_))
       .pipe(Future.successful(_))
@@ -55,10 +59,33 @@ with Logging
     request: RequestHeader,
     exception: Throwable
   ): Future[Result] =
+    exception match {
+      case e: IllegalArgumentException =>
+        onClientError(
+          request,
+          BAD_REQUEST,
+          e.getMessage
+        )
+
+      case _ =>
+        Outcome("Server error: " + exception.getMessage)
+          .pipe(toJson(_))
+          .pipe(InternalServerError(_))
+          .pipe(Future.successful(_))
+          .tap(_ => log.error("Server error",exception))
+    }
+
+
+/*      
+  override def onServerError(
+    request: RequestHeader,
+    exception: Throwable
+  ): Future[Result] =
     Outcome("Server error: " + exception.getMessage)
       .pipe(toJson(_))
       .pipe(InternalServerError(_))
       .pipe(Future.successful(_))
       .tap(_ => log.error("Server error",exception))
+*/
 
 }
