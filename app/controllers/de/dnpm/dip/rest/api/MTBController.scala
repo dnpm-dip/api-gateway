@@ -26,7 +26,6 @@ import play.api.libs.json.{
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
-//  SyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -43,9 +42,9 @@ import de.dnpm.dip.coding.{
 }
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
-import de.dnpm.dip.coding.atc.ATC
-import de.dnpm.dip.coding.UnregisteredMedication
-import de.dnpm.dip.model.Medications
+//import de.dnpm.dip.coding.atc.ATC
+//import de.dnpm.dip.coding.UnregisteredMedication
+//import de.dnpm.dip.model.Medications
 import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
@@ -135,36 +134,12 @@ with MTBHypermedia
 
   import CodingExtractors._
 
-  private val DiagnosisCodes =
+  private val DiagnosisCodings =
     Extractor.seq[Coding[ICD10GM]]
 
-  import scala.util.matching.Regex
-  private val atc = "(?i)(atc)".r.unanchored
- 
-
-  private val MedicationCodes =
+  private val MedicationCodings =
     Extractor.seq(
-      Extractor.csvSet {
-        param =>
-          val csv = param split "\\|"
-
-          {
-            for {
-            code <- Try(csv(0))
-            system =
-              Try(csv(1)).collect { case atc(_) => Coding.System[ATC].uri }
-                .getOrElse(Coding.System[UnregisteredMedication].uri)
-            version = Try(csv(2)).toOption
-          } yield
-            Coding[Medications](
-              Code(code),
-              None,
-              system,
-              version
-            )
-          }
-          .toOption
-      }    
+      Extractor.csvSet(MedicationCoding)
     )
 
 
@@ -175,21 +150,20 @@ with MTBHypermedia
       PatientFilterFrom(req),
       DiagnosisFilter(
         req.queryString.get("diagnosis[code]") collect {
-          case DiagnosisCodes(icd10s) if icd10s.nonEmpty => icd10s.toSet
+          case DiagnosisCodings(codings) if codings.nonEmpty => codings.toSet
         }
       ),
       RecommendationFilter(
         req.queryString.get("recommendation[medication]") collect { 
-          case MedicationCodes(codes) if codes.nonEmpty => codes.toSet
+          case MedicationCodings(codings) if codings.nonEmpty => codings.toSet
         }
       ),
       TherapyFilter(
         req.queryString.get("therapy[medication]") collect { 
-          case MedicationCodes(codes) if codes.nonEmpty => codes.toSet
+          case MedicationCodings(codings) if codings.nonEmpty => codings.toSet
         }
       )
     )
-
 
 
   implicit val hgnc: CodeSystem[HGNC] =

@@ -30,7 +30,6 @@ import play.api.libs.json.{
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
-//  SyncCacheApi => Cache
 }
 import cats.data.Ior
 import cats.Monad

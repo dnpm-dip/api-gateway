@@ -114,10 +114,10 @@ with RDHypermedia
   import CodingExtractors._
 
 
-  private val HPOTerms =
+  private val HPOCodings =
     Extractor.seq[Coding[HPO]]
 
-  private val Categories =
+  private val Category =
     Extractor.seq[Coding[RDDiagnosis.Category]]
 
 
@@ -128,12 +128,12 @@ with RDHypermedia
       PatientFilterFrom(req),
       HPOFilter(
         req.queryString.get("hpo[value]") collect {
-          case HPOTerms(hpos) if hpos.nonEmpty => hpos.toSet
+          case HPOCodings(codings) if codings.nonEmpty => codings.toSet
         }
       ),
       DiagnosisFilter(
         req.queryString.get("diagnosis[category]") collect {
-          case Categories(orphas) if orphas.nonEmpty => orphas.toSet
+          case Category(codings) if codings.nonEmpty => codings.toSet
         }
       )
     )

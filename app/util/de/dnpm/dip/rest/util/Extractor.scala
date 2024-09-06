@@ -1,18 +1,14 @@
 package de.dnpm.dip.rest.util
 
 
-import java.net.URI
-import scala.util.{
-  Failure,
-  Try
+import java.time.{
+  LocalDate,
+  LocalDateTime
 }
-import de.dnpm.dip.coding.{
-  Code,
-  Coding,
-  CodeSystem
+import java.time.format.DateTimeFormatter.{
+  ISO_LOCAL_DATE,
+  ISO_LOCAL_DATE_TIME
 }
-import cats.syntax.traverse._
-import shapeless.Coproduct
 
 
 abstract class Extractor[S,T]
@@ -25,11 +21,6 @@ object Extractor
 
   import scala.language.implicitConversions
 
-  implicit def unlift[S,T](f: S => Option[T]): Extractor[S,T] =
-    new Extractor[S,T]{
-      override def unapply(s: S): Option[T] = f(s)
-    }
-
 
   def apply[S,T](
     f: S => T
@@ -40,8 +31,27 @@ object Extractor
     }
 
 
-  def optional[S,T](f: S => T): Extractor[Option[S],Option[T]] =
-    apply((opt: Option[S]) => opt.map(f))
+  implicit def unlift[S,T](f: S => Option[T]): Extractor[S,T] =
+    new Extractor[S,T]{
+      override def unapply(s: S): Option[T] = f(s)
+    }
+
+
+  implicit lazy val isoDate: Extractor[String,LocalDate] =
+    Extractor(
+      LocalDate.parse(_,ISO_LOCAL_DATE)
+    )
+
+  implicit lazy val isoDateTime: Extractor[String,LocalDateTime] =
+    Extractor(
+      LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME)
+    )
+
+
+  def optional[T](
+    implicit ext: Extractor[String,T]
+  ): Extractor[Option[String],Option[T]] =
+    Extractor(_.map { case ext(t) => t })
 
 
   def csvSet[T](
@@ -49,10 +59,10 @@ object Extractor
   ): Extractor[String,Set[T]] =
     Extractor(
       _.split(",")
-       .toList
+       .toSet[String]
        .map { case ext(t) => t }
-       .toSet
     )
+
 
   def seq[T](
     implicit ext: Extractor[String,T]
@@ -61,56 +71,4 @@ object Extractor
       _.map { case ext(t) => t }
     )
 
-}
-
-
-
-object CodingExtractors
-{
-
-  implicit def fixedSystem[T](
-    implicit cs: Coding.System[T]
-  ): Extractor[String,Coding[T]] =
-    Extractor {
-      s =>
-        val csv = s split "\\|"
-
-        Coding[T](
-          Code(csv(0)),
-          None,
-          cs.uri,
-          Try(csv(2)).toOption
-        )
-    }
- 
-
-  implicit def systemCoproduct[T <: Coproduct](
-    implicit uris: Coding.System.UriSet[T]
-  ): Extractor[String,Coding[T]] =
-    Extractor {
-      s => 
-        val csv = s split "\\|"
-
-        {
-          for {
-            code <- Try(csv(0))
-            uri  <- Try(csv(1)).map(URI.create)
-            if (uris.values contains uri)
-            version = Try(csv(2)).toOption
-          } yield Coding[T](
-            Code(code),
-            None,
-            uri,
-            version
-          )
-        }
-        .recoverWith {
-          case t =>
-            Failure(
-              new Exception(s"Invalid 'system', expected one of {${uris.values.mkString(",")}}")
-            )
-        }
-        .get
-    }
-    
 }
