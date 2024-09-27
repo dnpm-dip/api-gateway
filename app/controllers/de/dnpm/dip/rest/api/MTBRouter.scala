@@ -20,7 +20,7 @@ import de.dnpm.dip.mtb.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.mtb.query.api.KaplanMeier
 import de.dnpm.dip.rest.util.Extractor
-
+import de.dnpm.dip.service.DataUpload
 
 
 class MTBRouter @Inject()(
@@ -33,7 +33,31 @@ extends UseCaseRouter[MTBConfig]("mtb")
     new Random
 
 
+  import DataUpload.Schemas._
 
+  override val jsonSchemas =
+    Map(
+      APPLICATION_JSON -> {
+        import de.dnpm.dip.mtb.model.v1.json.Schemas._
+        Map(
+          "draft-12" -> Schema[DataUpload[v1.MTBPatientRecord]].asPlay(Draft12("MTB-Patient-Record")),
+          "draft-09" -> Schema[DataUpload[v1.MTBPatientRecord]].asPlay(Draft09("MTB-Patient-Record")),
+          "draft-07" -> Schema[DataUpload[v1.MTBPatientRecord]].asPlay(Draft07("MTB-Patient-Record")),
+          "draft-04" -> Schema[DataUpload[v1.MTBPatientRecord]].asPlay(Draft04())
+        )
+      },          
+      s"$APPLICATION_JSON+v2" -> {
+        import de.dnpm.dip.mtb.model.json.Schemas._
+        Map(
+          "draft-12" -> Schema[DataUpload[MTBPatientRecord]].asPlay(Draft12("MTB-Patient-Record")),
+          "draft-09" -> Schema[DataUpload[MTBPatientRecord]].asPlay(Draft09("MTB-Patient-Record")),
+          "draft-07" -> Schema[DataUpload[MTBPatientRecord]].asPlay(Draft07("MTB-Patient-Record")),
+          "draft-04" -> Schema[DataUpload[MTBPatientRecord]].asPlay(Draft04())
+        )
+      }
+    )
+
+/*
   override val jsonSchemas =
     Map(
       APPLICATION_JSON -> {
@@ -55,7 +79,7 @@ extends UseCaseRouter[MTBConfig]("mtb")
         )
       }
     )
-
+*/
 
 
   private val SurvivalType: Extractor[String,KaplanMeier.SurvivalType.Value] =

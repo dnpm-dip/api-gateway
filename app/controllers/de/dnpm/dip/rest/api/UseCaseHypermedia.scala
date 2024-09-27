@@ -10,10 +10,14 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Relations,
   Method,
   Hyper,
+  Hypermediable,
   HypermediaBase
 }
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
+//  Count,
+//  Distribution,
+//  Entry
   PatientMatch,
   Query,
   PreparedQuery,
@@ -26,6 +30,25 @@ import de.dnpm.dip.service.validation.{
 }
 import scala.util.chaining._
 
+
+/*
+case class HyperEntry[+K,+V](
+  key: K,
+  value: V,
+  children: Option[Seq[HyperEntry[K,V]]]
+)
+extends Hypermediable
+
+
+type HyperConceptCount[+T] = HyperEntry[T,Count]
+
+
+case class HyperDistribution[T](
+  total: Int,
+  elements: Seq[HyperConceptCount[T]]
+)
+extends Hypermediable
+*/
 
 
 trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
@@ -77,161 +100,145 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
 
   implicit def HyperDataValidationInfo: Hyper.Mapper[ValidationInfo] =
-    Hyper.Mapper {
-      info =>
-        info.withLinks(
-          COLLECTION          -> Link(s"$VALIDATION_BASE_URI"),
-          "validation-report" -> Link(s"$VALIDATION_BASE_URI/report/${info.id}"),
-          "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${info.id}")
-        ) 
-    }
+    info => info.withLinks(
+      COLLECTION          -> Link(s"$VALIDATION_BASE_URI"),
+      "validation-report" -> Link(s"$VALIDATION_BASE_URI/report/${info.id}"),
+      "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${info.id}")
+    ) 
 
 
   implicit def HyperValidationReport: Hyper.Mapper[ValidationReport] =
-    Hyper.Mapper {
-      report =>
-        report.withLinks(
-          "infos"             -> Link(s"$VALIDATION_BASE_URI/infos"),
-          "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${report.patient}")
-        ) 
-    }
+    report => report.withLinks(
+      "infos"             -> Link(s"$VALIDATION_BASE_URI/infos"),
+      "patient-record"    -> Link(s"$VALIDATION_BASE_URI/patient-record/${report.patient}")
+    ) 
 
 
-  implicit def HyperQuery: Hyper.Mapper[QueryType] =
-    Hyper.Mapper {
-      query =>
+  implicit def HyperQuery: Hyper.Mapper[QueryType] = {
+    query =>
 
-        val selfLink =
-          Link(Uri(query))
+      val selfLink =
+        Link(Uri(query))
 
-        query.withLinks(
-          SELF                  -> selfLink,
-          "demographics"        -> Link(s"${Uri(query)}/demographics"),
-          "patient-matches"     -> Link(s"${Uri(query)}/patient-matches"),
-        )
-        .withOperations(
-          UPDATE   -> Operation(PUT, selfLink)
-        )
-    }
+      query.withLinks(
+        SELF              -> selfLink,
+        "demographics"    -> Link(s"${Uri(query)}/demographics"),
+        "patient-matches" -> Link(s"${Uri(query)}/patient-matches"),
+      )
+      .withOperations(
+        Relations.UPDATE -> Operation(PUT, selfLink),
+        Relations.DELETE -> Operation(DELETE, selfLink)
+      )
+  }
 
 
   implicit def HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
-    Hyper.Mapper { 
-      _.withLinks(
-         SELF -> Link(QUERY_BASE_URI)
-       )
-       .withOperations(
-         "submit" -> Operation(POST, Link(QUERY_BASE_URI))
-       )
+    _.withLinks(
+       SELF -> Link(QUERY_BASE_URI)
+     )
+     .withOperations(
+       "submit" -> Operation(POST, Link(QUERY_BASE_URI))
+     )
 
-    }
 
 
   implicit def HyperPatientMatch(
     implicit id: Query.Id
   ): Hyper.Mapper[PatientMatch[UseCase#Criteria]] =
-    Hyper.Mapper {
-      patMatch =>
-        patMatch.withLinks(
-          "query"          -> Link(QueryUri(id)),
-          "patient-record" -> Link(s"${QueryUri(id)}/patient-record/${patMatch.id.value}")
-        )
-    }
+    patMatch => patMatch.withLinks(
+      "query"          -> Link(QueryUri(id)),
+      "patient-record" -> Link(s"${QueryUri(id)}/patient-record/${patMatch.id.value}")
+    )
 
 
   implicit def HyperPatientMatches(
     implicit id: Query.Id,
-  ): Hyper.Mapper[Collection[Hyper[PatientMatch[UseCase#Criteria]]]] =
-    Hyper.Mapper {
-      matches =>
+  ): Hyper.Mapper[Collection[Hyper[PatientMatch[UseCase#Criteria]]]] = {
+    matches =>
 
-        val prev =
-          matches.limit.flatMap(
-            n => 
-              matches.offset.map(_ - n)
-                .collect {
-                  case off if (off > 0) => off -> n
-                  case _                => 0 -> n
-                }
-          )
+      val prev =
+        matches.limit.flatMap(
+          n => 
+            matches.offset.map(_ - n)
+              .collect {
+                case off if (off > 0) => off -> n
+                case _                => 0 -> n
+              }
+        )
 
-        val next =
-          matches.limit.collect {
-            case n if (matches.size - n >= 0) =>
-              (matches.offset.getOrElse(0) + n -> n)
-          }
+      val next =
+        matches.limit.collect {
+          case n if (matches.size - n >= 0) =>
+            (matches.offset.getOrElse(0) + n -> n)
+        }
 
-      matches.withLinks(
-        "query" -> Link(QueryUri(id)),
-       )
-       .pipe { coll =>
+    matches.withLinks(
+      "query" -> Link(QueryUri(id)),
+     )
+     .pipe { coll =>
 
-         prev match {
-           case Some(0 -> n) =>
-             coll.addLinks(
-               "prev" -> Link(s"${QueryUri(id)}/patient-matches?limit=${n}"),
-             )
-           case Some(off -> n) =>
-             coll.addLinks(
-               "prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}")
-             )
-           case _ => coll
-         }
+       prev match {
+         case Some(0 -> n) =>
+           coll.addLinks(
+             "prev" -> Link(s"${QueryUri(id)}/patient-matches?limit=${n}"),
+           )
+         case Some(off -> n) =>
+           coll.addLinks(
+             "prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}")
+           )
+         case _ => coll
        }
-       .pipe { coll =>
+     }
+     .pipe { coll =>
 
-         next match {
-           case Some(off -> n) =>
-             coll.addLinks(
-               "next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"),
-             )
-           case _ => coll
-         }
+       next match {
+         case Some(off -> n) =>
+           coll.addLinks(
+             "next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"),
+           )
+         case _ => coll
        }
-    }
+     }
+  }
 
 
   implicit def HyperPatientRecord(
     implicit id: Query.Id
-  ): Hyper.Mapper[UseCase#PatientRecord] =
-    Hyper.Mapper {
-      patRec =>
+  ): Hyper.Mapper[UseCase#PatientRecord] = {
+    patRec =>
 
-        import scala.language.reflectiveCalls
+      import scala.language.reflectiveCalls
 
-        patRec.withLinks(
-          "query" -> Link(QueryUri(id)),
-          SELF    -> Link(s"${QueryUri(id)}/patient-record/${patRec.patient.id.value}")
-        )
-    }
+      patRec.withLinks(
+        "query" -> Link(QueryUri(id)),
+        SELF    -> Link(s"${QueryUri(id)}/patient-record/${patRec.patient.id.value}")
+      )
+  }
 
 
-  implicit val HyperPreparedQuery: Hyper.Mapper[PreparedQueryType] =
-    Hyper.Mapper {
-      query =>
+  implicit val HyperPreparedQuery: Hyper.Mapper[PreparedQueryType] = {
+    query =>
 
-        val selfLink =
-          Link(Uri(query))
+      val selfLink =
+        Link(Uri(query))
 
-        query.withLinks(
-          SELF -> selfLink,
-        )
-        .withOperations(
-          UPDATE           -> Operation(PATCH, selfLink),
-          Relations.DELETE -> Operation(DELETE, selfLink)
-        )
-    }
+      query.withLinks(
+        SELF -> selfLink,
+      )
+      .withOperations(
+        UPDATE           -> Operation(PATCH, selfLink),
+        Relations.DELETE -> Operation(DELETE, selfLink)
+      )
+  }
 
 
   implicit val HyperPreparedQueries: Hyper.Mapper[Collection[Hyper[PreparedQueryType]]] =
-    Hyper.Mapper {
-      _.withLinks(
-         SELF -> Link(PREPARED_QUERY_BASE_URI)
-       )
-       .withOperations(
-         CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
-       )
+    _.withLinks(
+       SELF -> Link(PREPARED_QUERY_BASE_URI)
+     )
+     .withOperations(
+       CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
+     )
 
-    }
 
 }

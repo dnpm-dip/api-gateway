@@ -10,7 +10,15 @@ import play.api.libs.json.{
 }
 
 
-case class Hyper[T] private (
+
+class Hyper[+T] private (
+  val data: T
+)
+extends Hypermediable
+
+
+/*
+case class Hyper[+T] private (
   data: T,
   links: Map[String,Link] = Map.empty,
   operations: Map[String,Operation] = Map.empty,
@@ -30,10 +38,17 @@ case class Hyper[T] private (
     this.copy(operations = ops.toMap)
 
 }
+*/
 
 
 object Hyper
 {
+
+  def apply[T](t: T)(
+    implicit tr: Mapper[T]
+  ): Hyper[T] =
+    tr(t)
+
 
   @annotation.implicitNotFound(
     "Couldn't find implicit Hyper.Mapper[${T}]. Define one or ensure it is in scope."
@@ -43,39 +58,27 @@ object Hyper
     self =>
 
     def apply(t: T): Hyper[T]
-
+/*
     def addLinks(ls: (String,Link)*): Mapper[T] =
-      Mapper(
-        t => self(t).addLinks(ls: _*)
-      )
+      t => self(t).addLinks(ls: _*)
 
     def addOperations(ops: (String,Operation)*): Mapper[T] =
-      Mapper(
-        t => self(t).addOperations(ops: _*)
-      )
+      t => self(t).addOperations(ops: _*)
+*/
 
     def andThen(f: Hyper[T] => Hyper[T]): Mapper[T] =
-      Mapper(t => f(self(t)))
-
+      t => f(self(t))
   }
 
   object Mapper
   {
-    def apply[T](f: T => Hyper[T]): Mapper[T] =
+    import scala.language.implicitConversions
+
+    implicit def of[T](f: T => Hyper[T]): Mapper[T] =
       new Mapper[T]{
         override def apply(t: T): Hyper[T] = f(t)
       }
   }
-
-
-  def apply[T](t: T)(
-    implicit tr: Mapper[T]
-  ): Hyper[T] =
-    tr(t)
-
-
-  val Api =
-    JsObject.empty
 
 
   object syntax
@@ -83,6 +86,14 @@ object Hyper
 
     implicit class HyperExtensions[T](val t: T) extends AnyVal
     {
+
+      def withLinks(ls: (String,Link)*): Hyper[T] =
+        new Hyper(t).withLinks(ls: _*)
+        
+      def withOperations(ops: (String,Operation)*): Hyper[T] =
+        new Hyper(t).withOperations(ops: _*)
+
+/*
       def withLinks(ls: (String,Link)*) =
         Hyper(
           data = t,
@@ -94,11 +105,13 @@ object Hyper
           data = t,
           operations = ops.toMap
         )
+*/
 
     }
 
   }
 
+/*
   implicit def writesHyper[T: OWrites]: OWrites[Hyper[T]] =
     OWrites {
       t =>
@@ -118,6 +131,10 @@ object Hyper
               }
           )
     }
+*/
+
+  implicit def writesHyper[T](implicit wt: OWrites[T]): OWrites[Hyper[T]] =
+    Hypermediable.writes(wt.contramap[Hyper[T]](_.data))
 
 
   import scala.language.implicitConversions
@@ -126,6 +143,5 @@ object Hyper
     f: T => Boolean
   ): Hyper[T] => Boolean =
     _.data pipe f
-
 
 }

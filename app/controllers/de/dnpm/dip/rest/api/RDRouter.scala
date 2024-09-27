@@ -19,7 +19,7 @@ import de.dnpm.dip.rd.model.json.Schemas._
 import de.dnpm.dip.rd.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.rest.util.Outcome
-
+import de.dnpm.dip.service.DataUpload
 
 class RDRouter @Inject()(
   override val controller: RDController
@@ -30,6 +30,19 @@ extends UseCaseRouter[RDConfig]("rd")
   private implicit val rnd: Random =
     new Random
 
+  import DataUpload.Schemas._
+
+  override val jsonSchemas =
+    Map(
+      APPLICATION_JSON -> Map(
+        "draft-12" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft12("RD-Patient-Record")),
+        "draft-09" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft09("RD-Patient-Record")),
+        "draft-07" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft07("RD-Patient-Record")),
+        "draft-04" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft04())
+      )
+    )
+
+/*
   override val jsonSchemas =
     Map(
       APPLICATION_JSON -> Map(
@@ -39,7 +52,7 @@ extends UseCaseRouter[RDConfig]("rd")
         "draft-04" -> Schema[RDPatientRecord].asPlay(Draft04())
       )
     )
-
+*/
 
   override val additionalRoutes = {
 

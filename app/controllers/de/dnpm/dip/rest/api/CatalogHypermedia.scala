@@ -50,42 +50,30 @@ trait CatalogHypermedia extends HypermediaBase
 
 
   implicit val HyperCodeSystemProviderInfo: Hyper.Mapper[CodeSystemProvider.Info[Any]] =
-    Hyper.Mapper(
-      info =>
-        info.withLinks(
-          COLLECTION   -> codeSystemsLink,
-          "codesystem" -> codeSystemLink(info.uri),
-          "valueset"   -> valueSetLink(info.uri)
-        )
+    info => info.withLinks(
+      COLLECTION   -> codeSystemsLink,
+      "codesystem" -> codeSystemLink(info.uri),
+      "valueset"   -> valueSetLink(info.uri)
     )
 
   implicit def HyperCodeSystem[S]: Hyper.Mapper[CodeSystem[S]] =
-    Hyper.Mapper(
-      cs =>
-        cs.withLinks(
-          COLLECTION  -> codeSystemsLink,
-          SELF        -> codeSystemLink(cs.uri,cs.version),
-          "valueset"   -> valueSetLink(cs.uri,cs.version)
-        )
+    cs => cs.withLinks(
+      COLLECTION -> codeSystemsLink,
+      SELF       -> codeSystemLink(cs.uri,cs.version),
+      "valueset" -> valueSetLink(cs.uri,cs.version)
     )
 
 
   implicit val HyperValueSetProviderInfo: Hyper.Mapper[ValueSetProvider.Info] =
-    Hyper.Mapper(
-      info =>
-        info.withLinks(
-          COLLECTION   -> valueSetsLink,
-          "valueset"   -> valueSetLink(info.uri)
-        )
+    info => info.withLinks(
+      COLLECTION -> valueSetsLink,
+      "valueset" -> valueSetLink(info.uri)
     )
 
   implicit def HyperValueSet[S]: Hyper.Mapper[ValueSet[S]] =
-    Hyper.Mapper(
-      vs =>
-        vs.withLinks(
-          COLLECTION   -> valueSetsLink,
-          SELF         -> valueSetLink(vs.uri,vs.version)
-        )
+    vs => vs.withLinks(
+      COLLECTION -> valueSetsLink,
+      SELF       -> valueSetLink(vs.uri,vs.version)
     )
 
 }
