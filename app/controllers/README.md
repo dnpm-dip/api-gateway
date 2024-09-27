@@ -9,7 +9,9 @@ In the following: `use-case` in `{mtb,rd}`
 
 ### JSON Schema of Patient Record Payloads
 
-Request a JSON Schema description of the patient record, with optional indication of the desired JSON Schema version
+Request a JSON Schema description of the patient record (generated from the DTOs using library [scala-jsonschema](https://github.com/andyglow/scala-jsonschema)),
+with optional indication of the desired JSON Schema version
+
 
 ```
 GET /api/{use-case}/etl/patient-record/schema[?version={version}]
@@ -176,8 +178,8 @@ This CodeSystem structure is *conceptually* equivalent to [FHIR CodeSystem](http
 
 #### Applying CodeSystem filters:
 
-CodeSystems can be requested with applied filters on the concepts by including the filter name(s) as URI query parameter "filter".
-The API supports combining filters with AND/OR logic: filter names concatenated into a pipe-separated value list as one "filter" parameter are combined as OR, whereas filters occurring in different "filter" parameter values are combined using AND.
+CodeSystems can be requested with applied filters on the concepts by including the filter name(s) as URI query parameter `filter`.
+The API supports combining filters with AND/OR logic: filter names concatenated into a pipe-separated value list as one `filter` parameter are combined as OR, whereas filters occurring in different "filter" parameter values are combined using AND.
 For instance, the following request represents the query "Get CodeSystem ICD-O-3, picking only concepts from ICD-O-3-M (morphology) and of kind 'block' or 'category'":
 
 ```
