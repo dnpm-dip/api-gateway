@@ -42,6 +42,27 @@ POST /api/{use-case}/etl/patient-record
 | Unacceptable Issues                  | `422 Unprocessable Content` with JSON issue report | Data Set was saved in the validation module with a corresponding issue report |
 | Fatal Issues Detected                | `400 Bad Request` with JSON issue report | Import transaction aborted | 
 
+#### **IMPORTANT NOTE for MTB uploads (data uploads, JSON schemas)**:
+
+In order to be backward compatible with the (soon obsolete) bwHC node's data import API, the DNPM:DIP system's API currently supports 2  MTB data upload formats:
+
+| Format | Definition |
+| ---- | -------- |
+| `application/json`    | old bwHC MTBFile format (**Default**) |
+| `application/json+v2` | new DNPM:DIP Patient record format |
+
+In order to be non-breaking with the bwHC API, the old `application/json` is the default format of data upload requests, unless explicitly specified via the `Content-type` header.
+Accordingly, the JSON schema returned for requests to `GET /api/mtb/etl/patient-record/schema[?version={version}]` corresponds to this `application/json` format.
+
+However, the random generated MTB patient records are in the (new) `application/json+v2` format.
+In order to obtain the JSON schema and perform data uploads for this `application/json+v2` format, it must (currently) be specified explicitly:
+
+- **JSON Schema**: `GET /api/mtb/etl/patient-record/schema?format=application/json%2Bv2`
+- **Data Upload** `POST /api/mtb/etl/patient-record` **with Header** 'Content-type: application/json+v2'
+
+Apologies for the confusion and inconveniences this currently causes. Support for the old/obsolete bwHC format will eventually be dropped as soon as the data model has been aligned with Model Project specifications.
+
+
 ### Validate a Patient Record
 
 This endpoint allows to simply _validate_ a patient record, without actually importing it in the system
@@ -58,6 +79,7 @@ POST /api/{use-case}/etl/patient-record:validate
 | Data Acceptable with Issues  | `200 OK` with JSON issue report |
 | Unacceptable Issues          | `422 Unprocessable Content` with JSON issue report |
 | Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
+
 
 
 ### Delete All of a Patient's Data
