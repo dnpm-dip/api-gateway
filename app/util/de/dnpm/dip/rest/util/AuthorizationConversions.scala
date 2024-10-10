@@ -1,6 +1,7 @@
 package de.dnpm.dip.rest.util
 
 
+import scala.concurrent.ExecutionContext
 import shapeless.Witness
 import de.dnpm.dip.service.auth.PermissionEnumeration
 import de.dnpm.dip.auth.api.{
@@ -18,9 +19,11 @@ trait AuthorizationConversions
   implicit def permissionValueToAuthorization[E <: PermissionEnumeration](
     v: E#Value
   )(
-    implicit w: Witness.Aux[E]
+    implicit
+    w: Witness.Aux[E],
+    ec: ExecutionContext
   ): Authorization[UserPermissions] =
-    Authorization(
+    Authorization.check(
       _.permissions
        .exists {
          case w.value(p) if p == v => true

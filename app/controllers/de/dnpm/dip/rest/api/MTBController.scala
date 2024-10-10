@@ -25,7 +25,7 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  AsyncCacheApi => Cache
+  SyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer

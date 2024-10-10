@@ -15,9 +15,12 @@ import scala.concurrent.{
 import scala.concurrent.duration._
 import play.api.mvc.{
   Action,
+  ActionFilter,
   AnyContent,
   BaseController,
-  RequestHeader
+  RequestHeader,
+  Request,
+  Result
 }
 import play.api.libs.json.{
   Json,
@@ -29,7 +32,7 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  AsyncCacheApi => Cache
+  SyncCacheApi => Cache
 }
 import cats.data.Ior
 import cats.Monad
@@ -175,16 +178,26 @@ with AuthorizationOps[UserPermissions]
 
 
   override def OwnershipOf(id: Query.Id): Authorization[UserPermissions] =
-    Authorization.async {
+    Authorization.async[UserPermissions](
       implicit user =>
-        queryService.get(id).map(_.exists(_.querier.value == user.id))
-    }
+        queryService.get(id)
+          .map {
+            case Some(query) =>
+              if (query.querier.value == user.id) None  // no problem
+              else Some(Forbidden)
+
+            case None =>
+              Some(
+                NotFound(Json.toJson(Outcome(s"Invalid Query ID, your query session probably timed out")))
+              )
+          }
+    )
 
   override def OwnershipOfPreparedQuery(id: PreparedQuery.Id): Authorization[UserPermissions] =
-    Authorization.async {
+    Authorization.async[UserPermissions](
       implicit user =>
         (queryService ? id).map(_.exists(_.querier.value == user.id))
-    }
+    )
 
 
   // -------------------------------------------------------------------------- 
@@ -194,6 +207,7 @@ with AuthorizationOps[UserPermissions]
   // Keep track of which Result keys are cached for a given Query,
   // in order to be able to remove them when the Query is updated or deleted (see below)
    
+/*
   protected def addCachedResult(
     query: Query.Id,
     key: String
@@ -217,8 +231,8 @@ with AuthorizationOps[UserPermissions]
           _.foreach(cache.remove)
         )
       )
+*/      
 
-/*
   protected def addCachedResult(
     query: Query.Id,
     key: String
@@ -237,7 +251,6 @@ with AuthorizationOps[UserPermissions]
   protected def clearCachedResults(query: Query.Id) =
     cache.get[Set[String]](query.toString)
       .foreach(_ foreach cache.remove)
-*/      
   // --------------------------------------------------------------------------  
 
 
@@ -480,11 +493,9 @@ with AuthorizationOps[UserPermissions]
   protected def FilterFrom(req: RequestHeader): Filter 
 
 
-  def demographics(
-    id: Query.Id
-  ) =
+  def demographics(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async {
         implicit req =>
           queryService
             .resultSet(id)
@@ -503,7 +514,7 @@ with AuthorizationOps[UserPermissions]
   )(
     implicit id: Query.Id
   ): Action[AnyContent] =
-    AuthorizedAction(ReadQueryResult AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async {
       implicit req =>
         queryService
           .resultSet(id)
@@ -529,7 +540,7 @@ with AuthorizationOps[UserPermissions]
     id: Query.Id,
     patId: Id[Patient]
   ): Action[AnyContent] =
-    AuthorizedAction(ReadPatientRecord AND OwnershipOf(id)).async {
+    AuthorizedAction(ReadPatientRecord,OwnershipOf(id)).async {
       implicit req =>
         queryService.patientRecord(id,patId)
           .map(_.map(Hyper(_)))
