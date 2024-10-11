@@ -116,7 +116,7 @@ abstract class UseCaseController[UseCase <: UseCaseConfig](
   ec: ExecutionContext,
   formatPatRec: OFormat[UseCase#PatientRecord],
   formatCriteria: OFormat[UseCase#Criteria],
-  writesFilters: Writes[UseCase#Filter],
+  writesFilters: OWrites[UseCase#Filter],
 )
 extends BaseController
 with JsonOps
@@ -180,17 +180,16 @@ with AuthorizationOps[UserPermissions]
   override def OwnershipOf(id: Query.Id): Authorization[UserPermissions] =
     Authorization.async[UserPermissions](
       implicit user =>
-        queryService.get(id)
-          .map {
-            case Some(query) =>
-              if (query.querier.value == user.id) None  // no problem
-              else Some(Forbidden)
+        queryService.get(id).map {
+          case Some(query) =>
+            if (query.querier.value == user.id) None  // no problem
+            else Some(Forbidden)
 
-            case None =>
-              Some(
-                NotFound(Json.toJson(Outcome(s"Invalid Query ID, your query session probably timed out")))
-              )
-          }
+          case None =>
+            Some(
+              NotFound(Json.toJson(Outcome(s"Invalid Query ID, your query session probably timed out")))
+            )
+        }
     )
 
   override def OwnershipOfPreparedQuery(id: PreparedQuery.Id): Authorization[UserPermissions] =
@@ -491,6 +490,19 @@ with AuthorizationOps[UserPermissions]
 
 
   protected def FilterFrom(req: RequestHeader): Filter 
+
+
+  def defaultFilter(
+    implicit id: Query.Id
+  ) =
+    AuthorizedAction(OwnershipOf(id)).async {
+      implicit req =>
+        queryService
+          .resultSet(id)
+          .map(_.map(_.defaultFilter))
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
 
 
   def demographics(id: Query.Id) =

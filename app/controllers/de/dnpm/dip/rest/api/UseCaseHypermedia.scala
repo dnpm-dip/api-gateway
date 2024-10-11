@@ -122,6 +122,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
       query.withLinks(
         SELF              -> selfLink,
+        "default-filter"  -> Link(s"${Uri(query)}/default-filter"),
         "demographics"    -> Link(s"${Uri(query)}/demographics"),
         "patient-matches" -> Link(s"${Uri(query)}/patient-matches"),
       )
@@ -130,6 +131,15 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
         Relations.DELETE -> Operation(DELETE, selfLink)
       )
   }
+
+
+  implicit def HyperFilter(
+    implicit id: Query.Id
+  ): Hyper.Mapper[UseCase#Filter] =
+    _.withLinks(
+      SELF    -> Link(s"${QueryUri(id)}/default-filter"),
+      "query" -> Link(QueryUri(id))
+    )
 
 
   implicit def HyperQueries: Hyper.Mapper[Collection[Hyper[QueryType]]] =
