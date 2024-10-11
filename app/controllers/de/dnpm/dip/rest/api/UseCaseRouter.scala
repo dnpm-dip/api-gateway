@@ -150,7 +150,7 @@ extends SimpleRouter
     case GET(p"/queries"?q"id=${QueryId(id)}") =>
       controller.get(id)
 
-    case GET(p"/queries/${QueryId(id)}/default-filter") =>
+    case GET(p"/queries/${QueryId(id)}/filters") =>
       controller.defaultFilter(id)
 
     case GET(p"/queries/${QueryId(id)}") =>

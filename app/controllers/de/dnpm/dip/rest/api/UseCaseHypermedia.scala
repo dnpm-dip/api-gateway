@@ -122,7 +122,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
       query.withLinks(
         SELF              -> selfLink,
-        "default-filter"  -> Link(s"${Uri(query)}/default-filter"),
+        "filters"         -> Link(s"${Uri(query)}/filters"),
         "demographics"    -> Link(s"${Uri(query)}/demographics"),
         "patient-matches" -> Link(s"${Uri(query)}/patient-matches"),
       )
@@ -137,7 +137,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     implicit id: Query.Id
   ): Hyper.Mapper[UseCase#Filter] =
     _.withLinks(
-      SELF    -> Link(s"${QueryUri(id)}/default-filter"),
+      SELF    -> Link(s"${QueryUri(id)}/filters"),
       "query" -> Link(QueryUri(id))
     )
 
