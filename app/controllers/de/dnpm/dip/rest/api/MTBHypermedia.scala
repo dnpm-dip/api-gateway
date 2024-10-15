@@ -15,11 +15,12 @@ trait MTBHypermedia extends UseCaseHypermedia[MTBConfig]
     super.HyperQuery
       .andThen(
         q => q.addLinks(
-          "kaplan-meier-config" -> Link(s"$BASE_URI/kaplan-meier/config"),
-          "kaplan-meier-stats"  -> Link(s"${Uri(q.data)}/survival-statistics[?type={type}&grouping={grouping}]"),
-          "tumor-diagnostics"   -> Link(s"${Uri(q.data)}/tumor-diagnostics"),
-          "medication"          -> Link(s"${Uri(q.data)}/medication"),
-          "therapy-responses"   -> Link(s"${Uri(q.data)}/therapy-responses")
+          "kaplan-meier-config"          -> Link(s"$BASE_URI/kaplan-meier/config"),
+          "kaplan-meier-stats"           -> Link(s"${Uri(q.data)}/survival-statistics[?type={type}&grouping={grouping}]"),
+          "tumor-diagnostics"            -> Link(s"${Uri(q.data)}/tumor-diagnostics"),
+          "medication"                   -> Link(s"${Uri(q.data)}/medication"),
+          "therapy-responses"            -> Link(s"${Uri(q.data)}/therapy-responses"),
+          "therapy-responses-by-variant" -> Link(s"${Uri(q.data)}/therapy-responses-by-variant")
         )
       )
 

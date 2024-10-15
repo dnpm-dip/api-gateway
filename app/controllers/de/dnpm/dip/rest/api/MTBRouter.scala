@@ -57,30 +57,6 @@ extends UseCaseRouter[MTBConfig]("mtb")
       }
     )
 
-/*
-  override val jsonSchemas =
-    Map(
-      APPLICATION_JSON -> {
-        import de.dnpm.dip.mtb.model.v1.json.Schemas._
-        Map(
-          "draft-12" -> Schema[v1.MTBPatientRecord].asPlay(Draft12("MTB-Patient-Record")),
-          "draft-09" -> Schema[v1.MTBPatientRecord].asPlay(Draft09("MTB-Patient-Record")),
-          "draft-07" -> Schema[v1.MTBPatientRecord].asPlay(Draft07("MTB-Patient-Record")),
-          "draft-04" -> Schema[v1.MTBPatientRecord].asPlay(Draft04())
-        )
-      },      
-      s"$APPLICATION_JSON+v2" -> {
-        import de.dnpm.dip.mtb.model.json.Schemas._
-        Map(
-          "draft-12" -> Schema[MTBPatientRecord].asPlay(Draft12("MTB-Patient-Record")),
-          "draft-09" -> Schema[MTBPatientRecord].asPlay(Draft09("MTB-Patient-Record")),
-          "draft-07" -> Schema[MTBPatientRecord].asPlay(Draft07("MTB-Patient-Record")),
-          "draft-04" -> Schema[MTBPatientRecord].asPlay(Draft04())
-        )
-      }
-    )
-*/
-
 
   private val SurvivalType: Extractor[String,KaplanMeier.SurvivalType.Value] =
    KaplanMeier.SurvivalType.unapply(_)
@@ -102,6 +78,9 @@ extends UseCaseRouter[MTBConfig]("mtb")
 
     case GET(p"/queries/${QueryId(id)}/therapy-responses") =>
       controller.therapyResponses(id)
+
+    case GET(p"/queries/${QueryId(id)}/therapy-responses-by-variant") =>
+      controller.therapyResponsesByVariant(id)
 
     case GET(p"/queries/${QueryId(id)}/survival-statistics"
       ? q"type=${SurvivalType(typ)}"

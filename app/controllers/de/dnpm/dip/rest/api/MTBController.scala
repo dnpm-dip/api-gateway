@@ -246,6 +246,25 @@ with MTBHypermedia
     }
 
 
+  def therapyResponsesByVariant(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.therapyResponsesBySupportingVariant(FilterFrom(req))
+                 .pipe(Collection(_))
+              )
+            )
+            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .andThen {
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
+            }
+      }
+    }
+
   def survivalStatistics(
     id: Query.Id,
     typ: Option[SurvivalType.Value],
