@@ -18,6 +18,9 @@ GET /api/{use-case}/etl/patient-record/schema[?version={version}]
 ```
 with `version` in `{draft-12, draft-09, draft-07, draft-04}`, Default: `draft-12`
 
+**IMPORTANT NOTE**: Bear in mind that these JSON schemas for MTB and RD Patient Records are _provisional_, given that some adaptations
+are to be expected once the technical specifications derived from the "Datenkranz" for the "MVGenomV" model project become available. 
+
 
 ### Synthetic JSON Data
 
