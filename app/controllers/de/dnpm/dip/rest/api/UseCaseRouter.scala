@@ -5,6 +5,11 @@ import java.time.LocalDateTime
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
+import play.api.mvc.Accepting
+import play.api.mvc.ControllerHelpers.{
+  Accepts,
+  render
+}
 import play.api.mvc.Results.{
   BadRequest,
   NotFound,
@@ -81,19 +86,24 @@ extends SimpleRouter
     // ------------------------------------------------------------------------
     // ETL Routes:
     // ------------------------------------------------------------------------
+
+
     case GET(p"/etl/patient-record/schema"
       ? q_o"version=$version"
       & q_o"format=$format") =>
-      controller.Action {
+      controller.Action { req =>
         jsonSchemas(format.getOrElse(APPLICATION_JSON)).get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
-            Ok(sch)
+            Ok(Json.prettyPrint(sch)).as(APPLICATION_JSON)
+//            Ok(sch)
+
           case None =>
             NotFound(
               Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${jsonSchemas.keys.mkString(",")}}"))
             )
         }
       }
+
 
     case POST(p"/etl/patient-record:validate") =>
       controller.validate
