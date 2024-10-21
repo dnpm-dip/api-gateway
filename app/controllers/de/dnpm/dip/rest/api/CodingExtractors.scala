@@ -76,19 +76,19 @@ object CodingExtractors
 
       {
         for {
-        code <- Try(csv(0))
-        system =
-          Try(csv(1))
-            .collect { case atc(_) => Coding.System[ATC].uri }
-            .getOrElse(Coding.System[UnregisteredMedication].uri)
-        version = Try(csv(2)).toOption
-      } yield
-        Coding[Medications](
-          Code(code),
-          None,
-          system,
-          version
-        )
+          code <- Try(csv(0))
+          system =
+            Try(csv(1))
+              .collect { case atc(_) => Coding.System[ATC].uri }
+              .getOrElse(Coding.System[UnregisteredMedication].uri)
+          version = Try(csv(2)).toOption
+        } yield
+          Coding[Medications](
+            Code(code),
+            None,
+            system,
+            version
+          )
       }
       .toOption
   }

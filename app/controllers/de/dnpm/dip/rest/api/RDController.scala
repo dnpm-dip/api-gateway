@@ -115,10 +115,10 @@ with RDHypermedia
 
 
   private val HPOCodings =
-    Extractor.seq[Coding[HPO]]
+    Extractor.csvSet[Coding[HPO]]
 
   private val Category =
-    Extractor.seq[Coding[RDDiagnosis.Category]]
+    Extractor.csvSet[Coding[RDDiagnosis.Category]]
 
 
   override def FilterFrom(
@@ -127,13 +127,13 @@ with RDHypermedia
     RDFilters(
       PatientFilterFrom(req),
       HPOFilter(
-        req.queryString.get("hpo[value]") collect {
-          case HPOCodings(codings) if codings.nonEmpty => codings.toSet
+        req.queryString.get("hpo[value]").flatMap(_.headOption) collect {
+          case HPOCodings(codings) if codings.nonEmpty => codings
         }
       ),
       DiagnosisFilter(
-        req.queryString.get("diagnosis[category]") collect {
-          case Category(codings) if codings.nonEmpty => codings.toSet
+        req.queryString.get("diagnosis[category]").flatMap(_.headOption) collect {
+          case Category(codings) if codings.nonEmpty => codings
         }
       )
     )

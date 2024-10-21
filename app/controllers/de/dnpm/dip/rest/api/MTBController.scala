@@ -134,13 +134,11 @@ with MTBHypermedia
   import CodingExtractors._
 
   private val DiagnosisCodings =
-    Extractor.set[Coding[ICD10GM]]
+    Extractor.csvSet[Coding[ICD10GM]]
 
   private val MedicationCodings =
-    Extractor.set(
-      Extractor.csvSet[Coding[Medications]]
-    )
-
+    Extractor.csvSet(Extractor.csvSet[Coding[Medications]]("\\+"))
+    
 
   override def FilterFrom(
     req: RequestHeader,
@@ -148,17 +146,17 @@ with MTBHypermedia
     MTBFilters(
       PatientFilterFrom(req),
       DiagnosisFilter(
-        req.queryString.get("diagnosis[code]") collect {
+        req.queryString.get("diagnosis[code]").flatMap(_.headOption) collect {
           case DiagnosisCodings(codings) if codings.nonEmpty => codings
         }
       ),
       RecommendationFilter(
-        req.queryString.get("recommendation[medication]") collect { 
-          case MedicationCodings(codings) if codings.nonEmpty => codings
+        req.queryString.get("recommendation[medication]").flatMap(_.headOption) collect { 
+          case MedicationCodings(codings) if codings.nonEmpty => codings.tap(println)
         }
       ),
       TherapyFilter(
-        req.queryString.get("therapy[medication]") collect { 
+        req.queryString.get("therapy[medication]").flatMap(_.headOption) collect { 
           case MedicationCodings(codings) if codings.nonEmpty => codings
         }
       )
