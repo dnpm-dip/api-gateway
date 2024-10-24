@@ -32,6 +32,35 @@ GET /api/{use-case}/fake/data/patient-record
 
 ### Upload a Patient Record
 
+**Note on the validations performed and meaning of the different response codes:**
+
+Upon upload to the following API endpoint, the payload undergoes two-fold validation: After _syntactic_ validation (i.e. if the JSON payload can be properly parsed as a PatientRecord data transfer object (DTO)) there is a _semantic_ validation step.
+This is required for various reasons:
+
+Beyond mere structural correctness, more advanced validations like referential integrity checks, whether coded entries (e.g. ICD-10 codes) are correctly
+resolvable in the respective code system, or that a given entity is in a valid state depending on some `status` attribute, are not possible on the schema level anyway,
+ but require custom application logic (in case of interest, see for instance [here](https://github.com/KohlbacherLab/dnpm-dip-mtb-validation-service/blob/main/impl/src/main/scala/de/dnpm/dip/mtb/validation/impl/MTBValidators.scala)).
+
+Also, many of the attributes on the PatientRecord are kept _optional_ on the syntactic level, even though they are semantically required in order for a data set to be meaningful.
+The reason this was made so, is to separate concerns: Say you are an ETL developer in charge of extracting the data from respective primary systems and send them to the DNPM:DIP node.
+If this upload were to fail because semantically required attributes are missing or incorrect due to incomplete/erroneous documentation in the patient record, you'd be receiving upload rejections for which you can't really do anything.
+Therefore, errors pertaining to the content of a patient record are raised in the "data quality issue report" created in the semantic validation step and (aside from being returned in the upload response)
+ are stored in the validation module of the DNPM node.
+
+The idea is that some kind of data quality improvement loop be established at your respective site: Whether this consists in having documentarists in charge to regularly check the data quality issue reports
+ in the node's (upcoming) validation portal, and proceed from there to correct the data in primary systems and trigger a re-export, or that your ETL setup directly forwards the data quality issue report returned
+ in the error response into a corresponding local "workflow", is up to your site.
+
+Given this envisioned process of API usage, you will notice that although the syntactic and semantic error reports have the same JSON structure, the error messages are in English and German, respectively.
+The reason for this is that the former errors directly originate from the used JSON parsing/validation library, whereas the semantic validation reports, being meant for a "documentarist" user class, are in German in order be understandable by this non-technician user class.
+
+Aside from the different language, this difference of "error report addressee" is also reflected by the different HTTP status codes, to allow differentiated handling:
+
+* `400` indicates errors concerning the ETL developer (syntactical incorrectness or e.g. breaks of referential integrity)
+* `422` or `201` indicate more or less severe semantic issues, and thus concern documentarists.
+
+
+
 ```
 POST /api/{use-case}/etl/patient-record
 ```
@@ -82,7 +111,6 @@ POST /api/{use-case}/etl/patient-record:validate
 | Data Acceptable with Issues  | `200 OK` with JSON issue report |
 | Unacceptable Issues          | `422 Unprocessable Content` with JSON issue report |
 | Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
-
 
 
 ### Delete All of a Patient's Data
