@@ -39,7 +39,7 @@ This is required for various reasons:
 
 Beyond mere structural correctness, more advanced validations like referential integrity checks, whether coded entries (e.g. ICD-10 codes) are correctly
 resolvable in the respective code system, or that a given entity is in a valid state depending on some `status` attribute, are not possible on the schema level anyway,
- but require custom application logic (in case of interest, see for instance [here](https://github.com/KohlbacherLab/dnpm-dip-mtb-validation-service/blob/main/impl/src/main/scala/de/dnpm/dip/mtb/validation/impl/MTBValidators.scala)).
+ but require custom application logic (in case of interest, see for instance [here](https://github.com/KohlbacherLab/dnpm-dip-mtb-validation-service/blob/a785f5ba612addf31d32204d62113fae04c5981b/impl/src/main/scala/de/dnpm/dip/mtb/validation/impl/MTBValidators.scala#L265).
 
 Also, many of the attributes on the PatientRecord are kept _optional_ on the syntactic level, even though they are semantically required in order for a data set to be meaningful.
 The reason this was made so, is to separate concerns: Say you are an ETL developer in charge of extracting the data from respective primary systems and send them to the DNPM:DIP node.
