@@ -73,6 +73,7 @@ with QueryAuthorizations[UserPermissions]
 with RDHypermedia
 {
 
+  import scala.util.chaining._
   import de.dnpm.dip.rest.util.AuthorizationConversions._
 
 
@@ -137,7 +138,16 @@ with RDHypermedia
         }
       )
     )
-  
+ 
+
+  import RDFilters._  // For Json Writes of MTBFilter components
+
+  override val filterComponent = {
+    case "patient"   => (_.patient.pipe(Json.toJson(_)))
+    case "diagnosis" => (_.diagnosis.pipe(Json.toJson(_)))
+    case "hpo"       => (_.hpo.pipe(Json.toJson(_)))
+  }
+
  
   //TODO: Caching
   def diagnostics(id: Query.Id): Action[AnyContent] =

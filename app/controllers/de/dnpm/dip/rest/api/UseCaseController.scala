@@ -24,6 +24,7 @@ import play.api.mvc.{
 }
 import play.api.libs.json.{
   Json,
+  JsValue,
   Format,
   OFormat,
   Reads,
@@ -492,15 +493,17 @@ with AuthorizationOps[UserPermissions]
   protected def FilterFrom(req: RequestHeader): Filter 
 
 
-  def defaultFilter(
-    implicit id: Query.Id
-  ) =
+  protected val filterComponent: PartialFunction[String,Filter => JsValue]
+
+  def defaultFilter(part: String)(implicit id: Query.Id) =
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         queryService
           .resultSet(id)
-          .map(_.map(_.defaultFilter))
-          .map(_.map(Hyper(_)))
+          .map(
+            _.map(_.defaultFilter)
+             .map(filterComponent(part))
+          ) 
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 

@@ -54,7 +54,7 @@ extends Hypermediable
 trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 {
 
-  type QueryType = Query[UseCase#Criteria,UseCase#Filter]
+  type QueryType = Query[UseCase#Criteria]
 
   type PreparedQueryType = PreparedQuery[UseCase#Criteria]
 

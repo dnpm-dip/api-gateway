@@ -35,6 +35,8 @@ ENV RD_RANDOM_DATA=-1
 ENV MTB_RANDOM_DATA=-1
 ENV CONNECTOR_TYPE="broker"
 
+ENV JAVA_OPTS="-Xmx2g"
+
 
 USER 999
 
@@ -45,7 +47,7 @@ EXPOSE 9000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=5s \
   CMD curl http://127.0.0.1:9000/api/peer2peer/status || exit 1
-#  CMD wget --spider --proxy off http://127.0.0.1:9000/api/peer2peer/status || exit 1
+
 
 ENTRYPOINT /opt/$BACKEND_APP/bin/dnpm-dip-api-gateway \
     -Dhttp.port="$HTTP_PORT" \

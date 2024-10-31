@@ -17,7 +17,8 @@ import play.api.libs.json.{
   JsValue,
   JsObject,
   Reads,
-  OWrites
+  OWrites,
+  Writes
 }
 import play.api.mvc.{
   BaseController,
@@ -120,7 +121,7 @@ trait JsonOps
     }
 
 
-  def JsonResult[T: OWrites](
+  def JsonResult[T: Writes](
     xor: Either[NonEmptyList[String],T],
     err: JsValue => Result
   ): Result =
@@ -137,7 +138,7 @@ trait JsonOps
     )
 
 
-  def JsonResult[T: OWrites](
+  def JsonResult[T: Writes](
     opt: Option[T],
     err: => String = "Resource Not Found"
   ): Result =

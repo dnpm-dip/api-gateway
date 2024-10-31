@@ -151,7 +151,7 @@ with MTBHypermedia
         }
       ),
       RecommendationFilter(
-        req.queryString.get("recommendation[medication]").flatMap(_.headOption) collect { 
+        req.queryString.get("therapyRecommendation[medication]").flatMap(_.headOption) collect { 
           case MedicationCodings(codings) if codings.nonEmpty => codings.tap(println)
         }
       ),
@@ -161,6 +161,16 @@ with MTBHypermedia
         }
       )
     )
+
+
+  import MTBFilters._  // For Json Writes of MTBFilter components
+
+  override val filterComponent = {
+    case "patient"                => (_.patient.pipe(Json.toJson(_)))
+    case "diagnosis"              => (_.diagnosis.pipe(Json.toJson(_)))
+    case "therapy-recommendation" => (_.therapyRecommendation.pipe(Json.toJson(_)))
+    case "therapy"                => (_.therapyRecommendation.pipe(Json.toJson(_)))
+  }
 
 
   implicit val hgnc: CodeSystem[HGNC] =
