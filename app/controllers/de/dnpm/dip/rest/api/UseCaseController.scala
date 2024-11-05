@@ -240,6 +240,7 @@ with AuthorizationOps[UserPermissions]
     cache.get[Set[String]](query.toString)
       .orElse(Some(Set.empty[String]))
       .map(_ + key)
+//      .map(_ + key.tap(k => println(s"$query: Tracking cache key $k")))
       .foreach(
         cache.set(
           query.toString,
@@ -250,6 +251,7 @@ with AuthorizationOps[UserPermissions]
 
   protected def clearCachedResults(query: Query.Id) =
     cache.get[Set[String]](query.toString)
+//      .foreach(_.tap(set => println(s"$query: Clearing cache keys $set")) foreach cache.remove)
       .foreach(_ foreach cache.remove)
   // --------------------------------------------------------------------------  
 
@@ -495,7 +497,8 @@ with AuthorizationOps[UserPermissions]
 
   protected val filterComponent: PartialFunction[String,Filter => JsValue]
 
-  def defaultFilter(part: String)(implicit id: Query.Id) =
+
+  def defaultFilter(id: Query.Id, part: String) =
     AuthorizedAction(OwnershipOf(id)).async {
       implicit req =>
         queryService
@@ -515,7 +518,10 @@ with AuthorizationOps[UserPermissions]
           queryService
             .resultSet(id)
             .map(_.map(_.demographics(FilterFrom(req))))
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> "no-store")
+            )
             .andThen { 
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri) 
             }
@@ -524,9 +530,6 @@ with AuthorizationOps[UserPermissions]
 
 
   def patientMatches(
-    offset: Option[Int],
-    limit: Option[Int]
-  )(
     implicit id: Query.Id
   ): Action[AnyContent] =
     AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async {
@@ -541,7 +544,8 @@ with AuthorizationOps[UserPermissions]
           )
           .map(
             _.map(
-              Collection(_,offset,limit)
+              Collection(_)
+                .paginated
                 .map(Hyper(_))
                 .pipe(Hyper(_))
             )

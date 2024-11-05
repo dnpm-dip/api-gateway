@@ -7,8 +7,11 @@ import play.api.libs.json.{
   Writes,
   OWrites
 }
+import play.api.mvc.RequestHeader
 
-final case class Collection[T]
+
+
+final case class Collection[+T]
 (
   private val seq: Seq[T],
   offset: Option[Int] = None,
@@ -26,11 +29,19 @@ final case class Collection[T]
   def map[U](f: T => U): Collection[U] =
     this.copy(seq = seq map f)
 
+/*
   def withOffset(n: Int): Collection[T] =
     this.copy(offset = Some(n))
 
   def withLimit(n: Int): Collection[T] =
     this.copy(limit = Some(n))
+*/
+
+  def paginated(implicit req: RequestHeader): Collection[T] =
+    this.copy(
+      offset = req.queryString.get("offset").flatMap(_.headOption.map(_.toInt)),
+      limit = req.queryString.get("limit").flatMap(_.headOption.map(_.toInt))
+    )
 
 }
 
@@ -38,7 +49,7 @@ final case class Collection[T]
 object Collection
 {
 
-  implicit def writesCollection[T: Writes]: OWrites[Collection[T]] =
+  implicit def writes[T: Writes]: OWrites[Collection[T]] =
     OWrites {
       coll =>
         Json.obj(

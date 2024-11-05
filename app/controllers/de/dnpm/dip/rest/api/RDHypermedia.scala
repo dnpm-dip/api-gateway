@@ -14,8 +14,11 @@ trait RDHypermedia extends UseCaseHypermedia[RDConfig]
   override implicit def HyperQuery: Hyper.Mapper[QueryType] =
     super.HyperQuery
       .andThen(
-        h => h.addLinks(
-          "diagnostics" -> Link(s"${Uri(h.data)}/diagnostics"),
+        q => q.addLinks(
+          "patient-filter"   -> Link(s"${Uri(q.data)}/filters/patient"),
+          "diagnosis-filter" -> Link(s"${Uri(q.data)}/filters/diagnosis"),
+          "hpo-filter"       -> Link(s"${Uri(q.data)}/filters/hpo"),
+          "diagnostics"      -> Link(s"${Uri(q.data)}/diagnostics"),
         )
       )
 

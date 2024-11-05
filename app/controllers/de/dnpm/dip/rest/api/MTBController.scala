@@ -92,6 +92,7 @@ with MTBHypermedia
 {
 
   import scala.util.chaining._
+  import Json.toJson
   import de.dnpm.dip.rest.util.AuthorizationConversions._
 
 
@@ -166,10 +167,10 @@ with MTBHypermedia
   import MTBFilters._  // For Json Writes of MTBFilter components
 
   override val filterComponent = {
-    case "patient"                => (_.patient.pipe(Json.toJson(_)))
-    case "diagnosis"              => (_.diagnosis.pipe(Json.toJson(_)))
-    case "therapy-recommendation" => (_.therapyRecommendation.pipe(Json.toJson(_)))
-    case "therapy"                => (_.therapyRecommendation.pipe(Json.toJson(_)))
+    case "patient"                => (_.patient.pipe(toJson(_)))
+    case "diagnosis"              => (_.diagnosis.pipe(toJson(_)))
+    case "therapy-recommendation" => (_.therapyRecommendation.pipe(toJson(_)))
+    case "therapy"                => (_.therapyRecommendation.pipe(toJson(_)))
   }
 
 
@@ -211,7 +212,10 @@ with MTBHypermedia
   
           queryService.resultSet(id)
             .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> "no-store")
+            )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
@@ -226,7 +230,10 @@ with MTBHypermedia
       
           queryService.resultSet(id)
             .map(_.map(_.medication(FilterFrom(req))))
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders (CACHE_CONTROL -> "no-store")
+            )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
@@ -243,10 +250,13 @@ with MTBHypermedia
             .map(
               _.map(
                 _.therapyResponses(FilterFrom(req))
-                 .pipe(Collection(_))
+                 .pipe(Collection(_).paginated)
               )
             )
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> "no-store")
+            )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
@@ -263,10 +273,13 @@ with MTBHypermedia
             .map(
               _.map(
                 _.therapyResponsesBySupportingVariant(FilterFrom(req))
-                 .pipe(Collection(_))
+                 .pipe(Collection(_).paginated)
               )
             )
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> "no-store")
+            )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
@@ -285,7 +298,10 @@ with MTBHypermedia
             .map(
               _.map(_.survivalStatistics(typ,grp))
             )
-            .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> "no-store")
+            )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }

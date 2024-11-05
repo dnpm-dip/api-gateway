@@ -161,7 +161,7 @@ extends SimpleRouter
       controller.get(id)
 
     case GET(p"/queries/${QueryId(id)}/filters/$part") =>
-      controller.defaultFilter(part)(id)
+      controller.defaultFilter(id,part)
 
     case GET(p"/queries/${QueryId(id)}") =>
       controller.get(id)
@@ -178,10 +178,8 @@ extends SimpleRouter
     case GET(p"/queries/${QueryId(id)}/demographics") =>
       controller.demographics(id)
 
-    case GET(p"/queries/${QueryId(id)}/patient-matches"
-             ? q_o"offset=${int(offset)}"
-             & q_o"limit=${int(limit)}") =>
-      controller.patientMatches(offset,limit)(id)
+    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
+      controller.patientMatches(id)
 
     case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
       controller.patientRecord(id,patId)

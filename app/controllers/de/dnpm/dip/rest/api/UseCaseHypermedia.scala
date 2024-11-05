@@ -122,7 +122,6 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
       query.withLinks(
         SELF              -> selfLink,
-        "filters"         -> Link(s"${Uri(query)}/filters"),
         "demographics"    -> Link(s"${Uri(query)}/demographics"),
         "patient-matches" -> Link(s"${Uri(query)}/patient-matches"),
       )

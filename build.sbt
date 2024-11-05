@@ -50,7 +50,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "auth-api"                    % "1.0-SNAPSHOT",
 //  "de.dnpm.dip"            %% "fake-auth-service"           % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "standalone-authup-client"    % "1.0-SNAPSHOT",
-
+  
 )
 
 
