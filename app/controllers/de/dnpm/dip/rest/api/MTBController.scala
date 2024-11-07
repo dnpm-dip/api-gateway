@@ -25,7 +25,7 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  SyncCacheApi => Cache
+  AsyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
@@ -214,7 +214,7 @@ with MTBHypermedia
             .map(_.map(_.tumorDiagnostics(FilterFrom(req))))
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> "no-store")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
@@ -232,7 +232,7 @@ with MTBHypermedia
             .map(_.map(_.medication(FilterFrom(req))))
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders (CACHE_CONTROL -> "no-store")
+                .withHeaders (CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
@@ -255,7 +255,7 @@ with MTBHypermedia
             )
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> "no-store")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
@@ -278,7 +278,7 @@ with MTBHypermedia
             )
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> "no-store")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
@@ -300,7 +300,7 @@ with MTBHypermedia
             )
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> "no-store")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen {
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)

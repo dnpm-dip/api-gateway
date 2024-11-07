@@ -33,7 +33,7 @@ import play.api.libs.json.{
 }
 import play.api.cache.{
   Cached,
-  SyncCacheApi => Cache
+  AsyncCacheApi => Cache
 }
 import cats.data.Ior
 import cats.Monad
@@ -146,6 +146,7 @@ with AuthorizationOps[UserPermissions]
   protected val cache: Cache
   protected val cached: Cached
   protected val cachingDuration: Duration = 15 minutes
+  protected val CACHE_CONTROL_SETTINGS = "no-store"
 
 
   protected implicit val completer: Completer[PatientRecord]
@@ -206,55 +207,32 @@ with AuthorizationOps[UserPermissions]
 
   // Keep track of which Result keys are cached for a given Query,
   // in order to be able to remove them when the Query is updated or deleted (see below)
-   
-/*
-  protected def addCachedResult(
-    query: Query.Id,
-    key: String
-  ) =
-    cache.get[Set[String]](query.toString)
-      .foreach(
-        _.orElse(Some(Set.empty[String]))
-         .foreach(keys =>
-           cache.set(
-             query.toString,
-             keys + key,
-             cachingDuration * 2.0  // ensure this info is cached longer than results
-           )
-         )
-      )
-
-  protected def clearCachedResults(query: Query.Id) =
-    cache.get[Set[String]](query.toString)
-      .foreach(
-        _.foreach(
-          _.foreach(cache.remove)
-        )
-      )
-*/      
 
   protected def addCachedResult(
     query: Query.Id,
     key: String
-  ) =
-    cache.get[Set[String]](query.toString)
-      .orElse(Some(Set.empty[String]))
-      .map(_ + key)
-//      .map(_ + key.tap(k => println(s"$query: Tracking cache key $k")))
-      .foreach(
-        cache.set(
-          query.toString,
-          _,
-          cachingDuration * 1.5  // ensure this info is cached longer than results
-        )
+  ) =    
+    for {
+      optKeys <- cache.get[Set[String]](query.toString)
+      keys  = optKeys.getOrElse(Set.empty[String])
+    }{
+      cache.set(
+        query.toString,
+        keys + key,
+        cachingDuration * 1.5  // ensure this info is cached longer than results
       )
+    }  
 
   protected def clearCachedResults(query: Query.Id) =
-    cache.get[Set[String]](query.toString)
-//      .foreach(_.tap(set => println(s"$query: Clearing cache keys $set")) foreach cache.remove)
-      .foreach(_ foreach cache.remove)
+    for { optKeys <- cache.get[Set[String]](query.toString) }{      
+      for { keys <- optKeys }{
+        for { key <- keys }{
+          cache.remove(key)
+        }
+      }
+    }
+
   // --------------------------------------------------------------------------  
-
 
 
   def sites: Action[AnyContent] =
@@ -520,7 +498,7 @@ with AuthorizationOps[UserPermissions]
             .map(_.map(_.demographics(FilterFrom(req))))
             .map(
               JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> "no-store")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
             )
             .andThen { 
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri) 
