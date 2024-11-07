@@ -33,7 +33,7 @@ GET /api/{use-case}/fake/data/patient-record
 ### Upload a Patient Record
 
 <details>
-<summary>**Note on the validations performed and meaning of the different response codes:**</summary>
+<summary><b>Note on the validations performed and meaning of the different response codes</b></summary>
 
 Upon upload to the following API endpoint, the payload undergoes two-fold validation: After _syntactic_ validation (i.e. if the JSON payload can be properly parsed as a PatientRecord data transfer object (DTO)) there is a _semantic_ validation step.
 This is required for various reasons:
