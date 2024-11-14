@@ -156,31 +156,4 @@ with CatalogHypermedia
       }
     }
 
-/*
-  def codeSystem(
-    uri: URI,
-    version: Option[String],
-    filters: Seq[String]
-  ): Action[AnyContent] =
-    Action.async {
-      getCodeSystem(uri,version,filters)
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_))
-    }
-  def valueSet(
-    uri: URI,
-    version: Option[String],
-    filters: Seq[String]
-  ): Action[AnyContent] =
-    Action.async {
-      catalogService.valueSet(uri,version)
-        .filter(_.isDefined)
-        .fallbackTo(
-          getCodeSystem(uri,version,filters)
-            .map(_.map(ValueSet.from(_)))
-        )
-        .map(_.map(Hyper(_)))
-        .map(JsonResult(_))
-    }
-*/
 }
