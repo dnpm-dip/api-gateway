@@ -28,7 +28,7 @@ trait CatalogHypermedia extends HypermediaBase
 
 
   protected val BASE_URI =
-    s"$BASE_URL/api/coding"
+    s"$BASE_URL/coding"
 
   private val codeSystemsLink =
     Link(s"$BASE_URI/codesystems")

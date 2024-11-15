@@ -15,9 +15,6 @@ import de.dnpm.dip.rest.util.sapphyre.{
 }
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
-//  Count,
-//  Distribution,
-//  Entry
   PatientMatch,
   Query,
   PreparedQuery,
@@ -74,7 +71,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
 
   protected val BASE_URI =
-    s"$BASE_URL/api/$prefix"
+    s"$BASE_URL/$prefix"
 
   private val VALIDATION_BASE_URI =
     s"$BASE_URI/validation"
