@@ -1,13 +1,8 @@
 package de.dnpm.dip.rest.api
 
 
-
-import java.net.URI
 import javax.inject.Inject
-import scala.concurrent.{
-  Future,
-  ExecutionContext
-}
+import scala.concurrent.ExecutionContext
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -18,7 +13,6 @@ import de.dnpm.dip.admin.api.AdminService
 import de.dnpm.dip.admin.api.AdminPermissions._
 import play.api.libs.json.Json.toJson
 import de.dnpm.dip.auth.api.{
-  Authorization,
   AuthorizationOps,
   UserPermissions,
   UserAuthenticationService

@@ -24,9 +24,6 @@ abstract class Extractor[S,T]
 object Extractor
 {
 
-  import scala.language.implicitConversions
-
-
   def apply[S,T](
     f: S => T
   ): Extractor[S,T] =

@@ -3,40 +3,22 @@ package de.dnpm.dip.rest.api
 
 
 import javax.inject.Inject
-import scala.concurrent.{
-  Future,
-  ExecutionContext
-}
-import scala.util.{
-  Success,
-  Try
-}
+import scala.concurrent.ExecutionContext
+import scala.util.Success
 import play.api.mvc.{
   Action,
   AnyContent,
   RequestHeader,
   ControllerComponents
 }
-import play.api.libs.json.{
-  Json,
-  Format,
-  Reads,
-  Writes
-}
+import play.api.libs.json.Json
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
-import de.dnpm.dip.service.query.{
-  PatientFilter,
-  Query,
-  Querier,
-  ResultSet
-}
 import de.dnpm.dip.coding.{
-  Code,
   Coding,
   CodeSystem
 }
@@ -62,10 +44,8 @@ import de.dnpm.dip.mtb.query.api.{
   DiagnosisFilter,
   RecommendationFilter,
   TherapyFilter,
-  KaplanMeier,
   MTBQueryPermissions,
-  MTBQueryService,
-  MTBResultSet
+  MTBQueryService
 }
 import de.dnpm.dip.mtb.mvh.api.MTBMVHService
 import de.dnpm.dip.mtb.query.api.KaplanMeier.{
@@ -73,9 +53,7 @@ import de.dnpm.dip.mtb.query.api.KaplanMeier.{
   Grouping
 }
 import de.dnpm.dip.auth.api.{
-  Authorization,
   UserPermissions,
-  UserAuthenticationService
 }
 
 class MTBController @Inject()(
@@ -131,7 +109,6 @@ with MTBHypermedia
     MTBValidationPermissions.ReadInvalidPatientRecord
 
 
-  import Extractor._
   import CodingExtractors._
 
   private val DiagnosisCodings =

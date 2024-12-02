@@ -19,10 +19,7 @@ import play.api.mvc.{
   Results
 }
 import play.api.mvc.ControllerHelpers.BAD_REQUEST
-import play.api.mvc.Results.{
-  BadRequest,
-  InternalServerError
-}
+import play.api.mvc.Results.InternalServerError
 import play.api.routing.Router
 import play.api.libs.json.Json.toJson
 import scala.concurrent.Future

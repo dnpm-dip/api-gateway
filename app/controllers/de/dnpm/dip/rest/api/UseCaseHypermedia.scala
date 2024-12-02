@@ -1,8 +1,6 @@
 package de.dnpm.dip.rest.api
 
 
-import java.net.URI
-import play.api.libs.json.Json
 import de.dnpm.dip.rest.util.Collection
 import de.dnpm.dip.rest.util.sapphyre.{
   Operation,
@@ -10,15 +8,12 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Relations,
   Method,
   Hyper,
-  Hypermediable,
   HypermediaBase
 }
-import de.dnpm.dip.model.Patient
 import de.dnpm.dip.service.query.{
   PatientMatch,
   Query,
   PreparedQuery,
-  ResultSet,
   UseCaseConfig
 }
 import de.dnpm.dip.service.validation.{
@@ -63,7 +58,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
     CREATE,
     UPDATE
   }
-  import Method.{DELETE,GET,PATCH,POST,PUT}
+  import Method.{DELETE,PATCH,POST,PUT}
 
 
 
@@ -210,16 +205,12 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
   implicit def HyperPatientRecord(
     implicit id: Query.Id
-  ): Hyper.Mapper[UseCase#PatientRecord] = {
+  ): Hyper.Mapper[UseCase#PatientRecord] = 
     patRec =>
-
-      import scala.language.reflectiveCalls
-
       patRec.withLinks(
         "query" -> Link(QueryUri(id)),
         SELF    -> Link(s"${QueryUri(id)}/patient-record/${patRec.patient.id.value}")
       )
-  }
 
 
   implicit val HyperPreparedQuery: Hyper.Mapper[PreparedQueryType] = {

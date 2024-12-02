@@ -9,7 +9,6 @@ import scala.util.{
 import de.dnpm.dip.coding.{
   Code,
   Coding,
-  CodeSystem
 }
 import de.dnpm.dip.coding.atc.ATC
 import de.dnpm.dip.coding.UnregisteredMedication
@@ -58,7 +57,7 @@ object CodingExtractors
           )
         }
         .recoverWith {
-          case t =>
+          case _ =>
             Failure(
               new IllegalArgumentException(s"Invalid or missing 'system', expected one of {${uris.values.mkString(",")}}")
             )
@@ -67,7 +66,6 @@ object CodingExtractors
     }
 
 
-  import scala.util.matching.Regex
   private val atc = "(?i)(atc)".r.unanchored
 
   implicit val MedicationCoding: Extractor[String,Coding[Medications]] = {

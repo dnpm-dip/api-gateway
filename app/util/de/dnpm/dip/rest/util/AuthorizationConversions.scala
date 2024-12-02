@@ -13,9 +13,6 @@ import de.dnpm.dip.auth.api.{
 trait AuthorizationConversions
 {
 
-  import scala.language.implicitConversions
-
-
   implicit def permissionValueToAuthorization[E <: PermissionEnumeration](
     v: E#Value
   )(
@@ -30,8 +27,6 @@ trait AuthorizationConversions
          case _                    => false
        }
     )
-
-
 
 }
 object AuthorizationConversions extends AuthorizationConversions

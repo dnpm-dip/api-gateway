@@ -2,7 +2,6 @@ package de.dnpm.dip.rest.api
 
 
 import java.time.LocalDateTime
-import javax.inject.Inject
 import scala.util.{
   Left,
   Right,
@@ -15,27 +14,20 @@ import scala.concurrent.{
 import scala.concurrent.duration._
 import play.api.mvc.{
   Action,
-  ActionFilter,
   AnyContent,
   BaseController,
-  RequestHeader,
-  Request,
-  Result
+  RequestHeader
 }
 import play.api.libs.json.{
   Json,
   JsValue,
-  Format,
   OFormat,
-  Reads,
-  Writes,
-  OWrites
+  Reads
 }
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
-import cats.data.Ior
 import cats.Monad
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.{
@@ -65,26 +57,20 @@ import de.dnpm.dip.service.query.{
   Querier,
   QueryService,
   PreparedQuery,
-  ResultSet,
   UseCaseConfig
 }
 import de.dnpm.dip.service.mvh.{
   MVHService,
-  Metadata,
   SubmissionReport
 }
-import de.dnpm.dip.coding.{
-  Coding,
-  CodeSystem
-}
+import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
   Id,
   Gender,
   VitalStatus,
   Patient,
   OpenEndPeriod => Period,
-  Site,
-  Snapshot
+  Site
 }
 import de.dnpm.dip.auth.api.{
   AuthenticatedRequest,
@@ -116,8 +102,7 @@ abstract class UseCaseController[UseCase <: UseCaseConfig](
   implicit
   ec: ExecutionContext,
   formatPatRec: OFormat[UseCase#PatientRecord],
-  formatCriteria: OFormat[UseCase#Criteria],
-  writesFilters: OWrites[UseCase#Filter],
+  formatCriteria: OFormat[UseCase#Criteria]
 )
 extends BaseController
 with JsonOps
@@ -130,11 +115,7 @@ with AuthorizationOps[UserPermissions]
     with UseCaseHypermedia[UseCase] =>
 
 
-  import scala.language.implicitConversions
   import scala.util.chaining._
-  import cats.data.NonEmptyList
-  import cats.syntax.either._
-  import Completer.syntax._
 
 
   type PatientRecord = UseCase#PatientRecord
@@ -268,7 +249,7 @@ with AuthorizationOps[UserPermissions]
       req =>
         (orchestrator ! Process(req.body)).collect {
           case Right(Saved(snp))                  => Ok(Json.toJson(snp))
-          case Right(SavedWithIssues(snp,report)) => Created(Json.toJson(report))
+          case Right(SavedWithIssues(_,report))   => Created(Json.toJson(report))
           case Left(err) =>
             err match {
               case Left(UnacceptableIssuesDetected(report))   => UnprocessableEntity(Json.toJson(report))

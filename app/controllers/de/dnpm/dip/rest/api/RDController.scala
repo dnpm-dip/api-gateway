@@ -3,37 +3,24 @@ package de.dnpm.dip.rest.api
 
 
 import javax.inject.Inject
-import scala.concurrent.{
-  Future,
-  ExecutionContext
-}
+import scala.concurrent.ExecutionContext
 import play.api.mvc.{
   Action,
   AnyContent,
   RequestHeader,
   ControllerComponents
 }
-import play.api.libs.json.{
-  Json,
-  Format,
-  Reads,
-  Writes
-}
+import play.api.libs.json.Json
 import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
-import de.dnpm.dip.service.query.{
-  PatientFilter,
-  Query,
-  ResultSet
-}
+import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.coding.Coding 
 import de.dnpm.dip.rd.model.{
   HPO,
-  Orphanet,
   RDDiagnosis,
   RDPatientRecord,
   Completers
@@ -48,15 +35,10 @@ import de.dnpm.dip.rd.query.api.{
   HPOFilter,
   DiagnosisFilter,
   RDQueryPermissions,
-  RDQueryService,
-  RDResultSet
+  RDQueryService
 }
 import de.dnpm.dip.rd.mvh.api.RDMVHService
-import de.dnpm.dip.auth.api.{
-  Authorization,
-  UserPermissions,
-  UserAuthenticationService
-}
+import de.dnpm.dip.auth.api.UserPermissions
 
 
 

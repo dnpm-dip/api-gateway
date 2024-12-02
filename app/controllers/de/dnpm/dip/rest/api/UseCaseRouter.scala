@@ -5,13 +5,7 @@ import java.time.LocalDateTime
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
-import play.api.mvc.Accepting
-import play.api.mvc.ControllerHelpers.{
-  Accepts,
-  render
-}
 import play.api.mvc.Results.{
-  BadRequest,
   NotFound,
   Ok
 }
@@ -22,17 +16,9 @@ import play.api.libs.json.{
 import de.dnpm.dip.model.{
   Id,
   Patient,
-  Gender,
-  VitalStatus,
-  Site
-}
-import de.dnpm.dip.coding.{
-  Coding,
-  CodeSystem
 }
 import de.dnpm.dip.service.query.{
   Query,
-  PatientFilter,
   PreparedQuery,
   UseCaseConfig
 }
@@ -48,8 +34,6 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig]
 )
 extends SimpleRouter
 {
-
-  import scala.util.chaining._
 
   protected val QueryId =
     Extractor(Query.Id(_))

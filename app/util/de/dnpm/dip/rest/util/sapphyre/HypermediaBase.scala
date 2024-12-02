@@ -1,13 +1,6 @@
 package de.dnpm.dip.rest.util.sapphyre
 
 
-import play.api.libs.json.{
-  Json,
-  JsObject,
-  Writes
-}
-
-
 trait HypermediaBase
 {
 

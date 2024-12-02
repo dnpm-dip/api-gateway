@@ -9,11 +9,7 @@ import play.api.libs.json.{
   Writes,
   OWrites,
 }
-import cats.data.{
-  Ior,
-  IorNel,
-  NonEmptyList,
-}
+import cats.data.NonEmptyList
 
 
 
@@ -65,16 +61,6 @@ object Outcome
   implicit val writes: Writes[Outcome] =
     Json.writes[Outcome]
 
-/*
-  // Define Custom Writes so that field "issues" be called "_issues",
-  // in order to maintain convention that field "_issues" will also occur
-  // on resources in case of partial success
-  implicit val writes: OWrites[Outcome] =
-    OWrites(
-      out =>
-        Json.obj("_issues" -> Json.toJson(out.issues))
-    )
-*/
 
 
   def apply(

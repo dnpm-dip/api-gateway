@@ -2,12 +2,7 @@ package de.dnpm.dip.rest.util.sapphyre
 
 
 import scala.util.chaining._
-import play.api.libs.json.{
-  Json,
-  JsObject,
-  Writes,
-  OWrites
-}
+import play.api.libs.json.OWrites
 
 
 
@@ -72,7 +67,6 @@ object Hyper
 
   object Mapper
   {
-    import scala.language.implicitConversions
 
     implicit def of[T](f: T => Hyper[T]): Mapper[T] =
       new Mapper[T]{
@@ -136,8 +130,6 @@ object Hyper
   implicit def writesHyper[T](implicit wt: OWrites[T]): OWrites[Hyper[T]] =
     Hypermediable.writes(wt.contramap[Hyper[T]](_.data))
 
-
-  import scala.language.implicitConversions
 
   implicit def liftPredicate[T](
     f: T => Boolean

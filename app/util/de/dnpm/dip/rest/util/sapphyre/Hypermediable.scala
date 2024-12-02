@@ -5,8 +5,6 @@ import scala.collection.mutable.Map
 import scala.util.chaining._
 import play.api.libs.json.{
   Json,
-  JsObject,
-  Writes,
   OWrites
 }
 

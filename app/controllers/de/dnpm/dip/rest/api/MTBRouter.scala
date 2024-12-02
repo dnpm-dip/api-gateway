@@ -10,10 +10,7 @@ import play.api.libs.json.Json.toJson
 import json.Schema
 import json.schema.Version._
 import com.github.andyglow.jsonschema.AsPlay._
-import de.dnpm.dip.mtb.query.api.{
-  MTBConfig,
-  MTBQueryService
-}
+import de.dnpm.dip.mtb.query.api.MTBConfig
 import de.dnpm.dip.mtb.model.MTBPatientRecord
 import de.dnpm.dip.mtb.model.v1
 import de.dnpm.dip.mtb.gens.Generators._

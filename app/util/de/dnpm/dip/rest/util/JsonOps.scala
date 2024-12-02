@@ -15,14 +15,12 @@ import cats.syntax.either._
 import play.api.libs.json.{
   Json,
   JsValue,
-  JsObject,
   Reads,
   OWrites,
   Writes
 }
 import play.api.mvc.{
   BaseController,
-  Action,
   ActionBuilder,
   BodyParser,
   Request,
@@ -34,10 +32,6 @@ trait JsonOps
 {
 
   self: BaseController =>
-
-  import scala.util.chaining._
-  import cats.syntax.either._
-  import Json.toJson
 
 
   def JsonBody[T: Reads](
