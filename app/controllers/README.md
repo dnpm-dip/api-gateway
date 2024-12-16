@@ -1,6 +1,13 @@
 # REST API
 ----
 
+:warning: **IMPORTANT NOTE**:
+The URI path below assume that your backend is exposed via the reverse proxy as [configured in the deployment setup](https://github.com/dnpm-dip/deployment/blob/cedfb09d80b9b75f2b82fe17fb5a242c0fd4dac0/nginx/sites-available/tls-reverse-proxy.template.conf#L44-L46),
+where the `/api` prefix is used for disambiguation of backend API requests.
+
+Otherwise, you must strip the `/api` prefix from URI paths below.
+
+
 ## Example Data and ETL API 
 
 The following endpoints constitute the "ETL" API for both the Rare Diseases (RD) and Molecular Tumor Board (TMB) use cases. 
