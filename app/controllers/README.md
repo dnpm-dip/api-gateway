@@ -39,6 +39,19 @@ GET /api/{use-case}/fake/data/patient-record
 
 ### Upload a Patient Record
 
+> :warning: **IMPORTANT NOTE about Codings**:
+> Given that many elements of a patient record are concepts from various code systems, the models contain many [Coding](https://hl7.org/fhir/datatypes.html#Coding) objects.
+> In the random generated JSON examples (see above), these Coding elements are created not only with the `code`, but also `display`, `system` and possibly `version` attribute values.
+> However, in uploads only the `code` attribute is _required_, and the latter attributes can generally be omitted, so bear the following in mind for your Coding management: 
+>
+>| Attribute | Use | Note |
+>|-----------|-----|------|
+>|`code`     | Required | |
+>| `system ` | Optional | For most of the elements, the code system is defined from the context (e.g. for attribute `patient.gender`, `system: "Gender"`). The `system` must be explicitly specified only for those few attributes which allow Codings from _multiple_ code systems (e.g. for rare diseases, the diagnosis codes from ICD-10-GM, Orphanet or Alpha-ID-SE). In these cases, the referenced Coding type in the JSON schema has a required `system` attribute and lists admissible code system identifiers. |
+>| `version` | Optional  | The code system version need only be set in cases where the code-system is versioned and the version particularly relevant (e.g. for medications, the ATC version). Otherwise the Coding is resolved against the _latest_ available version of the corresponding code system. |
+>| `display` | Discarded | Upon import, Coding objects are validated against the respective code system and the `display` is completed, so no need to set it. |
+
+
 <details>
 <summary><b>Note on the validations performed and meaning of the different response codes</b></summary>
 
