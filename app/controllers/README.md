@@ -47,8 +47,8 @@ GET /api/{use-case}/fake/data/patient-record
 >| Attribute | Use | Note |
 >|-----------|-----|------|
 >|`code`     | Required | |
->| `system ` | Optional | For most of the elements, the code system is defined from the context (e.g. for attribute `patient.gender`, `system: "Gender"`). The `system` must be explicitly specified only for those few attributes which allow Codings from _multiple_ code systems (e.g. for rare diseases, the diagnosis codes from ICD-10-GM, Orphanet or Alpha-ID-SE). In these cases, the referenced Coding type in the JSON schema has a required `system` attribute and lists admissible code system identifiers. |
->| `version` | Optional  | The code system version need only be set in cases where the code-system is versioned and the version particularly relevant (e.g. for medications, the ATC version). Otherwise the Coding is resolved against the _latest_ available version of the corresponding code system. |
+>| `system ` | Optional | For most of the coded elements, the code system is clearly defined from the context (e.g. for attribute `patient.gender`). The `system` must thus only be explicitly specified for those few attributes which allow Codings from _multiple_ code systems (e.g. for rare diseases, the diagnosis codes from ICD-10-GM, Orphanet or Alpha-ID-SE). In these cases, the referenced Coding type in the JSON schema has a required `system` attribute and lists admissible code system identifiers. |
+>| `version` | Optional  | The code system version need only be set in cases where the code-system is versioned and the version particularly relevant (e.g. for medications, the ATC version). Else, by default, the Coding is resolved against the _latest_ available version of the corresponding code system. |
 >| `display` | Discarded | Upon import, Coding objects are validated against the respective code system and the `display` is completed, so no need to set it. |
 
 
