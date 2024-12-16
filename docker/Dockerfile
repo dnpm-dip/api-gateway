@@ -17,7 +17,7 @@ COPY --chmod=755 entrypoint.sh /
 
 
 LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/KohlbacherLab/dnpm-dip-api-gateway
+LABEL org.opencontainers.image.source=https://github.com/dnpm-dip/api-gateway
 LABEL org.opencontainers.image.description="DNPM:DIP Backend API Gateway"
 
 ARG CONFIG_DIR=/dnpm_config
@@ -43,7 +43,7 @@ VOLUME $DATA_DIR
 EXPOSE 9000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=5s \
-  CMD curl http://127.0.0.1:9000/api/peer2peer/status || exit 1
+  CMD curl http://127.0.0.1:9000/peer2peer/status || exit 1
 
 
 ENTRYPOINT ["/entrypoint.sh"]
