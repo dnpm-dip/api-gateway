@@ -7,5 +7,5 @@ REST API Gateway component to expose DNPM:DIP modules
 
 ## API Docs (Preliminary):
 
-[https://github.com/KohlbacherLab/dnpm-dip-api-gateway/blob/main/app/controllers/README.md](https://github.com/KohlbacherLab/dnpm-dip-api-gateway/blob/main/app/controllers/README.md)
+[https://github.com/dnpm-dip/api-gateway/tree/main/app/controllers](https://github.com/dnpm-dip/api-gateway/tree/main/app/controllers)
 
