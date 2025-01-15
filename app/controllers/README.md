@@ -2,7 +2,7 @@
 ----
 
 :warning: **IMPORTANT NOTE**:
-The URI paths below assume that your backend is exposed via the reverse proxy as configured in the deployment setup,
+The URI paths below assume that your backend is exposed via the reverse proxy as configured in the [deployment setup](https://github.com/dnpm-dip/deployment),
 where the `/api` prefix is used for disambiguation of backend API requests,
 but stripped in the [`proxy_pass` directive](https://github.com/dnpm-dip/deployment/blob/cedfb09d80b9b75f2b82fe17fb5a242c0fd4dac0/nginx/sites-available/tls-reverse-proxy.template.conf#L44-L46).
 Otherwise, discard the `/api` prefix from URI paths.
