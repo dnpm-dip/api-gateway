@@ -29,10 +29,10 @@ import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
 }
-import de.dnpm.dip.mtb.model.v1
-import v1.mappings._
-import de.dnpm.dip.util.mapping.syntax._
-import de.dnpm.dip.service.DataUpload
+//import de.dnpm.dip.mtb.model.v1
+//import v1.mappings._
+//import de.dnpm.dip.util.mapping.syntax._
+//import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
@@ -157,6 +157,7 @@ with MTBHypermedia
       .get
       .latest
 
+/*      
   override val patientRecordParser =
     parse.using(
       _.contentType match {
@@ -173,7 +174,7 @@ with MTBHypermedia
           }
       }
     )
-
+*/
 
   def kaplanMeierConfig: Action[AnyContent] =
     Action {

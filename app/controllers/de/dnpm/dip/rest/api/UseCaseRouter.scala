@@ -79,7 +79,6 @@ extends SimpleRouter
         jsonSchemas(format.getOrElse(APPLICATION_JSON)).get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
             Ok(Json.prettyPrint(sch)).as(APPLICATION_JSON)
-//            Ok(sch)
 
           case None =>
             NotFound(

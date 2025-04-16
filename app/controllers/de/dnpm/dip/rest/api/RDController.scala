@@ -102,7 +102,7 @@ with RDHypermedia
     Extractor.csvSet[Coding[HPO]]
 
   private val Category =
-    Extractor.csvSet[Coding[RDDiagnosis.Category]]
+    Extractor.csvSet[Coding[RDDiagnosis.Systems]]
 
 
   override def FilterFrom(

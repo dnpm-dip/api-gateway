@@ -61,7 +61,7 @@ import de.dnpm.dip.service.query.{
 }
 import de.dnpm.dip.service.mvh.{
   MVHService,
-  SubmissionReport
+//  SubmissionReport
 }
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
@@ -69,7 +69,7 @@ import de.dnpm.dip.model.{
   Gender,
   VitalStatus,
   Patient,
-  OpenEndPeriod => Period,
+//  OpenEndPeriod => Period,
   Site
 }
 import de.dnpm.dip.auth.api.{
@@ -252,10 +252,11 @@ with AuthorizationOps[UserPermissions]
           case Right(SavedWithIssues(_,report))   => Created(Json.toJson(report))
           case Left(err) =>
             err match {
-              case Left(UnacceptableIssuesDetected(report))   => UnprocessableEntity(Json.toJson(report))
-              case Left(FatalIssuesDetected(report))          => BadRequest(Json.toJson(report))
-              case Left(ValidationService.GenericError(msg))  => InternalServerError(msg)
-              case Right(QueryService.GenericError(msg))      => InternalServerError(msg)
+              case Left(UnacceptableIssuesDetected(report))     => UnprocessableEntity(Json.toJson(report))
+              case Left(FatalIssuesDetected(report))            => BadRequest(Json.toJson(report))
+              case Left(ValidationService.GenericError(msg))    => InternalServerError(msg)
+              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(msg)
+              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(msg)
             }
         }
     }
@@ -267,9 +268,10 @@ with AuthorizationOps[UserPermissions]
           case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
           case Left(err) =>
             err match {
-              case Left(ValidationService.GenericError(msg)) => InternalServerError(msg)
-              case Right(QueryService.GenericError(msg))     => InternalServerError(msg)
-              case Left(_)                                   => InternalServerError("Unexpected data deletion outcome")
+              case Left(ValidationService.GenericError(msg))    => InternalServerError(msg)
+              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(msg)
+              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(msg)
+              case Left(_)                                      => InternalServerError("Unexpected data deletion outcome")
             }
         }
     }
@@ -564,11 +566,14 @@ with AuthorizationOps[UserPermissions]
   def mvhSubmissionReports(
     start: Option[LocalDateTime],
     end: Option[LocalDateTime]
-  ) = Action.async {
+  ) = TODO
+/*  
+    Action.async {
     (mvhService ? SubmissionReport.Filter(start.map(Period(_,end))))
       .map(rs => Collection(rs.toSeq))
       .map(Json.toJson(_))
       .map(Ok(_))
   }
+*/      
 
 }
