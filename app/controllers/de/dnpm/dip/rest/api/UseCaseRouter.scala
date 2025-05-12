@@ -17,6 +17,10 @@ import de.dnpm.dip.model.{
   Id,
   Patient,
 }
+import de.dnpm.dip.service.mvh.{
+  TransferTAN,
+  Submission
+}
 import de.dnpm.dip.service.query.{
   Query,
   PreparedQuery,
@@ -26,6 +30,7 @@ import de.dnpm.dip.rest.util.{
   Extractor,
   Outcome
 }
+import shapeless.Witness
 
 
 abstract class UseCaseRouter[UseCase <: UseCaseConfig]
@@ -47,6 +52,19 @@ extends SimpleRouter
   protected val dateTime =
     Extractor.option[LocalDateTime]
 
+  protected val TAN =
+    Extractor(Id[TransferTAN](_))
+
+
+  implicit def enumExtractor[E <: Enumeration](
+    implicit w: Witness.Aux[E]
+  ): Extractor[String,E#Value] =
+    s => w.value.values.find(_.toString == s)
+
+  protected val ReportStatusSet =
+    Extractor.option(
+      Extractor.csvSet[Submission.Report.Status.Value]
+    )
 
   val prefix =
     if (pref startsWith "/")
@@ -71,7 +89,6 @@ extends SimpleRouter
     // ETL Routes:
     // ------------------------------------------------------------------------
 
-
     case GET(p"/etl/patient-record/schema"
       ? q_o"version=$version"
       & q_o"format=$format") =>
@@ -88,14 +105,11 @@ extends SimpleRouter
       }
 
 
-    case POST(p"/etl/patient-record:validate") =>
-      controller.validate
+    case POST(p"/etl/patient-record:validate") => controller.validate
 
-    case POST(p"/etl/patient-record") =>
-      controller.processUpload
+    case POST(p"/etl/patient-record") => controller.processUpload
 
-    case DELETE(p"/etl/patient/${PatId(patId)}") =>
-      controller.deleteData(patId)
+    case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
 
 
     // ------------------------------------------------------------------------
@@ -116,11 +130,9 @@ extends SimpleRouter
     // Peer-to-peer Routes:
     // ------------------------------------------------------------------------
 
-    case POST(p"/peer2peer/query") =>
-      controller.peerToPeerQuery
+    case POST(p"/peer2peer/query") => controller.peerToPeerQuery
 
-    case POST(p"/peer2peer/patient-record") =>
-      controller.patientRecordRequest
+    case POST(p"/peer2peer/patient-record") => controller.patientRecordRequest
 
 
     // ------------------------------------------------------------------------
@@ -129,78 +141,60 @@ extends SimpleRouter
 
     case GET(p"/peer2peer/mvh/submission-reports"
       ? q_o"created-after=${dateTime(start)}"
-      & q_o"created-before=${dateTime(end)}") =>
-      controller.mvhSubmissionReports(start,end)
+      & q_o"created-before=${dateTime(end)}"
+      & q_o"status=${ReportStatusSet(status)}") => controller.mvhSubmissionReports(start,end,status)
+
+    case POST(p"/peer2peer/mvh/submission-reports/${TAN(id)}:submitted") => controller.confirmReportSubmitted(id)
 
 
     // ------------------------------------------------------------------------
     // Query Routes:
     // ------------------------------------------------------------------------
 
-    case POST(p"/queries") =>
-      controller.submit
+    case POST(p"/queries") => controller.submit
 
-    case GET(p"/queries"?q"id=${QueryId(id)}") =>
-      controller.get(id)
+    case GET(p"/queries"?q"id=${QueryId(id)}") => controller.get(id)
 
-    case GET(p"/queries/${QueryId(id)}/filters/$part") =>
-      controller.defaultFilter(id,part)
+    case GET(p"/queries/${QueryId(id)}/filters/$part") => controller.defaultFilter(id,part)
 
-    case GET(p"/queries/${QueryId(id)}") =>
-      controller.get(id)
+    case GET(p"/queries/${QueryId(id)}") => controller.get(id)
 
-    case DELETE(p"/queries"?q"id=${QueryId(id)}") =>
-      controller.delete(id)
+    case DELETE(p"/queries"?q"id=${QueryId(id)}") => controller.delete(id)
 
-    case DELETE(p"/queries/${QueryId(id)}") =>
-      controller.delete(id)
+    case DELETE(p"/queries/${QueryId(id)}") => controller.delete(id)
 
-    case PUT(p"/queries/${QueryId(id)}") =>
-      controller.update(id)
+    case PUT(p"/queries/${QueryId(id)}") => controller.update(id)
 
-    case GET(p"/queries/${QueryId(id)}/demographics") =>
-      controller.demographics(id)
+    case GET(p"/queries/${QueryId(id)}/demographics") => controller.demographics(id)
 
-    case GET(p"/queries/${QueryId(id)}/patient-matches") =>
-      controller.patientMatches(id)
+    case GET(p"/queries/${QueryId(id)}/patient-matches") => controller.patientMatches(id)
 
-    case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") =>
-      controller.patientRecord(id,patId)
+    case GET(p"/queries/${QueryId(id)}/patient-record"?q"id=${PatId(patId)}") => controller.patientRecord(id,patId)
 
-    case GET(p"/queries/${QueryId(id)}/patient-record/${PatId(patId)}") =>
-      controller.patientRecord(id,patId)
+    case GET(p"/queries/${QueryId(id)}/patient-record/${PatId(patId)}") => controller.patientRecord(id,patId)
 
-    case GET(p"/queries") =>
-      controller.queries
+    case GET(p"/queries") => controller.queries
 
 
     // ------------------------------------------------------------------------
     // Prepared Query Routes:
     // ------------------------------------------------------------------------
 
-    case POST(p"/prepared-queries") =>
-      controller.createPreparedQuery
+    case POST(p"/prepared-queries") => controller.createPreparedQuery
 
-    case GET(p"/prepared-queries/${PreparedQueryId(id)}") =>
-      controller.getPreparedQuery(id)
+    case GET(p"/prepared-queries/${PreparedQueryId(id)}") => controller.getPreparedQuery(id)
 
-    case GET(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") =>
-      controller.getPreparedQuery(id)
+    case GET(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") => controller.getPreparedQuery(id)
 
-    case GET(p"/prepared-queries") =>
-      controller.getPreparedQueries
+    case GET(p"/prepared-queries") => controller.getPreparedQueries
 
-    case PATCH(p"/prepared-queries/${PreparedQueryId(id)}") =>
-      controller.updatePreparedQuery(id)
+    case PATCH(p"/prepared-queries/${PreparedQueryId(id)}") => controller.updatePreparedQuery(id)
 
-    case PATCH(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") =>
-      controller.updatePreparedQuery(id)
+    case PATCH(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") => controller.updatePreparedQuery(id)
 
-    case DELETE(p"/prepared-queries/${PreparedQueryId(id)}") =>
-      controller.deletePreparedQuery(id)
+    case DELETE(p"/prepared-queries/${PreparedQueryId(id)}") => controller.deletePreparedQuery(id)
 
-    case DELETE(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") =>
-      controller.deletePreparedQuery(id)
+    case DELETE(p"/prepared-queries"?q"id=${PreparedQueryId(id)}") => controller.deletePreparedQuery(id)
 
   }
 

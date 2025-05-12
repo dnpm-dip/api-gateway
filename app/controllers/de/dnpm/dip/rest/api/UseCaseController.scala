@@ -61,7 +61,8 @@ import de.dnpm.dip.service.query.{
 }
 import de.dnpm.dip.service.mvh.{
   MVHService,
-//  SubmissionReport
+  Submission,
+  TransferTAN
 }
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
@@ -69,7 +70,7 @@ import de.dnpm.dip.model.{
   Gender,
   VitalStatus,
   Patient,
-//  OpenEndPeriod => Period,
+  OpenEndPeriod,
   Site
 }
 import de.dnpm.dip.auth.api.{
@@ -565,15 +566,24 @@ with AuthorizationOps[UserPermissions]
 
   def mvhSubmissionReports(
     start: Option[LocalDateTime],
-    end: Option[LocalDateTime]
-  ) = TODO
-/*  
+    end: Option[LocalDateTime],
+    status: Option[Set[Submission.Report.Status.Value]]
+  ) = 
     Action.async {
-    (mvhService ? SubmissionReport.Filter(start.map(Period(_,end))))
-      .map(rs => Collection(rs.toSeq))
-      .map(Json.toJson(_))
-      .map(Ok(_))
-  }
-*/      
+      (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status))
+        .map(rs => Collection(rs.toSeq))
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
+ 
+ 
+  def confirmReportSubmitted(id: Id[TransferTAN]) =
+    Action.async {
+      (mvhService ! MVHService.ConfirmSubmitted(id))
+        .map { 
+          case Right(_)                           => Ok
+          case Left(MVHService.GenericError(err)) => InternalServerError(err)
+        }
+    }
 
 }
