@@ -545,6 +545,14 @@ with AuthorizationOps[UserPermissions]
   // Peer-to-Peer Operations
   // --------------------------------------------------------------------------  
 
+  def statusInfo =
+    Action.async { 
+      orchestrator.statusInfo
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
+
+
   def peerToPeerQuery =
     JsonAction[PeerToPeerQuery[Criteria,PatientRecord]].async { 
       req =>
@@ -555,6 +563,17 @@ with AuthorizationOps[UserPermissions]
           }
     }
 
+
+  def patientRecord(
+    origin: Coding[Site],
+    querier: Querier,
+    patId: Id[Patient],
+    snapshot: Option[Long]
+  ) =
+    Action.async {
+      (queryService ! PatientRecordRequest[PatientRecord](origin,querier,patId,snapshot))
+        .map(JsonResult(_))
+    }
 
   def patientRecordRequest =
     JsonAction[PatientRecordRequest[PatientRecord]].async { 

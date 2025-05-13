@@ -13,15 +13,18 @@ import play.api.libs.json.{
   Json,
   JsObject
 }
+import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
   Id,
   Patient,
+  Site
 }
 import de.dnpm.dip.service.mvh.{
   TransferTAN,
   Submission
 }
 import de.dnpm.dip.service.query.{
+  Querier,
   Query,
   PreparedQuery,
   UseCaseConfig
@@ -39,6 +42,12 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig]
 )
 extends SimpleRouter
 {
+
+  protected val querier =
+    Extractor(Querier(_))
+
+  protected val Origin: Extractor[String,Coding[Site]] =
+    Extractor(Coding[Site](_))
 
   protected val QueryId =
     Extractor(Query.Id(_))
@@ -104,7 +113,6 @@ extends SimpleRouter
         }
       }
 
-
     case POST(p"/etl/patient-record:validate") => controller.validate
 
     case POST(p"/etl/patient-record") => controller.processUpload
@@ -130,9 +138,17 @@ extends SimpleRouter
     // Peer-to-peer Routes:
     // ------------------------------------------------------------------------
 
+    case GET(p"/peer2peer/status-info") => controller.statusInfo
+
     case POST(p"/peer2peer/query") => controller.peerToPeerQuery
 
-    case POST(p"/peer2peer/patient-record") => controller.patientRecordRequest
+//    case POST(p"/peer2peer/patient-record") => controller.patientRecordRequest
+    case GET(p"/peer2peer/patient-record"
+             ? q"origin=${Origin(site)}"
+             & q"querier=${querier(q)}"
+             & q"patient=${PatId(id)}"
+             & q_o"snapshot=${long(snp)}") => controller.patientRecord(site,q,id,snp)
+
 
 
     // ------------------------------------------------------------------------
