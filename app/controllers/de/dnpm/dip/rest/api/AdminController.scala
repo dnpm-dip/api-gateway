@@ -34,11 +34,18 @@ with AuthorizationOps[UserPermissions]
   implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
 
-
-  val adminService =
+  private val adminService =
     AdminService
       .getInstance
       .get
+
+
+  def status =
+    Action.async {
+      adminService.connectionStatus
+        .map(toJson(_))
+        .map(Ok(_))
+    } 
 
 
   def connectionReport: Action[AnyContent] =

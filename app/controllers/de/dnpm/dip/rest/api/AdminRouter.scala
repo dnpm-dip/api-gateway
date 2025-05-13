@@ -4,34 +4,24 @@ package de.dnpm.dip.rest.api
 import javax.inject.Inject
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
-import play.api.routing.sird._
 import play.api.mvc.Results.Ok
-import play.api.libs.json.Json
-
+import play.api.routing.sird._
+import play.api.libs.json.Json.toJson
 
 
 class AdminRouter @Inject()(
-  adminController: AdminController
+  val controller: AdminController
 )
 extends SimpleRouter
 {
 
-  val status =
-    Json.obj("status" -> "Up and running")
-
-
   override val routes: Routes = {
-
     
-    case GET(p"/peer2peer/status") =>
+    case GET(p"/peer2peer/meta-info") => controller.Action { Ok(toJson(MetaInfo.instance)) }
 
-      // If the request reaches this point, the backend app is up and running
-      adminController.Action {
-        Ok(status)
-      }
+    case GET(p"/peer2peer/status") => controller.status
 
-    case GET(p"/admin/connection-report") =>
-      adminController.connectionReport
+    case GET(p"/admin/connection-report") => controller.connectionReport
 
   }
 

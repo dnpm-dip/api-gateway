@@ -13,31 +13,29 @@ import de.dnpm.dip.rest.util.Extractor
 
 
 class CatalogRouter @Inject()(
-  catalogController: CatalogController
+  val controller: CatalogController
 )
 extends SimpleRouter
 {
 
-  val Uri =
-    Extractor(URI.create)
-
+  private val Uri = Extractor(URI.create)
 
   override val routes: Routes = {
 
     case GET(p"/coding/codesystems"
               ? q"uri=${Uri(uri)}"
               & q_o"version=$version"
-              & q_s"filter=$filters")  => catalogController.codeSystem(uri,version,filters) 
+              & q_s"filter=$filters")  => controller.codeSystem(uri,version,filters) 
 
-    case GET(p"/coding/codesystems")   => catalogController.codeSystemInfos
+    case GET(p"/coding/codesystems")   => controller.codeSystemInfos
 
 
     case GET(p"/coding/valuesets"
               ? q"uri=${Uri(uri)}"
               & q_o"version=$version"
-              & q_s"filter=$filters")  => catalogController.valueSet(uri,version,filters) 
+              & q_s"filter=$filters")  => controller.valueSet(uri,version,filters) 
 
-    case GET(p"/coding/valuesets")     => catalogController.valueSetInfos
+    case GET(p"/coding/valuesets")     => controller.valueSetInfos
 
   }
 
