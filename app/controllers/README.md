@@ -31,11 +31,26 @@ with `version` in `{draft-12, draft-09, draft-07, draft-04}`, Default: `draft-12
 
 ### Synthetic JSON Data
 
-API endpoint to request random generated, structurally/syntactically correct JSON examples of patient records
+API endpoint to request random generated, structurally/syntactically correct JSON examples of payload objects
+
+#### Patient Records
 
 ```
 GET /api/{use-case}/fake/data/patient-record
 ```
+
+#### MVGenomSeq Submissions
+
+i.e. a patient record + [MVH metadata](https://ibmi-ut.atlassian.net/wiki/spaces/DRD/pages/1474938/Data+Model+-+SE+dip#DataModel-SE:dip-MVHMetadata)
+
+```
+GET /api/{use-case}/fake/data/mvh-submission
+```
+> :warning: **NOTE about generated MVH metadata**:  
+> The generated metadata does not contain examples of Research Consent entries.
+> These are expected to be FHIR/JSON [Consent](https://hl7.org/fhir/R4/consent.html) resources conforming to MII Consent specifications.
+> Refer to MII Consent documentation or your local consent management for examples.
+
 
 ### Upload a Patient Record
 

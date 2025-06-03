@@ -72,17 +72,4 @@ with Logging
           .tap(_ => log.error("Server error",exception))
     }
 
-
-/*      
-  override def onServerError(
-    request: RequestHeader,
-    exception: Throwable
-  ): Future[Result] =
-    Outcome("Server error: " + exception.getMessage)
-      .pipe(toJson(_))
-      .pipe(InternalServerError(_))
-      .pipe(Future.successful(_))
-      .tap(_ => log.error("Server error",exception))
-*/
-
 }

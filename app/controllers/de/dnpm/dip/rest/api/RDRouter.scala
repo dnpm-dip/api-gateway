@@ -2,7 +2,6 @@ package de.dnpm.dip.rest.api
 
 
 import javax.inject.Inject
-import scala.util.Random
 import scala.util.chaining._
 import play.api.routing.sird._
 import play.api.mvc.Results.Ok
@@ -17,14 +16,13 @@ import de.dnpm.dip.rd.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.service.DataUpload
 
+
 class RDRouter @Inject()(
   override val controller: RDController
 )
 extends UseCaseRouter[RDConfig]("rd")
+with FakeDataGen[RDPatientRecord]
 {
-
-  private implicit val rnd: Random =
-    new Random
 
   import DataUpload.Schemas._
 
@@ -46,6 +44,13 @@ extends UseCaseRouter[RDConfig]("rd")
     case GET(p"/fake/data/patient-record") =>
       controller.Action {
         Gen.of[RDPatientRecord].next
+          .pipe(toJson(_))
+          .pipe(Ok(_))
+      }
+
+    case GET(p"/fake/data/mvh-submission") =>
+      controller.Action {
+        Gen.of[DataUpload[RDPatientRecord]].next
           .pipe(toJson(_))
           .pipe(Ok(_))
       }

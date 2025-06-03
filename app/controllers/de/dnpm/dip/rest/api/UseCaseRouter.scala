@@ -43,6 +43,9 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig]
 extends SimpleRouter
 {
 
+  this: FakeDataGen[UseCase#PatientRecord] =>
+
+
   protected val querier =
     Extractor(Querier(_))
 

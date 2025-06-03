@@ -2,7 +2,6 @@ package de.dnpm.dip.rest.api
 
 
 import javax.inject.Inject
-import scala.util.Random
 import scala.util.chaining._
 import play.api.routing.sird._
 import play.api.mvc.Results.Ok
@@ -23,11 +22,8 @@ class MTBRouter @Inject()(
   override val controller: MTBController
 )
 extends UseCaseRouter[MTBConfig]("mtb")
+with FakeDataGen[MTBPatientRecord]
 {
-
-  private implicit val rnd: Random =
-    new Random
-
 
   import DataUpload.Schemas._
 
@@ -81,6 +77,13 @@ extends UseCaseRouter[MTBConfig]("mtb")
     case GET(p"/fake/data/patient-record") =>
       controller.Action {
         Gen.of[MTBPatientRecord].next
+          .pipe(toJson(_))
+          .pipe(Ok(_))
+      }
+
+    case GET(p"/fake/data/mvh-submission") =>
+      controller.Action {
+        Gen.of[DataUpload[MTBPatientRecord]].next
           .pipe(toJson(_))
           .pipe(Ok(_))
       }

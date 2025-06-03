@@ -235,7 +235,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        (validationService ! Validate(req.body.record)).collect {
+        (validationService ! Validate(req.body.record)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
@@ -249,8 +249,8 @@ with AuthorizationOps[UserPermissions]
     Action.async(patientRecordParser){ 
       req =>
         (orchestrator ! Process(req.body)).collect {
-          case Right(Saved(snp))                  => Ok(Json.toJson(snp))
-          case Right(SavedWithIssues(_,report))   => Created(Json.toJson(report))
+          case Right(Saved)                       => Ok
+          case Right(SavedWithIssues(report))     => Created(Json.toJson(report))
           case Left(err) =>
             err match {
               case Left(UnacceptableIssuesDetected(report))     => UnprocessableEntity(Json.toJson(report))
@@ -261,6 +261,7 @@ with AuthorizationOps[UserPermissions]
             }
         }
     }
+
 
   def deleteData(patId: Id[Patient]): Action[AnyContent] =
     Action.async { 
