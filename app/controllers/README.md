@@ -49,7 +49,8 @@ GET /api/{use-case}/fake/data/mvh-submission
 > :warning: **NOTE about generated MVH metadata**:  
 > The generated metadata does not contain examples of Research Consent entries.
 > These are expected to be FHIR/JSON [Consent](https://hl7.org/fhir/R4/consent.html) resources conforming to MII Consent specifications.
-> Refer to MII Consent documentation or your local consent management for examples.
+> One example can be found [here](https://github.com/dnpm-dip/service-base/blob/main/src/test/resources/consent.json).
+> Refer to MII Consent documentation or your local consent management for further info on Broad/Research Consent.
 
 
 ### Upload a Patient Record
