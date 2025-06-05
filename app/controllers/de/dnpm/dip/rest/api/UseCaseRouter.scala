@@ -33,6 +33,7 @@ import de.dnpm.dip.rest.util.{
   Extractor,
   Outcome
 }
+import cats.Eval
 import shapeless.Witness
 
 
@@ -89,7 +90,7 @@ extends SimpleRouter
 
   protected val APPLICATION_JSON = "application/json"
 
-  protected val jsonSchemas: Map[String,Map[String,JsObject]]
+  protected val jsonSchemas: Map[String,Eval[JsObject]]
 
 
   final val baseRoutes: Routes = {
@@ -101,13 +102,11 @@ extends SimpleRouter
     // ETL Routes:
     // ------------------------------------------------------------------------
 
-    case GET(p"/etl/patient-record/schema"
-      ? q_o"version=$version"
-      & q_o"format=$format") =>
+    case GET(p"/etl/patient-record/schema" ? q_o"version=$version") =>
       controller.Action { req =>
-        jsonSchemas(format.getOrElse(APPLICATION_JSON)).get(version.getOrElse("draft-12").toLowerCase) match {
+        jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
-            Ok(Json.prettyPrint(sch)).as(APPLICATION_JSON)
+            Ok(Json.prettyPrint(sch.value)).as(APPLICATION_JSON)
 
           case None =>
             NotFound(

@@ -15,6 +15,7 @@ import de.dnpm.dip.rd.model.json.Schemas._
 import de.dnpm.dip.rd.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.service.DataUpload
+import cats.Eval
 
 
 class RDRouter @Inject()(
@@ -28,12 +29,10 @@ with FakeDataGen[RDPatientRecord]
 
   override val jsonSchemas =
     Map(
-      APPLICATION_JSON -> Map(
-        "draft-12" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft12("RD-Patient-Record")),
-        "draft-09" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft09("RD-Patient-Record")),
-        "draft-07" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft07("RD-Patient-Record")),
-        "draft-04" -> Schema[DataUpload[RDPatientRecord]].asPlay(Draft04())
-      )
+      "draft-12" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft12("RD-Patient-Record"))),
+      "draft-09" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft09("RD-Patient-Record"))),
+      "draft-07" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft07("RD-Patient-Record"))),
+      "draft-04" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft04()))
     )
 
   override val additionalRoutes = {
