@@ -12,7 +12,6 @@ ThisBuild / version      := "1.0-SNAPSHOT"
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(BuildInfoPlugin)
-//  .settings()
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
     buildInfoPackage := "de.dnpm.dip.rest.api"
@@ -33,7 +32,6 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.0-SNAPSHOT",
-//  "de.dnpm.dip"            %% "mtb-dto-model-v1"            % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.0-SNAPSHOT",
   "de.dnpm.dip"            %% "rd-query-service-api"        % "1.0-SNAPSHOT",
