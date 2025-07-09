@@ -15,11 +15,6 @@ import de.dnpm.dip.service.mvh.{
   TransferTAN,
 }
 import de.dnpm.dip.service.DataUpload
-import play.api.libs.json.{
-  JsPath,
-  OWrites
-}
-import play.api.libs.functional.syntax._
 
 
 trait FakeDataGen[T <: PatientRecord]
@@ -35,18 +30,26 @@ trait FakeDataGen[T <: PatientRecord]
       typ    <- Gen.`enum`(Submission.Type)
       ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
       record <- Gen.of[T]
+
+      consentDate =
+        record.getCarePlans
+          .map(_.issuedOn)
+          .minOption
+          .map(_ minusWeeks 2)
+          .getOrElse(LocalDate.now)
+
       metadata =
         Submission.Metadata(
           typ,
           ttan,
           ModelProjectConsent(
             "Patient Info TE Consent MVGenomSeq vers01",
-            Some(LocalDate.now),
+            Some(consentDate minusDays 1),
             ModelProjectConsent.Purpose.values
               .toList
               .map(
                 Consent.Provision(
-                  LocalDate.now,
+                  consentDate,
                   _,
                   Consent.Provision.Type.Permit 
                 )
@@ -59,64 +62,4 @@ trait FakeDataGen[T <: PatientRecord]
       Some(metadata)
     )
 
-//  protected implicit def writesDataUpload[T <: PatientRecord: OWrites]: OWrites[DataUpload[T]] =
-  protected implicit def writesDataUpload(
-    implicit wt: OWrites[T]
-  ): OWrites[DataUpload[T]] =
-    (
-      JsPath.write[T] and
-      (JsPath \ "metadata").writeNullable[Submission.Metadata]
-    )(
-      unlift(DataUpload.unapply[T](_))
-    )
-
 }
-
-
-/*
-trait FakeDataGen
-{
-
-  protected implicit val rnd: Random =
-    new Random
-
-
-  protected implicit def genDataUpload[T <: PatientRecord: Gen]: Gen[DataUpload[T]] =
-    for {
-      typ    <- Gen.`enum`(Submission.Type)
-      ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
-      record <- Gen.of[T]
-      metadata =
-        Submission.Metadata(
-          typ,
-          ttan,
-          ModelProjectConsent(
-            "Patient Info TE Consent MVGenomSeq vers01",
-            Some(LocalDate.now),
-            ModelProjectConsent.Purpose.values
-              .toList
-              .map(
-                Consent.Provision(
-                  LocalDate.now,
-                  _,
-                  Consent.Provision.Type.Permit 
-                )
-              )
-          ),
-          None
-        )
-    } yield DataUpload(
-      record,
-      Some(metadata)
-    )
-
-  protected implicit def writesDataUpload[T <: PatientRecord: OWrites]: OWrites[DataUpload[T]] =
-    (
-      JsPath.write[T] and
-      (JsPath \ "metadata").writeNullable[Submission.Metadata]
-    )(
-      unlift(DataUpload.unapply[T](_))
-    )
-
-}
-*/

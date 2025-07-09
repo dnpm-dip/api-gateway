@@ -235,7 +235,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        (validationService ! Validate(req.body.record)).map {
+        (validationService ! Validate(req.body)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
