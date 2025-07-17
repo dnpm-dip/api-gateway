@@ -85,6 +85,6 @@ object Outcome
   def apply(
     error: String
   ): Outcome = 
-    Outcome(List(error).map(Issue.Error))
+    Outcome(List(Issue.Error(error)))
 
 }

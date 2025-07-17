@@ -119,6 +119,11 @@ extends SimpleRouter
 
     case POST(p"/etl/patient-record") => controller.processUpload
 
+    case GET(p"/etl/mvh/submission-reports"
+      ? q_o"created-after=${dateTime(start)}"
+      & q_o"created-before=${dateTime(end)}"
+      & q_o"status=${ReportStatusSet(status)}") => controller.mvhSubmissionReports(start,end,status)
+
     case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
 
 
@@ -150,8 +155,6 @@ extends SimpleRouter
              & q"querier=${querier(q)}"
              & q"patient=${PatId(id)}"
              & q_o"snapshot=${long(snp)}") => controller.patientRecord(site,q,id,snp)
-
-
 
     // ------------------------------------------------------------------------
     // MVH Endpoints  

@@ -255,9 +255,10 @@ with AuthorizationOps[UserPermissions]
             err match {
               case Left(UnacceptableIssuesDetected(report))     => UnprocessableEntity(Json.toJson(report))
               case Left(FatalIssuesDetected(report))            => BadRequest(Json.toJson(report))
-              case Left(ValidationService.GenericError(msg))    => InternalServerError(msg)
-              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(msg)
-              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(msg)
+              case Left(ValidationService.GenericError(msg))    => InternalServerError(Json.toJson(Outcome(msg)))
+              case Right(Left(MVHService.InvalidTAN(msg)))      => BadRequest(Json.toJson(Outcome(msg)))
+              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(Json.toJson(Outcome(msg)))
+              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(Json.toJson(Outcome(msg)))
             }
         }
     }
@@ -270,10 +271,11 @@ with AuthorizationOps[UserPermissions]
           case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
           case Left(err) =>
             err match {
-              case Left(ValidationService.GenericError(msg))    => InternalServerError(msg)
-              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(msg)
-              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(msg)
-              case Left(_)                                      => InternalServerError("Unexpected data deletion outcome")
+              case Left(ValidationService.GenericError(msg))    => InternalServerError(Json.toJson(Outcome(msg)))
+              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(Json.toJson(Outcome(msg)))
+              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(Json.toJson(Outcome(msg)))
+              case Right(_)                                     => InternalServerError(Json.toJson(Outcome("Unexpected data deletion outcome")))
+              case Left(_)                                      => InternalServerError(Json.toJson(Outcome("Unexpected data deletion outcome")))
             }
         }
     }
@@ -600,7 +602,7 @@ with AuthorizationOps[UserPermissions]
   def confirmReportSubmitted(id: Id[TransferTAN]) =
     Action.async {
       (mvhService ! MVHService.ConfirmSubmitted(id))
-        .map { 
+        .collect { 
           case Right(_)                           => Ok
           case Left(MVHService.GenericError(err)) => InternalServerError(err)
         }
