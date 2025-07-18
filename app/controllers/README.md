@@ -103,10 +103,10 @@ POST /api/{use-case}/etl/patient-record
 
 | Case | Response | Effect |
 | ---- | -------- | ------ |
-| Data OK                              | `200 OK` | Data set was saved in the query module |
-| Data acceptable with quality issues  | `201 Created` with JSON issue report | Data Set was saved in the validation module with a corresponding issue report, but also in the query module |
-| Unacceptable Issues                  | `422 Unprocessable Content` with JSON issue report | Data Set was saved in the validation module with a corresponding issue report |
-| Fatal Issues Detected                | `400 Bad Request` with JSON issue report | Import transaction aborted | 
+| Data OK                             | `200 OK`                                           | Data set accepted for MVGenomSeq (and given consent for research use also for federated queries)  |
+| Data acceptable with quality issues | `201 Created` with JSON issue report               | At most `warning`-level issues detected: Data Set saved in the validation module with the returned issue report, but still accepted for MVGenomSeq (and given consent for research use also for federated queries)  |
+| Unacceptable Issues                 | `422 Unprocessable Content` with JSON issue report | `error`-level Issues detected: Data Set *unacceptable* for MVGenomSeq; saved in the validation module with the returned issue report |
+| Fatal Issues Detected               | `400 Bad Request` with JSON issue report           | Import transaction aborted | 
 
 
 ### Validate a Patient Record
@@ -119,12 +119,12 @@ POST /api/{use-case}/etl/patient-record:validate
 
 **Response**
 
-| Case | Response |
-| ---- | -------- |
-| Data fully acceptable        | `200 OK` |
-| Data Acceptable with Issues  | `200 OK` with JSON issue report |
-| Unacceptable Issues          | `422 Unprocessable Content` with JSON issue report |
-| Fatal Issues Detected        | `400 Bad Request` with JSON issue report |
+| Case | Response | Meaning |
+| ---- | -------- | ------- |
+| Data fully acceptable       | `200 OK`                                           | Acceptable for MVGenomSeq                                                 |
+| Data Acceptable with Issues | `200 OK` with JSON issue report                    | Acceptable for MVGenomSeq, but `warning`-level issues should be corrected | 
+| Unacceptable Issues         | `422 Unprocessable Content` with JSON issue report | Unacceptable for MVGenomSeq due to `error`-level issues                   |
+| Fatal Issues Detected       | `400 Bad Request` with JSON issue report           | Unacceptable for MVGenomSeq due to `fatal` issues                         |
 
 
 ### Delete All of a Patient's Data
