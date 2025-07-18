@@ -106,7 +106,7 @@ POST /api/{use-case}/etl/patient-record
 | Data OK                             | `200 OK`                                           | Data set accepted for MVGenomSeq (and given consent for research use also for federated queries)  |
 | Data acceptable with quality issues | `201 Created` with JSON issue report               | At most `warning`-level issues detected: Data Set saved in the validation module with the returned issue report, but still accepted for MVGenomSeq (and given consent for research use also for federated queries)  |
 | Unacceptable Issues                 | `422 Unprocessable Content` with JSON issue report | `error`-level Issues detected: Data Set *unacceptable* for MVGenomSeq; saved in the validation module with the returned issue report |
-| Fatal Issues Detected               | `400 Bad Request` with JSON issue report           | Import transaction aborted | 
+| Fatal Issues Detected               | `400 Bad Request` with JSON issue report           | Payload syntactically invalid or unacceptable for MVGenomSeq due to `fatal` issues | 
 
 
 ### Validate a Patient Record
@@ -124,7 +124,7 @@ POST /api/{use-case}/etl/patient-record:validate
 | Data fully acceptable       | `200 OK`                                           | Acceptable for MVGenomSeq                                                 |
 | Data Acceptable with Issues | `200 OK` with JSON issue report                    | Acceptable for MVGenomSeq, but `warning`-level issues should be corrected | 
 | Unacceptable Issues         | `422 Unprocessable Content` with JSON issue report | Unacceptable for MVGenomSeq due to `error`-level issues                   |
-| Fatal Issues Detected       | `400 Bad Request` with JSON issue report           | Unacceptable for MVGenomSeq due to `fatal` issues                         |
+| Fatal Issues Detected       | `400 Bad Request` with JSON issue report           | Payload syntactically invalid or unacceptable for MVGenomSeq due to `fatal` issues |
 
 
 ### Delete All of a Patient's Data
