@@ -12,9 +12,12 @@ WORKDIR /opt
 COPY build.sbt .
 COPY project/ ./project/
 
+# Token required by sbt-github-packages plugin to pull dependency jars
 ARG GITHUB_TOKEN=""
-# Github Token
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+
+ARG VERSION=""
+ENV VERSION=${VERSION}
 
 # Dependencies cachen
 RUN sbt update
@@ -24,18 +27,15 @@ COPY app/ ./app/
 COPY conf/ ./conf/
 RUN sbt dist
 
-RUN cp ./target/universal/dnpm-dip-api-gateway-*.zip ./dnpm-dip-api-gateway.zip
-RUN unzip ./dnpm-dip-api-gateway.zip -d dnpm-dip-api-gateway 
-RUN mv ./dnpm-dip-api-gateway/dnpm-dip-api-gateway-*/* ./dnpm-dip-api-gateway
+RUN cp ./target/universal/dnpm-dip-api-gateway-${VERSION}.zip .
+RUN unzip ./dnpm-dip-api-gateway-${VERSION}  
+RUN mv ./dnpm-dip-api-gateway-${VERSION} ./dnpm-dip-api-gateway
 
 FROM openjdk:21
 
 COPY --from=builder /opt/dnpm-dip-api-gateway /opt/
-
 COPY --chmod=755 entrypoint.sh .
 
-#WORKDIR /opt
-#RUN
 
 LABEL org.opencontainers.image.licenses=MIT
 LABEL org.opencontainers.image.source=https://github.com/dnpm-dip/api-gateway
