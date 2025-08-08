@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-/opt/$BACKEND_APP/bin/dnpm-dip-api-gateway \
+java -jar app.jar \
   -Dhttp.port="$HTTP_PORT" \
   -Dplay.http.secret.key="$APPLICATION_SECRET" \
   -Dconfig.file="$CONFIG_DIR/production.conf" \
