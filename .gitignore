@@ -5,6 +5,7 @@
 *.o
 
 *.txt
+!version.txt
 
 *.exe
 
