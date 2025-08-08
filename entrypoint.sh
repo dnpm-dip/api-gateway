@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+ls -l /opt
+ls -l /opt/dnpm-dip-api-gateway-1.0.0
 
-java -jar app.jar \
+/opt/bin/dnpm-dip-api-gateway
   -Dhttp.port="$HTTP_PORT" \
   -Dplay.http.secret.key="$APPLICATION_SECRET" \
   -Dconfig.file="$CONFIG_DIR/production.conf" \
