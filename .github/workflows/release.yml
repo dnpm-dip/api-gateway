@@ -50,8 +50,9 @@ jobs:
             VERSION: ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
           with:
             buildArgs: |
-              GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}
-              VERSION=${{env.VERSION}}
+              GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+              REPOSITORY=${{ github.repository }}
+              VERSION=${{ env.VERSION }}
             registryTag: |
               latest
-              ${{env.VERSION}}
+              ${{ env.VERSION }}

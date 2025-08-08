@@ -1,6 +1,6 @@
 FROM openjdk:11-jre AS builder
 
-# SBT installieren
+# Install sbt
 RUN apt-get update && apt-get install -y curl && \
     curl -L -o sbt.deb https://scala.jfrog.io/artifactory/debian/sbt-1.11.3.deb && \
     apt-get install -y ./sbt.deb && \
@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y curl && \
 
 WORKDIR /opt
 
-# SBT-Cache vorbereiten (erst nur project files kopieren)
+# Prepare sbt cache
 COPY build.sbt .
 COPY project/ ./project/
 
@@ -16,13 +16,17 @@ COPY project/ ./project/
 ARG GITHUB_TOKEN=""
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 
+# Set ENV variables required by sbt
 ARG VERSION=""
 ENV VERSION=${VERSION}
 
-# Dependencies cachen
+ARG REPOSITORY=""
+ENV REPOSITORY=${REPOSITORY}
+
+# Cache dependencies
 RUN sbt update
 
-# Source-Code kopieren und kompilieren
+# Copy source code and build
 COPY app/ ./app/
 COPY conf/ ./conf/
 RUN sbt dist
