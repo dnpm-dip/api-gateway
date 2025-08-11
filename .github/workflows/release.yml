@@ -8,14 +8,21 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
+  contents: read
   packages: write
-  contents: write
   pull-requests: write
   issues: write
+  id-token: write
+  attestations: write
 
 defaults:
   run:
     shell: bash
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 
 jobs:
   release:
@@ -23,36 +30,62 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      -   uses: googleapis/release-please-action@v4
-          id: release
-          with:
-            token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      -   name: Checkout
-          if: steps.release.outputs.releases_created == 'true'
-          uses: actions/checkout@v4
+      - name: Checkout
+        if: steps.release.outputs.releases_created == 'true'
+        uses: actions/checkout@v4
 
-      -   name: Setup JDK
-          if: steps.release.outputs.releases_created == 'true'
-          uses: actions/setup-java@v4
-          with:
-            distribution: temurin
-            java-version: 11
+      - name: Setup JDK
+        if: steps.release.outputs.releases_created == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
 
-      -   name: Setup sbt launcher
-          if: steps.release.outputs.releases_created == 'true'
-          uses: sbt/setup-sbt@v1
 
-      -   uses: tada5hi/action-docker-image-publish@v3
-          if: steps.release.outputs.releases_created == 'true'
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            VERSION: ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
-          with:
-            buildArgs: |
-              GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-              REPOSITORY=${{ github.repository }}
-              VERSION=${{ env.VERSION }}
-            registryTag: |
-              latest
-              ${{ env.VERSION }}
+      - name: Setup sbt launcher
+        if: steps.release.outputs.releases_created == 'true'
+        uses: sbt/setup-sbt@v1
+
+      - name: Dist
+        if: steps.release.outputs.releases_created == 'true'
+        env:
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+        run: |
+          sbt dist
+          mv ./target/universal/dnpm-dip-api-gateway-${{ env.VERSION }}.zip .
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: steps.release.outputs.releases_created == 'true'
+        id: push
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        env:
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

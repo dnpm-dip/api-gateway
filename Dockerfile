@@ -1,44 +1,24 @@
 FROM openjdk:11-jre AS builder
 
-# Install sbt
-RUN apt-get update && apt-get install -y curl && \
-    curl -L -o sbt.deb https://scala.jfrog.io/artifactory/debian/sbt-1.11.3.deb && \
-    apt-get install -y ./sbt.deb && \
-    rm sbt.deb
 
-WORKDIR /opt
-
-# Prepare sbt cache
-COPY build.sbt .
-COPY project/ ./project/
-
-# Token required by sbt-github-packages plugin to pull dependency jars
-ARG GITHUB_TOKEN=""
-ENV GITHUB_TOKEN=${GITHUB_TOKEN}
-
-# Set ENV variables required by sbt
-ARG VERSION=""
+ARG VERSION
 ENV VERSION=${VERSION}
 
-ARG REPOSITORY=""
-ENV REPOSITORY=${REPOSITORY}
+ARG BACKEND_APP="dnpm-dip-api-gateway-${VERSION}"
+ARG BACKEND_ZIP="${BACKEND_APP}.zip"
 
-# Cache dependencies
-RUN sbt update
+COPY $BACKEND_ZIP /opt/
+WORKDIR /opt
+RUN unzip $BACKEND_ZIP && rm $BACKEND_ZIP
 
-# Copy source code and build
-COPY app/ ./app/
-COPY conf/ ./conf/
-RUN sbt dist
-
-RUN cp ./target/universal/dnpm-dip-api-gateway-${VERSION}.zip .
-RUN unzip ./dnpm-dip-api-gateway-${VERSION}  
-RUN mv ./dnpm-dip-api-gateway-${VERSION} ./dnpm-dip-api-gateway
 
 FROM openjdk:21
 
-COPY --from=builder /opt/dnpm-dip-api-gateway /opt/
-COPY --chmod=755 entrypoint.sh .
+ARG VERSION=${VERSION}
+ARG BACKEND_APP="dnpm-dip-api-gateway-${VERSION}"
+
+COPY --from=builder /opt/$BACKEND_APP /opt/
+COPY --chmod=755 entrypoint.sh /
 
 
 LABEL org.opencontainers.image.licenses=MIT
