@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/dnpm-dip/api-gateway/compare/v1.0.0...v1.0.1) (2025-08-11)
+
+
+### Bug Fixes
+
+* Updated dependencies in build.sbt; Fixes to files for docker build/release ([1669300](https://github.com/dnpm-dip/api-gateway/commit/166930073125210b43e1cb5aacf4a82e94888e83))
+
 ## 1.0.0 (2025-08-08)
 
 
