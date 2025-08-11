@@ -46,7 +46,6 @@ jobs:
           distribution: temurin
           java-version: 11
 
-
       - name: Setup sbt launcher
         if: steps.release.outputs.releases_created == 'true'
         uses: sbt/setup-sbt@v1
