@@ -79,7 +79,7 @@ jobs:
           context: .
           push: true
           build-args: |
-            VERSION=${{ env.VERSION }
+            VERSION=${{ env.VERSION }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
