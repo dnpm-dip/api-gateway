@@ -27,7 +27,8 @@ trait FakeDataGen[T <: PatientRecord]
     implicit genT: Gen[T]
   ): Gen[DataUpload[T]] =
     for {
-      ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
+//      ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
+      ttan <- Gen.listOf(64, Gen.oneOf("0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F")).map(_.mkString)
       record <- Gen.of[T]
 
       consentDate =
@@ -40,7 +41,7 @@ trait FakeDataGen[T <: PatientRecord]
       metadata =
         Submission.Metadata(
           Submission.Type.Test,
-          ttan,
+          Id[TransferTAN](ttan),
           ModelProjectConsent(
             "Patient Info TE Consent MVGenomSeq vers01",
             Some(consentDate minusDays 1),

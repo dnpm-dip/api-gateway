@@ -149,7 +149,6 @@ extends SimpleRouter
 
     case POST(p"/peer2peer/query") => controller.peerToPeerQuery
 
-//    case POST(p"/peer2peer/patient-record") => controller.patientRecordRequest
     case GET(p"/peer2peer/patient-record"
              ? q"origin=${Origin(site)}"
              & q"querier=${querier(q)}"
