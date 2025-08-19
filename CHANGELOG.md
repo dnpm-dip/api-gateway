@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/dnpm-dip/api-gateway/compare/v1.0.1...v1.0.2) (2025-08-19)
+
+
+### Bug Fixes
+
+* Updated MTB and RD dependency versions; Adapted TAN generation; Some code clean-up ([424804c](https://github.com/dnpm-dip/api-gateway/commit/424804c7c7d696aefb5f6a8fed9d3fee5088e42a))
+
 ## [1.0.1](https://github.com/dnpm-dip/api-gateway/compare/v1.0.0...v1.0.1) (2025-08-11)
 
 
