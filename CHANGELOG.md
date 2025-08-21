@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/dnpm-dip/api-gateway/compare/v1.0.2...v1.0.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* Updated component versions ([c4fb903](https://github.com/dnpm-dip/api-gateway/commit/c4fb9038cffa629a84df48c2e66ce690f92b081a))
+
 ## [1.0.2](https://github.com/dnpm-dip/api-gateway/compare/v1.0.1...v1.0.2) (2025-08-19)
 
 
