@@ -5,7 +5,7 @@ import scala.util.Properties.envOrElse
 name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.16"
-ThisBuild / version      := envOrElse("VERSION","1.0.2")
+ThisBuild / version      := envOrElse("VERSION","1.0.3")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/api-gateway").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
@@ -31,12 +31,12 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "catalog-service-api"         % "1.0.0",
   "de.dnpm.dip"            %% "catalog-service-impl"        % "1.0.0",
   "de.dnpm.dip"            %% "service-base"                % "1.0.3",
-  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.0.2",
-  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.0.2",
+  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.0.3",
+  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.0.3",
   "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.0.1",
   "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.0.1",
-  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.0.2",
-  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.0.2",
+  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.0.3",
+  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.0.3",
   "de.dnpm.dip"            %% "rd-query-service-api"        % "1.0.1",
   "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.0.1",
   "de.dnpm.dip"            %% "connector-base"              % "1.0.0",
@@ -51,7 +51,6 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.0.0",
   "de.dnpm.dip"            %% "auth-api"                    % "1.0.0",
   "de.dnpm.dip"            %% "standalone-authup-client"    % "1.0.0",
-//  "de.dnpm.dip"            %% "fake-auth-service"           % "1.0.0",
   
 )
 
