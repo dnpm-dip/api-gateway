@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/dnpm-dip/api-gateway/compare/v1.0.4...v1.0.5) (2025-09-11)
+
+
+### Bug Fixes
+
+* Upgraded admin-service-api and -impl version ([cd4f7dd](https://github.com/dnpm-dip/api-gateway/commit/cd4f7dde800568b7617949f12067cb74a92b1cf4))
+
 ## [1.0.4](https://github.com/dnpm-dip/api-gateway/compare/v1.0.3...v1.0.4) (2025-09-08)
 
 
