@@ -26,8 +26,8 @@ libraryDependencies ++= Seq(
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.1" % Test,  //TODO: version!
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
-  "de.dnpm.dip"            %% "admin-service-api"           % "1.0.0",
-  "de.dnpm.dip"            %% "admin-service-impl"          % "1.0.0",
+  "de.dnpm.dip"            %% "admin-service-api"           % "1.0.1",
+  "de.dnpm.dip"            %% "admin-service-impl"          % "1.0.1",
   "de.dnpm.dip"            %% "catalog-service-api"         % "1.0.0",
   "de.dnpm.dip"            %% "catalog-service-impl"        % "1.0.0",
   "de.dnpm.dip"            %% "service-base"                % "1.0.5",
