@@ -56,15 +56,19 @@ with FakeDataGen[MTBPatientRecord]
     case GET(p"/queries/${QueryId(id)}/medication") =>
       controller.medication(id)
 
+    case GET(p"/queries/${QueryId(id)}/gene-alterations") =>
+      controller.geneAlterations(id)
+
     case GET(p"/queries/${QueryId(id)}/therapy-responses") =>
       controller.therapyResponses(id)
 
     case GET(p"/queries/${QueryId(id)}/therapy-responses-by-variant") =>
       controller.therapyResponsesByVariant(id)
 
-    case GET(p"/queries/${QueryId(id)}/survival-statistics"
-      ? q"type=${SurvivalType(typ)}"
-      & q"grouping=${Grouping(grp)}") =>
+    case GET(p"/queries/${QueryId(id)}/therapy-response-infos") =>
+      controller.therapyResponseInfos(id)
+
+    case GET(p"/queries/${QueryId(id)}/survival-statistics"?q"type=${SurvivalType(typ)}"&q"grouping=${Grouping(grp)}") =>
       controller.survivalStatistics(id,Some(typ),Some(grp))
 
     case GET(p"/queries/${QueryId(id)}/survival-statistics") =>
