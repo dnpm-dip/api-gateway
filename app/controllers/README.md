@@ -7,6 +7,19 @@ where the `/api` prefix is used for disambiguation of backend API requests,
 but stripped in the [`proxy_pass` directive](https://github.com/dnpm-dip/deployment/blob/cedfb09d80b9b75f2b82fe17fb5a242c0fd4dac0/nginx/sites-available/tls-reverse-proxy.template.conf#L44-L46).
 Otherwise, discard the `/api` prefix from URI paths.
 
+## Backend/API Version Info
+
+```
+GET /api/
+```
+Returns JSON metadata with version info:
+```
+{
+  "name": "dnpm-dip-api-gateway",
+  "version": "<MAIN.MINOR.PATCH>"
+  ...
+}
+```
 
 ## Example Data and ETL API 
 
@@ -108,6 +121,31 @@ POST /api/{use-case}/etl/patient-record
 | Unacceptable Issues                 | `422 Unprocessable Content` with JSON issue report | `error`-level Issues detected: Data Set *unacceptable* for MVGenomSeq; saved in the validation module with the returned issue report |
 | Fatal Issues Detected               | `400 Bad Request` with JSON issue report           | Payload syntactically invalid or unacceptable for MVGenomSeq due to `fatal` issues | 
 
+
+### SubmissionReports for MVGenomSeq
+
+For each MVGenomSeq submission passing quality control, the DIP node creates a SubmissionReport to be relayed to BfArM.
+This endpoint returns the collection of SubmissionReports in your DIP node:
+
+```
+POST /api/{use-case}/etl/mvh/submission-reports
+```
+
+This can thus be used to check a submission report's `status`: A submission report is initially `unsubmitted`.
+After it has been successfully been relayed to BfArM it's status is updated to `submitted`
+
+The API call allows to filter using the following query parameters:
+
+| Parameter | Type/Value | Effect |
+| --------- | ----- | ------ |
+| `status`          | CSV string of values in {`unsubmitted`,`submitted`} | Return only SubmissionReports with `status` in the given CSV value set |
+| `created-after`   | ISO datetime | Filter SubmissionReports created after given datetime |
+| `created-before`  | ISO datetime | Filter SubmissionReports created before given datetime |
+
+For instance:
+```
+POST /api/{use-case}/etl/mvh/submission-reports?status=submitted,unsubmitted&created-after={datetime}&created-before={datetime}
+```
 
 ### Validate a Patient Record
 
