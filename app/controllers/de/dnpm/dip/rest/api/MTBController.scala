@@ -202,6 +202,29 @@ with MTBHypermedia
     }
 
 
+  def geneAlterations(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.geneAlterations(FilterFrom(req))
+                 .pipe(Collection(_).paginated)
+              )
+            )
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
+            )
+            .andThen {
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
+            }
+      }
+    }
+
+
   def therapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
       AuthorizedAction(OwnershipOf(id)).async { 
@@ -224,28 +247,6 @@ with MTBHypermedia
       }
     }
 
-
-  def therapyResponsesByVariant(id: Query.Id) =
-    cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
-        implicit req =>
-  
-          queryService.resultSet(id)
-            .map(
-              _.map(
-                _.therapyResponsesBySupportingVariant(FilterFrom(req))
-                 .pipe(Collection(_).paginated)
-              )
-            )
-            .map(
-              JsonResult(_,s"Invalid Query ID ${id.value}")
-                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
-            )
-            .andThen {
-              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
-            }
-      }
-    }
 
   def survivalStatistics(
     id: Query.Id,
