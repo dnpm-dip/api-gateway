@@ -132,7 +132,7 @@ POST /api/{use-case}/etl/mvh/submission-reports
 ```
 
 This can thus be used to check a submission report's `status`: A submission report is initially `unsubmitted`.
-After it has been successfully been relayed to BfArM it's status is updated to `submitted`
+After it has been successfully relayed to BfArM its status is updated to `submitted`
 
 The API call allows to filter using the following query parameters:
 
