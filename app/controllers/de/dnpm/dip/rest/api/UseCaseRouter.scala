@@ -68,6 +68,9 @@ extends SimpleRouter
   protected val TAN =
     Extractor(Id[TransferTAN](_))
 
+  protected val TANs =
+    Extractor.option(Extractor.csvSet(TAN))
+
 
   implicit def enumExtractor[E <: Enumeration](
     implicit w: Witness.Aux[E]
@@ -119,10 +122,8 @@ extends SimpleRouter
 
     case POST(p"/etl/patient-record") => controller.processUpload
 
-    case GET(p"/etl/mvh/submission-reports"
-      ? q_o"created-after=${dateTime(start)}"
-      & q_o"created-before=${dateTime(end)}"
-      & q_o"status=${ReportStatusSet(status)}") => controller.mvhSubmissionReports(start,end,status)
+    case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}") =>
+      controller.mvhSubmissionReports(start,end,status)
 
     case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
 
@@ -149,22 +150,21 @@ extends SimpleRouter
 
     case POST(p"/peer2peer/query") => controller.peerToPeerQuery
 
-    case GET(p"/peer2peer/patient-record"
-             ? q"origin=${Origin(site)}"
-             & q"querier=${querier(q)}"
-             & q"patient=${PatId(id)}"
-             & q_o"snapshot=${long(snp)}") => controller.patientRecord(site,q,id,snp)
+    case GET(p"/peer2peer/patient-record"?q"origin=${Origin(site)}"&q"querier=${querier(q)}"&q"patient=${PatId(id)}"&q_o"snapshot=${long(snp)}") =>
+      controller.patientRecord(site,q,id,snp)
 
     // ------------------------------------------------------------------------
     // MVH Endpoints  
     // ------------------------------------------------------------------------
 
-    case GET(p"/peer2peer/mvh/submission-reports"
-      ? q_o"created-after=${dateTime(start)}"
-      & q_o"created-before=${dateTime(end)}"
-      & q_o"status=${ReportStatusSet(status)}") => controller.mvhSubmissionReports(start,end,status)
+    case GET(p"/peer2peer/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}") =>
+      controller.mvhSubmissionReports(start,end,status)
 
     case POST(p"/peer2peer/mvh/submission-reports/${TAN(id)}:submitted") => controller.confirmReportSubmitted(id)
+
+    case GET(p"/peer2peer/mvh/submissions"?q_o"tan=${TANs(tans)}"&q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}") =>
+      controller.mvhSubmissions(tans,start,end)
+
 
 
     // ------------------------------------------------------------------------

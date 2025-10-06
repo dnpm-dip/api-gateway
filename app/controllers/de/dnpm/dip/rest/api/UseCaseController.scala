@@ -597,6 +597,19 @@ with AuthorizationOps[UserPermissions]
         .map(Json.toJson(_))
         .map(Ok(_))
     }
+
+
+  def mvhSubmissions(
+    tans: Option[Set[Id[TransferTAN]]],
+    start: Option[LocalDateTime],
+    end: Option[LocalDateTime]
+  ) = 
+    Action.async {
+      (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
+        .map(rs => Collection(rs.toSeq))
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
  
  
   def confirmReportSubmitted(id: Id[TransferTAN]) =
