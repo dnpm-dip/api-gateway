@@ -128,7 +128,7 @@ For each MVGenomSeq submission passing quality control, the DIP node creates a S
 This endpoint returns the collection of SubmissionReports in your DIP node:
 
 ```
-POST /api/{use-case}/etl/mvh/submission-reports
+GET /api/{use-case}/etl/mvh/submission-reports
 ```
 
 This can thus be used to check a submission report's `status`: A submission report is initially `unsubmitted`.
@@ -144,7 +144,7 @@ The API call allows to filter using the following query parameters:
 
 For instance:
 ```
-POST /api/{use-case}/etl/mvh/submission-reports?status=submitted,unsubmitted&created-after={datetime}&created-before={datetime}
+GET /api/{use-case}/etl/mvh/submission-reports?status=submitted,unsubmitted&created-after={datetime}&created-before={datetime}
 ```
 
 ### Validate a Patient Record
