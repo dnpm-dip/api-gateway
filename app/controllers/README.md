@@ -141,11 +141,19 @@ The API call allows to filter using the following query parameters:
 | `status`          | CSV string of values in {`unsubmitted`,`submitted`} | Return only SubmissionReports with `status` in the given CSV value set |
 | `created-after`   | ISO datetime | Filter SubmissionReports created after given datetime |
 | `created-before`  | ISO datetime | Filter SubmissionReports created before given datetime |
+| `type`            | CSV string of values in {`test`,`initial`,`addition`,`correction`,`followup`} | Return only SubmissionReports with `type` in the given CSV value set |
 
 For instance:
 ```
 GET /api/{use-case}/etl/mvh/submission-reports?status=submitted,unsubmitted&created-after={datetime}&created-before={datetime}
 ```
+
+This endpoint returns a specific SubmissionReport by its TAN:
+
+```
+GET /api/{use-case}/etl/mvh/submission-reports/{TAN}
+```
+
 
 ### Validate a Patient Record
 
