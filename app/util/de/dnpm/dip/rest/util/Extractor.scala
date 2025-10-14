@@ -3,7 +3,8 @@ package de.dnpm.dip.rest.util
 
 import java.time.{
   LocalDate,
-  LocalDateTime
+  LocalDateTime,
+  Year
 }
 import java.time.format.DateTimeFormatter.{
   ISO_LOCAL_DATE,
@@ -38,16 +39,16 @@ object Extractor
       override def unapply(s: S): Option[T] = f(s)
     }
 
+  def of[T](implicit ext: Extractor[String,T]) = ext  
+
+  implicit lazy val year: Extractor[String,Year] =
+    Extractor(Year.parse(_))
 
   implicit lazy val isoDate: Extractor[String,LocalDate] =
-    Extractor(
-      LocalDate.parse(_,ISO_LOCAL_DATE)
-    )
+    Extractor(LocalDate.parse(_,ISO_LOCAL_DATE))
 
   implicit lazy val isoDateTime: Extractor[String,LocalDateTime] =
-    Extractor(
-      LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME)
-    )
+    Extractor(LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME))
 
   implicit def option[T](
     implicit ext: Extractor[String,T]

@@ -1,7 +1,11 @@
 package de.dnpm.dip.rest.api
 
 
-import java.time.LocalDateTime
+import java.time.{
+  LocalDate,
+  LocalDateTime,
+  Year
+}
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
@@ -20,8 +24,9 @@ import de.dnpm.dip.model.{
   Site
 }
 import de.dnpm.dip.service.mvh.{
-  TransferTAN,
-  Submission
+  Report,
+  Submission,
+  TransferTAN
 }
 import de.dnpm.dip.service.query.{
   Querier,
@@ -47,29 +52,26 @@ extends SimpleRouter
   this: FakeDataGen[UseCase#PatientRecord] =>
 
 
-  protected val querier =
-    Extractor(Querier(_))
+  protected val querier = Extractor(Querier(_))
 
-  protected val Origin: Extractor[String,Coding[Site]] =
-    Extractor(Coding[Site](_))
+  protected val Origin: Extractor[String,Coding[Site]] = Extractor(Coding[Site](_))
 
-  protected val QueryId =
-    Extractor(Query.Id(_))
+  protected val QueryId = Extractor(Query.Id(_))
 
-  protected val PreparedQueryId =
-    Extractor(PreparedQuery.Id(_))
+  protected val PreparedQueryId = Extractor(PreparedQuery.Id(_))
 
-  protected val PatId =
-    Extractor(Id[Patient](_))
+  protected val PatId = Extractor(Id[Patient](_))
 
-  protected val dateTime =
-    Extractor.option[LocalDateTime]
+  protected val date = Extractor.of[LocalDate]
+//  protected val date = Extractor.isoDate
 
-  protected val TAN =
-    Extractor(Id[TransferTAN](_))
+  protected val dateTime = Extractor.option[LocalDateTime]
 
-  protected val TANs =
-    Extractor.option(Extractor.csvSet(TAN))
+  protected val year = Extractor.option[Year]
+
+  protected val TAN = Extractor(Id[TransferTAN](_))
+
+  protected val TANs = Extractor.option(Extractor.csvSet(TAN))
 
 
   implicit def enumExtractor[E <: Enumeration](
@@ -77,16 +79,14 @@ extends SimpleRouter
   ): Extractor[String,E#Value] =
     s => w.value.values.find(_.toString == s)
 
-  protected val ReportStatusSet =
-    Extractor.option(
-      Extractor.csvSet[Submission.Report.Status.Value]
-    )
+  protected val Quarter = Extractor.of[Report.Quarter.Value]
 
-  val prefix =
-    if (pref startsWith "/")
-      pref
-    else
-      s"/$pref"
+  protected val ReportStatusSet = Extractor.option(Extractor.csvSet[Submission.Report.Status.Value])
+
+  protected val SubmissionTypeSet = Extractor.option(Extractor.csvSet[Submission.Type.Value])
+
+
+  val prefix = if (pref startsWith "/") pref else s"/$pref"
 
 
   protected val controller: UseCaseController[UseCase]
@@ -122,24 +122,23 @@ extends SimpleRouter
 
     case POST(p"/etl/patient-record") => controller.processUpload
 
-    case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}") =>
-      controller.mvhSubmissionReports(start,end,status)
-
     case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
+
+    case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
+      controller.mvhSubmissionReports(start,end,status,typ)
+
+    case GET(p"/etl/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
 
 
     // ------------------------------------------------------------------------
     // Data Validation Result Routes:
     // ------------------------------------------------------------------------
 
-    case GET(p"/validation/infos") =>
-      controller.validationInfos
+    case GET(p"/validation/infos") => controller.validationInfos
 
-    case GET(p"/validation/report/${PatId(patId)}") =>
-      controller.validationReport(patId)
+    case GET(p"/validation/report/${PatId(patId)}") => controller.validationReport(patId)
 
-    case GET(p"/validation/patient-record/${PatId(patId)}") =>
-      controller.validationPatientRecord(patId)
+    case GET(p"/validation/patient-record/${PatId(patId)}") => controller.validationPatientRecord(patId)
 
 
     // ------------------------------------------------------------------------
@@ -157,14 +156,17 @@ extends SimpleRouter
     // MVH Endpoints  
     // ------------------------------------------------------------------------
 
-    case GET(p"/peer2peer/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}") =>
-      controller.mvhSubmissionReports(start,end,status)
+    case GET(p"/peer2peer/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
+      controller.mvhSubmissionReports(start,end,status,typ)
+
+    case GET(p"/peer2peer/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
 
     case POST(p"/peer2peer/mvh/submission-reports/${TAN(id)}:submitted") => controller.confirmReportSubmitted(id)
 
-    case GET(p"/peer2peer/mvh/submissions"?q_o"tan=${TANs(tans)}"&q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}") =>
-      controller.mvhSubmissions(tans,start,end)
+    case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"tan=${TANs(tans)}") => controller.mvhSubmissions(tans,start,end)
 
+    case GET(p"/peer2peer/mvh/report"?q"quarter=${Quarter(quarter)}"&q_o"year=${year(y)}") => controller.mvhReport(Some(quarter),y,None,None)
+    case GET(p"/peer2peer/mvh/report"?q"start=${date(start)}"&q"end=${date(end)}")         => controller.mvhReport(None,None,Some(start),Some(end))
 
 
     // ------------------------------------------------------------------------
