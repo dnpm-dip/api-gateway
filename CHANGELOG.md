@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/dnpm-dip/api-gateway/compare/v1.0.5...v1.1.0) (2025-10-14)
+
+
+### Features
+
+* Added API endpoints for MV quarterly reporting ([29bb163](https://github.com/dnpm-dip/api-gateway/commit/29bb1637989e8ffbfa5fd65bfe4ee2da9f28f0f5))
+* Preliminary work on endpoints for quarterly MV reporting ([31cc15c](https://github.com/dnpm-dip/api-gateway/commit/31cc15cab3fd8313c4b9ebc9831ee96aaa66b632))
+* Upgraded dependency versions ([29bb163](https://github.com/dnpm-dip/api-gateway/commit/29bb1637989e8ffbfa5fd65bfe4ee2da9f28f0f5))
+
 ## [1.0.5](https://github.com/dnpm-dip/api-gateway/compare/v1.0.4...v1.0.5) (2025-09-11)
 
 
