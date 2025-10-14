@@ -11,8 +11,9 @@ import de.dnpm.dip.model.{
 import de.dnpm.dip.service.mvh.{
   Consent,
   ModelProjectConsent,
+  ResearchConsent,
   Submission,
-  TransferTAN,
+  TransferTAN
 }
 import de.dnpm.dip.service.DataUpload
 
@@ -27,9 +28,10 @@ trait FakeDataGen[T <: PatientRecord]
     implicit genT: Gen[T]
   ): Gen[DataUpload[T]] =
     for {
-//      ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
       ttan <- Gen.listOf(64, Gen.oneOf("0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F")).map(_.mkString)
       record <- Gen.of[T]
+
+      reasonConsentMissing <- Gen.`enum`(ResearchConsent.ReasonMissing)
 
       consentDate =
         record.getCarePlans
@@ -55,7 +57,8 @@ trait FakeDataGen[T <: PatientRecord]
                 )
               )
           ),
-          Some(List.empty)
+          Some(List.empty),
+          Some(reasonConsentMissing)
         )
     } yield DataUpload(
       record,

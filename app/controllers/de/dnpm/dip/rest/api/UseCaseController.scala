@@ -1,7 +1,11 @@
 package de.dnpm.dip.rest.api
 
 
-import java.time.LocalDateTime
+import java.time.{
+  LocalDate,
+  LocalDateTime,
+  Year
+}
 import scala.util.{
   Left,
   Right,
@@ -61,6 +65,7 @@ import de.dnpm.dip.service.query.{
 }
 import de.dnpm.dip.service.mvh.{
   MVHService,
+  Report,
   Submission,
   TransferTAN
 }
@@ -589,14 +594,51 @@ with AuthorizationOps[UserPermissions]
   def mvhSubmissionReports(
     start: Option[LocalDateTime],
     end: Option[LocalDateTime],
-    status: Option[Set[Submission.Report.Status.Value]]
+    status: Option[Set[Submission.Report.Status.Value]],
+    `type`: Option[Set[Submission.Type.Value]]
   ) = 
     Action.async {
-      (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status))
+      (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status,`type`))
         .map(rs => Collection(rs.toSeq))
         .map(Json.toJson(_))
         .map(Ok(_))
     }
+
+
+  def mvhSubmissionReport(id: Id[TransferTAN]) = 
+    Action.async {
+      (mvhService ? id)
+        .map(JsonResult(_))
+    }
+
+
+  def mvhSubmissions(
+    tans: Option[Set[Id[TransferTAN]]],
+    start: Option[LocalDateTime],
+    end: Option[LocalDateTime]
+  ) = 
+    Action.async {
+      (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
+        .map(rs => Collection(rs.toSeq))
+        .map(Json.toJson(_))
+        .map(Ok(_))
+    }
+
+  
+  protected def mvhReport(criteria: Report.Criteria): Action[AnyContent]
+
+  def mvhReport(
+    quarter: Option[Report.Quarter.Value],
+    year: Option[Year],
+    start: Option[LocalDate],
+    end: Option[LocalDate]
+  ): Action[AnyContent] =
+    mvhReport(
+      quarter match { 
+        case Some(q) => Report.ForQuarter(q,year)
+        case _       => Report.ForPeriod(start.get,end.get)
+      }
+    )
  
  
   def confirmReportSubmitted(id: Id[TransferTAN]) =

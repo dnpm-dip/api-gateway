@@ -29,11 +29,8 @@ import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
 }
-//import de.dnpm.dip.mtb.model.v1
-//import v1.mappings._
-//import de.dnpm.dip.util.mapping.syntax._
-//import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
+import de.dnpm.dip.service.mvh.Report
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
   MTBValidationService
@@ -157,24 +154,6 @@ with MTBHypermedia
       .get
       .latest
 
-/*      
-  override val patientRecordParser =
-    parse.using(
-      _.contentType match {
-        case Some("application/json+v2") =>
-          JsonBody[DataUpload[MTBPatientRecord]]
-
-        case _ =>
-          JsonBody[DataUpload[v1.MTBPatientRecord]].map {
-            case DataUpload(record,meta) =>
-              DataUpload(
-                record.mapTo[MTBPatientRecord],
-                meta
-              )
-          }
-      }
-    )
-*/
 
   def kaplanMeierConfig: Action[AnyContent] =
     Action {
@@ -284,6 +263,13 @@ with MTBHypermedia
               case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
             }
       }
+    }
+
+  override def mvhReport(criteria: Report.Criteria) =
+    Action.async { 
+      mvhService.report(criteria)
+        .map(toJson(_))
+        .map(Ok(_))
     }
 
 }

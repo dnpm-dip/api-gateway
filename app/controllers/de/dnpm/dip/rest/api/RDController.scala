@@ -18,6 +18,7 @@ import play.api.cache.{
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.Query
+import de.dnpm.dip.service.mvh.Report
 import de.dnpm.dip.coding.Coding 
 import de.dnpm.dip.rd.model.{
   HPO,
@@ -140,6 +141,14 @@ with RDHypermedia
         queryService.resultSet(id)
           .map(_.map(_.diagnostics(FilterFrom(req))))
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
+    }
+
+
+  override def mvhReport(criteria: Report.Criteria) =
+    Action.async { 
+      mvhService.report(criteria)
+        .map(toJson(_))
+        .map(Ok(_))
     }
 
 }
