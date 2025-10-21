@@ -28,6 +28,10 @@ import de.dnpm.dip.service.mvh.{
   Submission,
   TransferTAN
 }
+import Report.{
+  ForQuarter,
+  ForPeriod
+}
 import de.dnpm.dip.service.query.{
   Querier,
   Query,
@@ -165,8 +169,8 @@ extends SimpleRouter
 
     case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"tan=${TANs(tans)}") => controller.mvhSubmissions(tans,start,end)
 
-    case GET(p"/peer2peer/mvh/report"?q"quarter=${Quarter(quarter)}"&q_o"year=${year(y)}") => controller.mvhReport(Some(quarter),y,None,None)
-    case GET(p"/peer2peer/mvh/report"?q"start=${date(start)}"&q"end=${date(end)}")         => controller.mvhReport(None,None,Some(start),Some(end))
+    case GET(p"/peer2peer/mvh/report"?q"quarter=${Quarter(q)}"&q_o"year=${year(y)}") => controller.mvhReport(ForQuarter(q,y))
+    case GET(p"/peer2peer/mvh/report"?q"start=${date(start)}"&q"end=${date(end)}")   => controller.mvhReport(ForPeriod(start,end))
 
 
     // ------------------------------------------------------------------------

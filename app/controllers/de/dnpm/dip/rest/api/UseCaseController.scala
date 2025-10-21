@@ -1,11 +1,7 @@
 package de.dnpm.dip.rest.api
 
 
-import java.time.{
-  LocalDate,
-  LocalDateTime,
-  Year
-}
+import java.time.LocalDateTime
 import scala.util.{
   Left,
   Right,
@@ -625,21 +621,8 @@ with AuthorizationOps[UserPermissions]
     }
 
   
-  protected def mvhReport(criteria: Report.Criteria): Action[AnyContent]
+  def mvhReport(criteria: Report.Criteria): Action[AnyContent]
 
-  def mvhReport(
-    quarter: Option[Report.Quarter.Value],
-    year: Option[Year],
-    start: Option[LocalDate],
-    end: Option[LocalDate]
-  ): Action[AnyContent] =
-    mvhReport(
-      quarter match { 
-        case Some(q) => Report.ForQuarter(q,year)
-        case _       => Report.ForPeriod(start.get,end.get)
-      }
-    )
- 
  
   def confirmReportSubmitted(id: Id[TransferTAN]) =
     Action.async {
