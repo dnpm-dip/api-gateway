@@ -29,6 +29,7 @@ trait FakeDataGen[T <: PatientRecord]
   ): Gen[DataUpload[T]] =
     for {
       ttan <- Gen.listOf(64, Gen.oneOf("0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F")).map(_.mkString)
+
       record <- Gen.of[T]
 
       reasonConsentMissing <- Gen.`enum`(ResearchConsent.ReasonMissing)
@@ -57,7 +58,7 @@ trait FakeDataGen[T <: PatientRecord]
                 )
               )
           ),
-          Some(List.empty),
+          None,
           Some(reasonConsentMissing)
         )
     } yield DataUpload(
