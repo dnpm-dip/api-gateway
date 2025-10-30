@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/dnpm-dip/api-gateway/compare/v1.1.0...v1.1.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* Upgraded to fixed validation components ([e7e1b2b](https://github.com/dnpm-dip/api-gateway/commit/e7e1b2b02c68e054e1412c8971c8d3371b1086a0))
+
 ## [1.1.0](https://github.com/dnpm-dip/api-gateway/compare/v1.0.5...v1.1.0) (2025-10-14)
 
 
