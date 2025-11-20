@@ -220,6 +220,31 @@ but in case it is needed for monitoring purposes:
 GET /api/admin/connection-report  'Authorization: Bearer {access_token}'
 ```
 
+**Response**
+```
+{
+  "createdAt": "2025-11-20T09:42:06.277008908",
+  "self": {  // Self-availability via the broker infrastructure
+    "site": {
+      "code": "UKx",
+      "display": "...",
+    },
+    "status": "online"
+  },
+  "peers": [ // Availability of external peers
+    {
+      "site": {
+        "code": "UK_",
+        "display": "...",
+      },
+      "status": "offline"
+      "details": "502 Bad Gateway",
+    },
+    ...
+  ]
+}
+```
+
 -------
 ## Catalogs (CodeSystems/ValueSets)
 
