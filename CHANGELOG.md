@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/dnpm-dip/api-gateway/compare/v1.1.1...v1.2.0) (2025-11-20)
+
+
+### Features
+
+* Adapted data upload endpoint to use 'deidentify-consent' parameter ([a9c1079](https://github.com/dnpm-dip/api-gateway/commit/a9c10792b489c2ae80ec02287bd48a667c64893d))
+
+
+### Miscellaneous Chores
+
+* release 1.2.0 ([9faac35](https://github.com/dnpm-dip/api-gateway/commit/9faac35eaf351f2acffbd5f99afb07ea94b535b0))
+
 ## [1.1.1](https://github.com/dnpm-dip/api-gateway/compare/v1.1.0...v1.1.1) (2025-10-15)
 
 
