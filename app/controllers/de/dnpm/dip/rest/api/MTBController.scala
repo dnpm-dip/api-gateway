@@ -24,7 +24,10 @@ import de.dnpm.dip.coding.{
 }
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
-import de.dnpm.dip.model.Medications
+import de.dnpm.dip.model.{
+  Medications,
+  Patient
+}
 import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
@@ -76,6 +79,8 @@ with MTBHypermedia
   override implicit val completer: Completer[MTBPatientRecord] =
     Completers.mtbPatientRecordCompleter
 
+  override implicit val patientSetter: (MTBPatientRecord,Patient) => MTBPatientRecord =
+    (record,patient) => record.copy(patient = patient)
 
   override val validationService: MTBValidationService =
     MTBValidationService.getInstance.get

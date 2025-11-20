@@ -124,7 +124,7 @@ extends SimpleRouter
 
     case POST(p"/etl/patient-record:validate") => controller.validate
 
-    case POST(p"/etl/patient-record") => controller.processUpload
+    case POST(p"/etl/patient-record"?q_o"deidentify-consent=${bool(deidentify)}") => controller.processUpload(deidentify)
 
     case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
 

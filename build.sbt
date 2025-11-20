@@ -30,7 +30,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.0",
   "de.dnpm.dip"            %% "catalog-service-api"         % "1.1.0",
   "de.dnpm.dip"            %% "catalog-service-impl"        % "1.1.0",
-  "de.dnpm.dip"            %% "service-base"                % "1.1.2",
+  "de.dnpm.dip"            %% "service-base"                % "1.2.0-SNAPSHOT",
   "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.2",
   "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.2",
   "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.0",
