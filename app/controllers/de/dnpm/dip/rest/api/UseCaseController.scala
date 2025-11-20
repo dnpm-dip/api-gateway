@@ -134,6 +134,8 @@ with AuthorizationOps[UserPermissions]
 
   protected implicit val completer: Completer[PatientRecord]
 
+  protected implicit val patientSetter: (PatientRecord,Patient) => PatientRecord
+
   protected implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
 
@@ -246,10 +248,10 @@ with AuthorizationOps[UserPermissions]
     }
 
 
-  def processUpload =
+  def processUpload(deidentify: Option[Boolean]) =
     Action.async(patientRecordParser){ 
       req =>
-        (orchestrator ! Process(req.body)).collect {
+        (orchestrator ! Process(req.body,deidentify.getOrElse(false))).collect {
           case Right(Saved)                       => Ok
           case Right(SavedWithIssues(report))     => Created(Json.toJson(report))
           case Left(err) =>

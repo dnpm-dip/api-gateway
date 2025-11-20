@@ -109,8 +109,18 @@ Aside from the different language, this difference of "error report addressee" i
 
 
 ```
-POST /api/{use-case}/etl/patient-record
+POST /api/{use-case}/etl/patient-record[?deidentify-consent={true|false}]
 ```
+
+#### **De-identification of Broad Consent**
+
+The _optional_ boolean URI parameter `deidentify-consent` above defines whether Broad Consent resources in MVH submission metadata should be deidentified in a pre-processing step or not (Default: `false`).
+
+If set to `true`, the following [modifications](https://github.com/dnpm-dip/service-base/blob/8f3920783edc8dfdc3f8ab1fb431f18308f30ca6/src/main/scala/de/dnpm/dip/service/mvh/Consent.scala#L377-L392) will be performed on the FHIR Consent JSON:
+
+* Removal of `Consent.id`
+* Replacement of the reference `Consent.patient` with the same Patient pseudonym ID as the Patient object of the submission
+
 
 **Response**
 
@@ -177,6 +187,62 @@ POST /api/{use-case}/etl/patient-record:validate
 
 ```
 DELETE /api/{use-case}/etl/patient/{Patient-ID}
+```
+
+-------
+
+## Login (OAuth2)
+
+To request a bearer token.
+```
+POST /auth/token
+```
+with JSON credentials
+```
+{ 
+  "username": "...",
+  "password": "..."
+}
+```
+
+-------
+## Admin Service Endpoints
+
+
+### Connection Report
+
+This endpoint requires a Bearer Token of a DIP user account with permission "connection\_report\_read: DNPM-Verbindungs-Status abrufen".
+
+It is in principle meant for use by the 'Admin Panel' in the DIP portal, to display the current connection status of the DIP node to the central broker and other peers,
+but in case it is needed for monitoring purposes:
+ 
+```
+GET /api/admin/connection-report  'Authorization: Bearer {access_token}'
+```
+
+**Response**
+```
+{
+  "createdAt": "2025-11-20T09:42:06.277008908",
+  "self": {  // Self-availability via the broker infrastructure
+    "site": {
+      "code": "UKx",
+      "display": "...",
+    },
+    "status": "online"
+  },
+  "peers": [ // Availability of external peers
+    {
+      "site": {
+        "code": "UK_",
+        "display": "...",
+      },
+      "status": "offline"
+      "details": "502 Bad Gateway",
+    },
+    ...
+  ]
+}
 ```
 
 -------

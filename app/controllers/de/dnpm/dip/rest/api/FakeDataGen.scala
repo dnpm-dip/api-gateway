@@ -11,7 +11,7 @@ import de.dnpm.dip.model.{
 import de.dnpm.dip.service.mvh.{
   Consent,
   ModelProjectConsent,
-  ResearchConsent,
+  BroadConsent,
   Submission,
   TransferTAN
 }
@@ -32,7 +32,7 @@ trait FakeDataGen[T <: PatientRecord]
 
       record <- Gen.of[T]
 
-      reasonConsentMissing <- Gen.`enum`(ResearchConsent.ReasonMissing)
+      reasonConsentMissing <- Gen.`enum`(BroadConsent.ReasonMissing)
 
       consentDate =
         record.getCarePlans
