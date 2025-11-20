@@ -200,6 +200,7 @@ POST /auth/token
 with JSON credentials
 ```
 { 
+  "grant_type": "password",
   "username": "...",
   "password": "..."
 }
