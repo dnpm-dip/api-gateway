@@ -1,8 +1,9 @@
-FROM openjdk:11-jre AS builder
-
+FROM amazonlinux:2 AS builder
 
 ARG VERSION
 ENV VERSION=${VERSION}
+
+RUN set -eux && yum install -y unzip
 
 ARG BACKEND_APP="dnpm-dip-api-gateway-${VERSION}"
 ARG BACKEND_ZIP="${BACKEND_APP}.zip"
@@ -12,14 +13,13 @@ WORKDIR /opt
 RUN unzip $BACKEND_ZIP && rm $BACKEND_ZIP
 
 
-FROM openjdk:21
+FROM amazoncorretto:21
 
 ARG VERSION=${VERSION}
 ARG BACKEND_APP="dnpm-dip-api-gateway-${VERSION}"
 
 COPY --from=builder /opt/$BACKEND_APP /opt/
 COPY --chmod=755 entrypoint.sh /
-
 
 LABEL org.opencontainers.image.licenses=MIT
 LABEL org.opencontainers.image.source=https://github.com/dnpm-dip/api-gateway
