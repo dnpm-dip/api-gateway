@@ -4,7 +4,7 @@
 echo "Image tag? (default: latest)"
 read tag
 
-IMAGE=ghcr.io/dnpm-dip/backend:${tag:-latest}
+IMAGE=ghcr.io/dnpm-dip/api-gateway:${tag:-latest}
 
 cp ../target/universal/dnpm-dip-api-gateway-1.0-SNAPSHOT.zip .
 
