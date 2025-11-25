@@ -68,7 +68,6 @@ with RDHypermedia
   override implicit val patientSetter: (RDPatientRecord,Patient) => RDPatientRecord =
     (record,patient) => record.copy(patient = patient)
 
-
   override val validationService: RDValidationService =
     RDValidationService.getInstance.get
 
