@@ -10,6 +10,7 @@ import de.dnpm.dip.model.{
 }
 import de.dnpm.dip.service.mvh.{
   Consent,
+  BroadConsent,
   ModelProjectConsent,
   Submission,
   TransferTAN,
@@ -27,8 +28,9 @@ trait FakeDataGen[T <: PatientRecord]
     implicit genT: Gen[T]
   ): Gen[DataUpload[T]] =
     for {
-//      ttan   <- Gen.uuidStrings.map(Id[TransferTAN](_))
+
       ttan <- Gen.listOf(64, Gen.oneOf("0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F")).map(_.mkString)
+
       record <- Gen.of[T]
 
       consentDate =
@@ -37,6 +39,8 @@ trait FakeDataGen[T <: PatientRecord]
           .minOption
           .map(_ minusWeeks 2)
           .getOrElse(LocalDate.now)
+
+      reasonConsentMissing <- Gen.`enum`(BroadConsent.ReasonMissing)
 
       metadata =
         Submission.Metadata(
@@ -55,7 +59,8 @@ trait FakeDataGen[T <: PatientRecord]
                 )
               )
           ),
-          Some(List.empty)
+          None,
+          Some(reasonConsentMissing)
         )
     } yield DataUpload(
       record,

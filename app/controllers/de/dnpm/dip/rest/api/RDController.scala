@@ -19,6 +19,7 @@ import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.coding.Coding 
+import de.dnpm.dip.model.Patient
 import de.dnpm.dip.rd.model.{
   HPO,
   RDDiagnosis,
@@ -65,6 +66,8 @@ with RDHypermedia
   override implicit val completer: Completer[RDPatientRecord] =
     Completers.rdPatientRecordCompleter
 
+  override implicit val patientSetter: (RDPatientRecord,Patient) => RDPatientRecord =
+    (record,patient) => record.copy(patient = patient)
 
   override val validationService: RDValidationService =
     RDValidationService.getInstance.get

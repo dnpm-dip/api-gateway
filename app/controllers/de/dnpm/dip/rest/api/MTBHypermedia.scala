@@ -24,7 +24,6 @@ trait MTBHypermedia extends UseCaseHypermedia[MTBConfig]
           "tumor-diagnostics"            -> Link(s"${Uri(q.data)}/tumor-diagnostics"),
           "medication"                   -> Link(s"${Uri(q.data)}/medication"),
           "therapy-responses"            -> Link(s"${Uri(q.data)}/therapy-responses"),
-          "therapy-responses-by-variant" -> Link(s"${Uri(q.data)}/therapy-responses-by-variant")
         )
       )
 

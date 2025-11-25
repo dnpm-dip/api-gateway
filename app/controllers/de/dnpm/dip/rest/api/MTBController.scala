@@ -25,14 +25,11 @@ import de.dnpm.dip.coding.{
 import de.dnpm.dip.coding.hgnc.HGNC
 import de.dnpm.dip.coding.icd.ICD10GM 
 import de.dnpm.dip.model.Medications
+import de.dnpm.dip.model.Patient
 import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
 }
-//import de.dnpm.dip.mtb.model.v1
-//import v1.mappings._
-//import de.dnpm.dip.util.mapping.syntax._
-//import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
@@ -79,6 +76,8 @@ with MTBHypermedia
   override implicit val completer: Completer[MTBPatientRecord] =
     Completers.mtbPatientRecordCompleter
 
+  override implicit val patientSetter: (MTBPatientRecord,Patient) => MTBPatientRecord =
+    (record,patient) => record.copy(patient = patient)
 
   override val validationService: MTBValidationService =
     MTBValidationService.getInstance.get
@@ -250,7 +249,7 @@ with MTBHypermedia
           queryService.resultSet(id)
             .map(
               _.map(
-                _.therapyResponseDistributions(FilterFrom(req))
+                _.therapyResponses(FilterFrom(req))
                  .pipe(Collection(_).paginated)
               )
             )
@@ -264,7 +263,7 @@ with MTBHypermedia
       }
     }
 
-
+/*
   def therapyResponsesByVariant(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
       AuthorizedAction(OwnershipOf(id)).async { 
@@ -309,7 +308,7 @@ with MTBHypermedia
             }
       }
     }
-
+*/
 
   def survivalStatistics(
     id: Query.Id,

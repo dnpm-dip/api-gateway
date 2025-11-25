@@ -133,6 +133,8 @@ with AuthorizationOps[UserPermissions]
 
   protected implicit val completer: Completer[PatientRecord]
 
+  protected implicit val patientSetter: (PatientRecord,Patient) => PatientRecord
+
   protected implicit val authService: UserAuthenticationService =
     UserAuthenticationService.getInstance.get
 
