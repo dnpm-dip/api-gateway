@@ -10,8 +10,8 @@ import de.dnpm.dip.model.{
 }
 import de.dnpm.dip.service.mvh.{
   Consent,
-  ModelProjectConsent,
   BroadConsent,
+  ModelProjectConsent,
   Submission,
   TransferTAN
 }
