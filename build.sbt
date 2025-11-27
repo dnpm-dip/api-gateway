@@ -4,13 +4,8 @@ import scala.util.Properties.envOrElse
 
 name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
-<<<<<<< HEAD
 ThisBuild / scalaVersion := "2.13.18"
 ThisBuild / version      := envOrElse("VERSION","1.3.2-SNAPSHOT")
-=======
-ThisBuild / scalaVersion := "2.13.16"
-ThisBuild / version      := envOrElse("VERSION","1.3.1-SNAPSHOT")
->>>>>>> 2ff8b1a (feat: Finished first draft implementation of ranked TherapyResponses)
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/api-gateway").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
