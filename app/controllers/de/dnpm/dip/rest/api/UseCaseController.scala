@@ -248,10 +248,12 @@ with AuthorizationOps[UserPermissions]
     }
 
 
-  def processUpload(deidentify: Option[Boolean]) =
+//  def processUpload(deidentify: Option[Boolean]) =
+  def processUpload =
     Action.async(patientRecordParser){ 
       req =>
-        (orchestrator ! Process(req.body,deidentify.getOrElse(false))).collect {
+//        (orchestrator ! Process(req.body,deidentify.getOrElse(false))).collect {
+        (orchestrator ! Process(req.body)).collect {
           case Right(Saved)                       => Ok
           case Right(SavedWithIssues(report))     => Created(Json.toJson(report))
           case Left(err) =>

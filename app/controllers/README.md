@@ -112,16 +112,6 @@ Aside from the different language, this difference of "error report addressee" i
 POST /api/{use-case}/etl/patient-record[?deidentify-consent={true|false}]
 ```
 
-#### **De-identification of Broad Consent**
-
-The _optional_ boolean URI parameter `deidentify-consent` above defines whether Broad Consent resources in MVH submission metadata should be deidentified in a pre-processing step or not (Default: `false`).
-
-If set to `true`, the following [modifications](https://github.com/dnpm-dip/service-base/blob/8f3920783edc8dfdc3f8ab1fb431f18308f30ca6/src/main/scala/de/dnpm/dip/service/mvh/Consent.scala#L377-L392) will be performed on the FHIR Consent JSON:
-
-* Removal of `Consent.id`
-* Replacement of the reference `Consent.patient` with the same Patient pseudonym ID as the Patient object of the submission
-
-
 **Response**
 
 | Case | Response | Effect |
