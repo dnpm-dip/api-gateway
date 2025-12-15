@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/dnpm-dip/api-gateway/compare/v1.2.2...v1.2.3) (2025-12-15)
+
+
+### Bug Fixes
+
+* bump service-base to 1.2.3, mtb-validation-service-* to 1.1.6, rd-validation-service-* to 1.1.7 ([7afefd6](https://github.com/dnpm-dip/api-gateway/commit/7afefd677259b6327516a2101f3f8e195a116a0f))
+
 ## [1.2.2](https://github.com/dnpm-dip/api-gateway/compare/v1.2.1...v1.2.2) (2025-12-15)
 
 
