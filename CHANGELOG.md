@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/dnpm-dip/api-gateway/compare/v1.2.0...v1.2.1) (2025-12-15)
+
+
+### Bug Fixes
+
+* Bump service-base to 1.2.1, mtb-validation-service-* to 1.1.4, mtb-query-service-* to 1.1.2, rd-validation-service-* to 1.1.5, rd-query-service-* to 1.1.3 ([a1f8469](https://github.com/dnpm-dip/api-gateway/commit/a1f846900136643200d9e509d6d46ee134cd90fb))
+* Removed deidentifier parameter (temporarily) from upload endpoint ([a1f8469](https://github.com/dnpm-dip/api-gateway/commit/a1f846900136643200d9e509d6d46ee134cd90fb))
+
 ## [1.2.0](https://github.com/dnpm-dip/api-gateway/compare/v1.1.1...v1.2.0) (2025-11-20)
 
 
