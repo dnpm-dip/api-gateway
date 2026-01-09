@@ -43,7 +43,6 @@ import Orchestrator.{
 }
 import de.dnpm.dip.service.validation.ValidationService
 import ValidationService.{
-  Validate,
   DataAcceptableWithIssues,
   FatalIssuesDetected,
   UnacceptableIssuesDetected,
@@ -238,7 +237,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        (validationService ! Validate(req.body)).map {
+        validationService.validate(req.body).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
