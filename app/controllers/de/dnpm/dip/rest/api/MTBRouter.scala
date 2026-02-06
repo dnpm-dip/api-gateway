@@ -59,6 +59,9 @@ with FakeDataGen[MTBPatientRecord]
     case GET(p"/queries/${QueryId(id)}/gene-alterations") =>
       controller.geneAlterations(id)
 
+    case GET(p"/queries/${QueryId(id)}/altered-gene-distributions") =>
+      controller.alteredGeneDistributions(id)
+
     case GET(p"/queries/${QueryId(id)}/therapy-responses") =>
       controller.therapyResponses(id)
 
