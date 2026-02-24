@@ -29,10 +29,13 @@ import play.api.cache.{
   AsyncCacheApi => Cache
 }
 import cats.Monad
+import cats.data.NonEmptyList
+import cats.syntax.either._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.{
   DataUpload,
-  Orchestrator
+  Orchestrator,
+  UsageScope
 }
 import Orchestrator.{
   Process,
@@ -41,7 +44,10 @@ import Orchestrator.{
   Delete,
   Deleted
 }
-import de.dnpm.dip.service.validation.ValidationService
+import de.dnpm.dip.service.validation.{
+  ValidationReport,
+  ValidationService
+}
 import ValidationService.{
   DataAcceptableWithIssues,
   FatalIssuesDetected,
@@ -234,12 +240,13 @@ with AuthorizationOps[UserPermissions]
   protected val patientRecordParser =
     JsonBody[DataUpload[PatientRecord]]
 
+
   def validate =
     Action.async(patientRecordParser){ 
       req =>
         validationService.validate(req.body).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
-          case Right(_)                                  => Ok("Valid")
+          case Right(_)                                  => Ok
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
           case Left(FatalIssuesDetected(report))         => BadRequest(Json.toJson(report))
           case Left(ValidationService.GenericError(err)) => InternalServerError(err)
@@ -247,40 +254,114 @@ with AuthorizationOps[UserPermissions]
     }
 
 
-//  def processUpload(deidentify: Option[Boolean]) =
   def processUpload =
     Action.async(patientRecordParser){ 
       req =>
-//        (orchestrator ! Process(req.body,deidentify.getOrElse(false))).collect {
         (orchestrator ! Process(req.body)).collect {
-          case Right(Saved)                       => Ok
-          case Right(SavedWithIssues(report))     => Created(Json.toJson(report))
-          case Left(err) =>
-            err match {
-              case Left(UnacceptableIssuesDetected(report))     => UnprocessableEntity(Json.toJson(report))
-              case Left(FatalIssuesDetected(report))            => BadRequest(Json.toJson(report))
-              case Left(ValidationService.GenericError(msg))    => InternalServerError(Json.toJson(Outcome(msg)))
-              case Right(Left(MVHService.InvalidTAN(msg)))      => BadRequest(Json.toJson(Outcome(msg)))
-              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(Json.toJson(Outcome(msg)))
-              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(Json.toJson(Outcome(msg)))
+          case Right(Saved)                   => Ok
+          case Right(SavedWithIssues(report)) => Created(Json.toJson(report))
+          case Left(errs) =>
+            val results =
+              errs.foldLeft(Map.empty[Int,Either[NonEmptyList[String],ValidationReport]]){
+                (acc,err) => err match {
+                  case Left(FatalIssuesDetected(report))         => acc + (BAD_REQUEST -> report.asRight)
+              
+                  case Left(UnacceptableIssuesDetected(report))  => acc + (UNPROCESSABLE_ENTITY -> report.asRight)
+              
+                  case Left(ValidationService.GenericError(msg)) => //acc + (INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft)
+                    acc.updatedWith(INTERNAL_SERVER_ERROR){
+                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
+                      case _ => Some(NonEmptyList.of(msg).asLeft)
+                    }
+              
+                  case Right(Left(MVHService.InvalidTAN(msg)))   => acc + (BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
+
+                  case Right(Left(MVHService.InvalidSubmissionType(msg))) => acc + (BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
+              
+                  case Right(Left(MVHService.GenericError(msg))) =>
+                    acc.updatedWith(INTERNAL_SERVER_ERROR){
+                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
+                      case _ => Some(NonEmptyList.of(msg).asLeft)
+                    }
+              
+                  case Right(Right(QueryService.GenericError(msg))) =>
+                    acc.updatedWith(INTERNAL_SERVER_ERROR){
+                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
+                      case _ => Some(NonEmptyList.of(msg).asLeft)
+                    }
+                }
+              }
+
+            val code =
+              results.keySet match {
+                case codes if codes(BAD_REQUEST) => BAD_REQUEST
+                case codes if codes(UNPROCESSABLE_ENTITY) => UNPROCESSABLE_ENTITY
+                case _ => INTERNAL_SERVER_ERROR  
+              }
+
+            Status(code)(
+              results(code)
+                .leftMap(Outcome(_))
+                .fold(Json.toJson(_),Json.toJson(_))
+            )
+            
+/*            
+            val result =
+              errs.foldLeft(Option.empty[(Int,Either[NonEmptyList[String],ValidationReport])]){
+                (acc,err) => err match {
+                  case Left(FatalIssuesDetected(report))         => Some(BAD_REQUEST -> report.asRight)
+              
+                  case Left(UnacceptableIssuesDetected(report))  => Some(UNPROCESSABLE_ENTITY -> report.asRight)
+              
+                  case Left(ValidationService.GenericError(msg)) => Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft)
+              
+                  case Right(Left(MVHService.InvalidTAN(msg)))   => Some(BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
+              
+                  case Right(Left(MVHService.GenericError(msg))) =>
+                    acc.collect {
+                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
+                    }
+                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
+              
+                  case Right(Right(QueryService.GenericError(msg))) =>
+                    acc.collect {
+                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
+                    }
+                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
+                }
+              }
+
+            result match {
+              case Some(sc -> result) => Status(sc)(result.leftMap(Outcome(_)).fold(Json.toJson(_),Json.toJson(_)))
+              case None => Ok
             }
+*/            
         }
     }
 
 
-  def deleteData(patId: Id[Patient]): Action[AnyContent] =
+  def deleteData(
+    patId: Id[Patient],
+    scopes: Option[Set[UsageScope.Value]]
+  ): Action[AnyContent] =
     Action.async { 
-      (orchestrator ! Delete(patId))
+      (orchestrator ! Delete(patId,scopes))
         .collect {
-          case Right(Deleted(id)) => Ok(s"Deleted data of Patient ${id.value}")
-          case Left(err) =>
-            err match {
-              case Left(ValidationService.GenericError(msg))    => InternalServerError(Json.toJson(Outcome(msg)))
-              case Right(Left(MVHService.GenericError(msg)))    => InternalServerError(Json.toJson(Outcome(msg)))
-              case Right(Right(QueryService.GenericError(msg))) => InternalServerError(Json.toJson(Outcome(msg)))
-              case Right(_)                                     => InternalServerError(Json.toJson(Outcome("Unexpected data deletion outcome")))
-              case Left(_)                                      => InternalServerError(Json.toJson(Outcome("Unexpected data deletion outcome")))
-            }
+          case Right(Deleted(id)) => Ok
+          case Left(errs) => InternalServerError(
+            Json.toJson(
+              Outcome(
+                errs.collect {
+                  case Left(ValidationService.GenericError(msg))    => msg
+                  case Right(Left(MVHService.GenericError(msg)))    => msg
+                  case Right(Right(QueryService.GenericError(msg))) => msg
+                  case Right(_)                                     => "Unexpected data deletion outcome"
+                  case Left(_)                                      => "Unexpected data deletion outcome"
+                }
+                .map(Outcome.Issue.Error(_))
+              )
+            )
+          )
         }
     }
 

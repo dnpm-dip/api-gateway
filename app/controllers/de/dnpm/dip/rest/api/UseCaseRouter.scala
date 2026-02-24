@@ -23,6 +23,7 @@ import de.dnpm.dip.model.{
   Patient,
   Site
 }
+import de.dnpm.dip.service.UsageScope
 import de.dnpm.dip.service.mvh.{
   Report,
   Submission,
@@ -89,6 +90,8 @@ extends SimpleRouter
 
   protected val SubmissionTypeSet = Extractor.option(Extractor.csvSet[Submission.Type.Value])
 
+  protected val ScopeSet = Extractor.option(Extractor.csvSet[UsageScope.Value])
+
 
   val prefix = if (pref startsWith "/") pref else s"/$pref"
 
@@ -124,10 +127,9 @@ extends SimpleRouter
 
     case POST(p"/etl/patient-record:validate") => controller.validate
 
-//    case POST(p"/etl/patient-record"?q_o"deidentify-consent=${bool(deidentify)}") => controller.processUpload(deidentify)
     case POST(p"/etl/patient-record") => controller.processUpload
 
-    case DELETE(p"/etl/patient/${PatId(patId)}") => controller.deleteData(patId)
+    case DELETE(p"/etl/patient/${PatId(patId)}"?q_o"scopes=${ScopeSet(scopes)}") => controller.deleteData(patId,scopes)
 
     case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
       controller.mvhSubmissionReports(start,end,status,typ)
