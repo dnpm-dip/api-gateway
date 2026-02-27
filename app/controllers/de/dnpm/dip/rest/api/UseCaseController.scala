@@ -403,7 +403,7 @@ with AuthorizationOps[UserPermissions]
 
   def validationInfos =
     AuthorizedAction(ReadValidationInfos).async {
-      req =>
+      implicit req =>
         (validationService ? ValidationService.Filter.empty)
           .map(_.map(Hyper(_)).toSeq)  
           .map(Collection(_))
@@ -625,10 +625,7 @@ with AuthorizationOps[UserPermissions]
           )
           .map(
             _.map(
-              Collection(_)
-                .paginated
-                .map(Hyper(_))
-                .pipe(Hyper(_))
+              ts => Collection(ts.map(Hyper(_))).pipe(Hyper(_))
             )
           )
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
@@ -751,10 +748,10 @@ with AuthorizationOps[UserPermissions]
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-      (mvhService ? Submission.Filter(types,start.map(OpenEndPeriod(_,end))))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req => 
+        (mvhService ? Submission.Filter(types,start.map(OpenEndPeriod(_,end))))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
   
