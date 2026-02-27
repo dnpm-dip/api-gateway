@@ -17,11 +17,18 @@ import de.ekut.tbi.generators.Gen
 final case class FooBar
 (
   foo: Int,
-  bar: String
+  bar: String,
+  nested: FooBar.Nested
 )
 
 object FooBar
 {
+
+  final case class Nested(value: Double)
+
+  implicit val formatNested: OFormat[Nested] =
+    Json.format[Nested]
+
   implicit val format: OFormat[FooBar] =
     Json.format[FooBar]
 
@@ -29,7 +36,12 @@ object FooBar
     for {
       foo <- Gen.intsBetween(0,42)
       bar <- Gen.letters(12)
-    } yield FooBar(foo,bar)
+      nested <- Gen.doubles
+    } yield FooBar(
+      foo,
+      bar,
+      Nested(nested)
+    )
 
   val lists = Gen.listOf(100,Gen.of[FooBar]) 
 
@@ -75,7 +87,7 @@ class CollectionTests extends AnyFlatSpec
 
     val fooBars = collection.entries.map(Json.fromJson[FooBar](_).get)
 
-    fooBars.map { case FooBar(foo,bar) => foo -> bar } mustBe sorted
+    fooBars.map { case FooBar(foo,bar,_) => foo -> bar } mustBe sorted
 
   }
 
@@ -88,9 +100,10 @@ class CollectionTests extends AnyFlatSpec
 
     val fooBars = collection.entries.map(Json.fromJson[FooBar](_).get)
 
-    fooBars.map { case FooBar(foo,bar) => foo -> bar }.reverse mustBe sorted
+    fooBars.map { case FooBar(foo,bar,_) => foo -> bar }.reverse mustBe sorted
 
   }
+
 
   it must "have been sorted by 'foo' in DESC order and then 'bar' in ASC order" in {
 
@@ -104,6 +117,19 @@ class CollectionTests extends AnyFlatSpec
 
     // All 'bar' values for the same 'foo' value must be sorted ASC
     forAll(fooBars.groupMap(_.foo)(_.bar)){ case (_,bars) => bars mustBe sorted }
+
+  }
+
+
+  it must "have been sorted by 'nested.value'" in {
+
+    implicit val req: RequestHeader = FakeRequest("GET","/foobars?sort=nested.value")
+
+    val collection = Collection(FooBar.lists.next)
+
+    val fooBars = collection.entries.map(Json.fromJson[FooBar](_).get)
+
+    fooBars.map(_.nested.value) mustBe sorted
 
   }
 
