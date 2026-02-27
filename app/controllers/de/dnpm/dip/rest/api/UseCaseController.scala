@@ -404,7 +404,7 @@ with AuthorizationOps[UserPermissions]
 
   def validationInfos =
     AuthorizedAction(ReadValidationInfos).async {
-      req =>
+      implicit req =>
         (validationService ? ValidationService.Filter.empty)
           .map(_.map(Hyper(_)).toSeq)  
           .map(Collection(_))
@@ -611,10 +611,7 @@ with AuthorizationOps[UserPermissions]
           )
           .map(
             _.map(
-              Collection(_)
-                .paginated
-                .map(Hyper(_))
-                .pipe(Hyper(_))
+              ts => Collection(ts.map(Hyper(_))).pipe(Hyper(_))
             )
           )
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
@@ -761,7 +758,7 @@ with AuthorizationOps[UserPermissions]
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-
+      implicit req =>
       // To make the API flexible even though the filtering period is required,
       // keep "start" as an optional query parameter, and use a default before which
       // no DeletionEvent can possibly have occurred
