@@ -50,11 +50,12 @@ with CatalogHypermedia
 
   def codeSystemInfos: Action[AnyContent] =
     Action.async {
-      catalogService.codeSystemInfos
-        .map(_.map(Hyper(_)))
-        .map(Collection(_))
-        .map(toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        catalogService.codeSystemInfos
+          .map(_.map(Hyper(_)))
+          .map(Collection(_))
+          .map(toJson(_))
+          .map(Ok(_))
     }
 
 
@@ -130,11 +131,12 @@ with CatalogHypermedia
 
   def valueSetInfos: Action[AnyContent] =
     Action.async {
-      catalogService.valueSetInfos
-        .map(_.map(Hyper(_)))
-        .map(Collection(_))
-        .map(toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        catalogService.valueSetInfos
+          .map(_.map(Hyper(_)))
+          .map(Collection(_))
+          .map(toJson(_))
+          .map(Ok(_))
     }
 
 

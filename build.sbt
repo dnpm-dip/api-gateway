@@ -24,7 +24,7 @@ lazy val root = (project in file("."))
 libraryDependencies ++= Seq(
   caffeine,
   guice,
-  "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.1" % Test,  //TODO: version!
+  "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
   "de.dnpm.dip"            %% "admin-service-api"           % "1.1.1",
   "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.1",
@@ -50,8 +50,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "atc-impl"                    % "1.1.0",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.1.0",
   "de.dnpm.dip"            %% "auth-api"                    % "1.1.0",
-  "de.dnpm.dip"            %% "fake-auth-service"           % "1.1.0",
-//  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.0",
+//  "de.dnpm.dip"            %% "fake-auth-service"           % "1.1.0",
+  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.0",
   
 )
 

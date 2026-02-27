@@ -227,7 +227,7 @@ with MTBHypermedia
             .map(
               _.map(
                 _.geneAlterations(FilterFrom(req))
-                 .pipe(Collection(_).paginated)
+                 .pipe(Collection(_))
               )
             )
             .map(
@@ -273,7 +273,7 @@ with MTBHypermedia
             .map(
               _.map(
                 _.therapyResponses(FilterFrom(req))
-                 .pipe(Collection(_).paginated)
+                 .pipe(Collection(_))
               )
             )
             .map(
