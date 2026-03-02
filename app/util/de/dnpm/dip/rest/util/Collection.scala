@@ -17,11 +17,10 @@ import play.api.mvc.RequestHeader
 
 final class Collection[+T] private (
   val entries: Seq[JsObject],
+  val size: Int,
   val offset: Option[Int],
   val limit: Option[Int]
-){
-  def size: Int = entries.size
-}
+)
 
 
 object Collection
@@ -45,6 +44,7 @@ object Collection
 
     new Collection[T](
       entries,
+      ts.size, // Total size info of collection (in case pagination were applied)
       offset,
       limit
     )
