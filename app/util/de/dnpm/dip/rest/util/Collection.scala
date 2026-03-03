@@ -59,6 +59,11 @@ object Collection
     }
 
 
+    /**
+     * Ordering only possible for "primitive" JsValues, i.e. JsString, JsNumber or JSBoolean.
+     * Then apply the respective ordering of the wrapped String, Number or Boolean,
+     * else skip the value, as comparing JsArray, JsObject or JsNull is undefined
+     */
     private val jsValue: Ordering[JsValue] =
       new Ordering[JsValue]{
         def compare(left: JsValue, right: JsValue): Int = { 
@@ -71,7 +76,11 @@ object Collection
         }
       }
 
-
+    /**
+     * Access a nested value on a JsValue
+     * @param nodes: "Path" to the nesed value
+     * @param json: JSValue on which to extract the nested value
+     */
     private def value(
       nodes: List[String],
       json: JsValue
@@ -83,14 +92,20 @@ object Collection
       }
 
 
+    /**
+     * JsObject Ordering given potentially multiple (possibly nested) attributes:
+     * Similar to Ordering logic for TupleN, i.e. starting from the left/first attribute,
+     * continue comparing while attribute values are equal,
+     * else return with the first non-zero comparison result
+     */
     def apply(attributes: List[String]): Ordering[JsObject] =
       new Ordering[JsObject]{
         def compare(left: JsObject, right: JsObject): Int = {
           attributes.foldLeft(0){
             case (result,rawAttribute) if result == 0 =>
 
-              // Determine whether DESC ordering is requested and the
-              // attribute name stripped of leading dash "-foo" -> "foo"
+              // Determine whether DESC ordering is requested and
+              // extract the attribute name stripped of leading dash "-foo" -> "foo"
               val (attribute,ordering) = rawAttribute match {
                 case DESC(attribute) => attribute -> jsValue.reverse
                 case attribute => attribute -> jsValue
