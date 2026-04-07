@@ -14,9 +14,6 @@ import cats.data.{
 import cats.syntax.either._
 import play.api.libs.json.{
   Json,
-  JsObject,
-  JsPath,
-  JsSuccess,
   JsValue,
   OWrites,
   Reads,
@@ -29,43 +26,6 @@ import play.api.mvc.{
   Request,
   RequestHeader,
   Result
-}
-
-
-object JsonProjector
-{
-
-  private val identityReads: Reads[JsObject] =
-    Reads.pure(JsObject.empty)
-
-
-  def of(paths: Option[Seq[String]]): Reads[JsObject] =
-    paths.filter(_.nonEmpty)
-      .map(
-        _.map(_.split("\\.").foldLeft(JsPath())(_ \ _))
-         .map(
-           path => path.readNullable[JsValue].map {
-             case Some(value) => path.write[JsValue].writes(value)
-             case None        => JsObject.empty
-           }
-         )
-      )
-      .map(
-        readsList => Reads {
-          json =>
-            val merged =
-              readsList.foldLeft(JsObject.empty)(
-                (acc,r) => r.reads(json).fold(_ => acc, acc.deepMerge(_))
-              )
-            JsSuccess(merged)
-        }
-      )
-      .getOrElse(identityReads)
-
-
-  def of(req: RequestHeader): Reads[JsObject] =
-    of(req.queryString.get("project"))
-
 }
 
 
@@ -186,17 +146,14 @@ trait JsonOps
     err: JsValue => Result
   )(
     implicit req: RequestHeader
-  ): Result = 
+  ): Result = {
+    import JsonProjector.syntax._
+
     xor match {
       case Left(errs) => err(Json.toJson(Outcome(errs)))
 
-      case Right(t)   =>
-        Json.toJsObject(t)
-          .transform(JsonProjector.of(req.queryString.get("project")))
-          .fold(
-            errs => err(Json.toJson(Outcome(errs))),
-            Ok(_)
-          )
+      case Right(t) => Ok(t.toProjectedJson)
     }
+  }
 
 }

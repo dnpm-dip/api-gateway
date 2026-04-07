@@ -81,6 +81,7 @@ import de.dnpm.dip.auth.api.{
   UserAuthenticationService
 }
 import de.dnpm.dip.rest.util._
+import JsonProjector.syntax._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
@@ -617,10 +618,10 @@ with AuthorizationOps[UserPermissions]
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-      (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
+          .map(rs => Collection(rs.toSeq).toProjectedJson)
+          .map(Ok(_))
     }
 
   
