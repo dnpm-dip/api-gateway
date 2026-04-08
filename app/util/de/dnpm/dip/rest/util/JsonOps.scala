@@ -147,8 +147,8 @@ trait JsonOps
     import JsonProjection.syntax._
 
     Json.toJson(t).project match { 
-      case Some(json) => Ok(json)
-      case None       => BadRequest(Json.toJson(Outcome("Invalid JSONPath projections")))
+      case Right(json) => Ok(json)
+      case Left(errs)  => BadRequest(Json.toJson(Outcome(errs)))
     }
   }
 

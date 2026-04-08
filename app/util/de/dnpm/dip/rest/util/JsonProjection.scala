@@ -1,6 +1,8 @@
 package de.dnpm.dip.rest.util
 
 
+import cats.data.EitherNel
+import cats.syntax.either._
 import play.api.libs.json.{
   JsArray,
   JsObject,
@@ -15,7 +17,6 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
   import JsonProjection.{
     Node,
     Field,
-//    Element,
     Wildcard,
     Tree,
     Identity
@@ -157,24 +158,28 @@ object JsonProjection
   }
 
 
-  def of(opt: Option[List[String]]): JsonProjection =
+  def of(opt: Option[List[String]]): EitherNel[String,JsonProjection] =
     opt match { 
       case Some(projections) if projections.nonEmpty =>
         projections.map(JsonPath.parse)
-          .collect {
-            case Parsed.Success(jsonpath,_) => jsonpath 
+          .foldLeft[EitherNel[String,JsonProjection]](
+            Tree.empty.asRight.toEitherNel
+          ){
+            case (acc,        Parsed.Success(jsonpath,_)) => acc.map(_ insert jsonpath)
+            case (Right(_),   Parsed.Failure(err,_,_))    => err.asLeft.toEitherNel 
+            case (Left(errs), Parsed.Failure(err,_,_))    => (err :: errs).asLeft 
           }
-          .foldLeft[JsonProjection](Tree.empty)(_ insert _)
 
-      case _ => Identity
+      case _ => Identity.asRight.toEitherNel
     }
+
 
   /**
    * Implicit conversion of RequestHeader into JsonProjection:
    * Parse the CSV JSONPath projections from query parameter 'project' as
    * /api/resources?project=jsonpath1,jsonpath2,...
    */
-  implicit def fromRequest(implicit req: RequestHeader): JsonProjection =
+  implicit def fromRequest(implicit req: RequestHeader): EitherNel[String,JsonProjection] =
     of(req.getQueryString("project").map(_.split(",")).map(_.toList))
 
 
@@ -183,8 +188,8 @@ object JsonProjection
 
     implicit class JsValueProjectionOps(val json: JsValue) extends AnyVal
     { 
-      def project(implicit project: JsonProjection): Option[JsValue] =
-        project(json)
+      def project(implicit project: EitherNel[String,JsonProjection]): EitherNel[String,JsValue] =
+        project.flatMap(p => p(json).toRight("Empty JSON projection").toEitherNel)
     }
 
   }
