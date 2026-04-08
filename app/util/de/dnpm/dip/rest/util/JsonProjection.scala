@@ -15,7 +15,7 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
   import JsonProjection.{
     Node,
     Field,
-    Element,
+//    Element,
     Wildcard,
     Tree,
     Identity
@@ -58,12 +58,12 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 
         
       case (Tree(nodes),JsArray(entries)) =>
+/*
         val indexed =
           nodes.flatMap { 
             case (Element(i),proj) if (entries isDefinedAt i) => proj(entries(i)).map(i -> _)
             case _ => None
           }
-/*
         val sliced = 
           nodes.flatMap { 
             case (Slice(start,end),proj) =>
@@ -74,7 +74,7 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
             case _ => None
           }
 */
-        val all = 
+        val projectedElements = 
           nodes.flatMap { 
             case (Wildcard,proj) =>
               entries.zipWithIndex.flatMap { case (value,i) => proj(value).map(i -> _) }
@@ -82,7 +82,6 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
             case _ => None
           }
 
-        val projectedElements = (indexed ++ all)
 //        val projectedElements = (indexed ++ sliced ++ all)
 
         Option.when(projectedElements.nonEmpty)(
@@ -102,7 +101,7 @@ object JsonProjection
   private sealed trait Node
   private case object Root extends Node
   private case class Field(name: String) extends Node
-  private case class Element(idx: Int) extends Node
+//  private case class Element(idx: Int) extends Node
 //  private case class Slice(start: Int, end: Int) extends Node
   private case object Wildcard extends Node
 
@@ -122,14 +121,15 @@ object JsonProjection
     private def dotField[$: P]: P[Node] =
       P("." ~ field)
   
-    private def element[$: P]: P[Node] =
-      P("[" ~ CharsWhileIn("0-9").!.map(_.toInt) ~ "]").map(Element)
+//    private def element[$: P]: P[Node] =
+//      P("[" ~ CharsWhileIn("0-9").!.map(_.toInt) ~ "]").map(Element)
   
     private def wildcard[$: P]: P[Node] =
       P("[*]").map(_ => Wildcard)
   
     private def segment[$: P]: P[Node] =
-      P(dotField | element | wildcard)
+      P(dotField | wildcard)
+//      P(dotField | element | wildcard)
 
     /**
      * Keep the parser tolerant:

@@ -68,7 +68,7 @@ class JsonProjectorTests extends AnyFlatSpec
     Set(
       "int",
       "composite.string",
-      "bars[1].int"
+      "bars[*].int"
     )
 
 
@@ -83,7 +83,7 @@ class JsonProjectorTests extends AnyFlatSpec
 
     assert(projected.as[JsObject].keys == Set("int","composite","bars"))
     assert((projected \ "composite").as[JsObject].keys == Set("string"))
-    assert((projected \ "bars").as[JsArray].value.size == 1)
+    assert((projected \ "bars").as[JsArray].value.size == foo.bars.size)
     assert((projected \ "bars" \ 0).as[JsObject].keys == Set("int"))
 
   }
