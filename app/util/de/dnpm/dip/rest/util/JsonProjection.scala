@@ -26,6 +26,8 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 
       case (Nil,_) => Identity
 
+      case (_,Identity) => Identity
+
       case ((node: Node) :: tail, Tree(nodes)) => 
         Tree( 
           nodes.updatedWith(node)(
