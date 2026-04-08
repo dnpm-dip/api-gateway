@@ -141,18 +141,14 @@ trait JsonOps
     )
 
 
-  def ProjectedJsonResult[T: OWrites](
-    xor: Either[NonEmptyList[String],T],
-    err: JsValue => Result
-  )(
+  def ProjectedJsonResult[T: OWrites](t: T)(
     implicit req: RequestHeader
   ): Result = {
-    import JsonProjector.syntax._
+    import JsonProjection.syntax._
 
-    xor match {
-      case Left(errs) => err(Json.toJson(Outcome(errs)))
-
-      case Right(t) => Ok(t.toProjectedJson)
+    Json.toJson(t).project match { 
+      case Some(json) => Ok(json)
+      case None       => BadRequest(Json.toJson(Outcome("Invalid JSONPath projections")))
     }
   }
 

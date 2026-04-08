@@ -81,7 +81,6 @@ import de.dnpm.dip.auth.api.{
   UserAuthenticationService
 }
 import de.dnpm.dip.rest.util._
-import JsonProjector.syntax._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
 
 
@@ -620,8 +619,8 @@ with AuthorizationOps[UserPermissions]
     Action.async {
       implicit req =>
         (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
-          .map(rs => Collection(rs.toSeq).toProjectedJson)
-          .map(Ok(_))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
   

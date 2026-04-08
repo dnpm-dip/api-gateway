@@ -11,6 +11,7 @@ import play.api.libs.json.{
   JsObject,
   OWrites
 }
+import JsonProjection.syntax._
 
 
 case class Bar
@@ -65,7 +66,7 @@ class JsonProjectorTests extends AnyFlatSpec
 
   val fields =
     Set(
-      "int",
+      "['int']",
       "composite.string",
       "bars[1].int"
     )
@@ -76,9 +77,9 @@ class JsonProjectorTests extends AnyFlatSpec
     implicit val req: RequestHeader =
       FakeRequest("GET",s"/foos?project=${fields.mkString(",")}")
 
-    val projected = JsonProjector(req).apply(Json.toJsObject(foo))
+    val projected = Json.toJson(foo).project.getOrElse(JsObject.empty)
 
-//    println(Json.prettyPrint(projected))
+    println(Json.prettyPrint(projected))
 
     assert(projected.as[JsObject].keys == Set("int","composite","bars"))
     assert((projected \ "composite").as[JsObject].keys == Set("string"))
