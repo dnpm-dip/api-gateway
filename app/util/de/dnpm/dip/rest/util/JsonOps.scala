@@ -141,7 +141,7 @@ trait JsonOps
     )
 
 
-  def ProjectedJsonResult[T: OWrites](t: T)(
+  def ProjectedJsonResult[T: Writes](t: T)(
     implicit req: RequestHeader
   ): Result = {
     import JsonProjection.syntax._

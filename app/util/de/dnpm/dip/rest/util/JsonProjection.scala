@@ -16,8 +16,7 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
     Node,
     Field,
     Element,
-    Slice,
-    All,
+    Wildcard,
     Tree,
     Identity
   }
@@ -62,7 +61,7 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
             case (Element(i),proj) if (entries isDefinedAt i) => proj(entries(i)).map(i -> _)
             case _ => None
           }
-
+/*
         val sliced = 
           nodes.flatMap { 
             case (Slice(start,end),proj) =>
@@ -72,16 +71,17 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 
             case _ => None
           }
-
+*/
         val all = 
           nodes.flatMap { 
-            case (All,proj) =>
+            case (Wildcard,proj) =>
               entries.zipWithIndex.flatMap { case (value,i) => proj(value).map(i -> _) }
 
             case _ => None
           }
 
-        val projectedElements = (indexed ++ sliced ++ all)
+        val projectedElements = (indexed ++ all)
+//        val projectedElements = (indexed ++ sliced ++ all)
 
         Option.when(projectedElements.nonEmpty)(
           JsArray(projectedElements.toSeq.sortBy(_._1).map(_._2))
@@ -95,11 +95,56 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 object JsonProjection
 {
 
+  private type JsonPath = List[Node]
+
   private sealed trait Node
+  private case object Root extends Node
   private case class Field(name: String) extends Node
   private case class Element(idx: Int) extends Node
-  private case class Slice(start: Int, end: Int) extends Node
-  private case object All extends Node
+//  private case class Slice(start: Int, end: Int) extends Node
+  private case object Wildcard extends Node
+
+
+  import fastparse._
+  import NoWhitespace._
+
+  private object JsonPath
+  {
+
+    private def root[$: P]: P[Node] =
+      P("$").map(_ => Root)
+ 
+    private def field[$: P]: P[Node] =
+      P(CharsWhileIn("a-zA-Z0-9_").!).map(Field)
+
+    private def dotField[$: P]: P[Node] =
+      P("." ~ field)
+  
+    private def element[$: P]: P[Node] =
+      P("[" ~ CharsWhileIn("0-9").!.map(_.toInt) ~ "]").map(Element)
+  
+    private def wildcard[$: P]: P[Node] =
+      P("[*]").map(_ => Wildcard)
+  
+    private def segment[$: P]: P[Node] =
+      P(dotField | element | wildcard)
+
+    /**
+     * Keep the parser tolerant:
+     * Allow root $ to be missing, but thus also allow for a first field to occur without a dot,
+     * e.g. 'field.nested' instead of full '$.field.nested'
+     */
+    private def path[$: P]: P[JsonPath] =
+      P(root.? ~ field.? ~ segment.rep).map {
+        // Ignore the root element from the path
+        case (_,Some(field),segments) => field :: segments.toList
+        case (_,None,segments)        => segments.toList
+      }
+
+    def parse(input: String): Parsed[JsonPath] =
+      fastparse.parse(input, path(_))
+  }
+
 
   private case class Tree(nodes: Map[Node,JsonProjection]) extends JsonProjection
   private case object Identity extends JsonProjection
@@ -110,34 +155,21 @@ object JsonProjection
   }
 
 
-  //TODO: Generalize parser 
-  private val objectField       = "\\['([a-zA-Z]+)'\\]".r 
-  private val namedArrayElement = "(.+)\\[(\\d+)\\]".r 
-  private val namedArraySlice   = "(.+)\\[(\\d+):(\\d+)\\]".r 
-  private val namedArrayAll     = "(.+)\\[\\*?\\]".r 
-
   def of(opt: Option[List[String]]): JsonProjection =
     opt match { 
       case Some(projections) if projections.nonEmpty =>
-        projections.map(
-          _.split("\\.").toList.flatMap(
-            node => node match { 
-              case namedArrayElement(name,idx)     => List(Field(name),Element(idx.toInt))
-              case namedArraySlice(name,start,end) => List(Field(name),Slice(start.toInt,end.toInt))
-              case namedArrayAll(name)             => List(Field(name),All)
-              case objectField(name)               => List(Field(name))
-              case name                            => List(Field(name))
-            }
-          )
-        )
-        .foldLeft[JsonProjection](Tree.empty)(_ insert _)
+        projections.map(JsonPath.parse)
+          .collect {
+            case Parsed.Success(jsonpath,_) => jsonpath 
+          }
+          .foldLeft[JsonProjection](Tree.empty)(_ insert _)
 
       case _ => Identity
     }
 
   /**
-   * Implicit conversion of RequestHeader into JsONProject:
-   * Parse the CSV JSON Path projections from query parameter 'project' as
+   * Implicit conversion of RequestHeader into JsonProjection:
+   * Parse the CSV JSONPath projections from query parameter 'project' as
    * /api/resources?project=jsonpath1,jsonpath2,...
    */
   implicit def fromRequest(implicit req: RequestHeader): JsonProjection =

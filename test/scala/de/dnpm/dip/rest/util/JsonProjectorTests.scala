@@ -66,7 +66,7 @@ class JsonProjectorTests extends AnyFlatSpec
 
   val fields =
     Set(
-      "['int']",
+      "int",
       "composite.string",
       "bars[1].int"
     )
