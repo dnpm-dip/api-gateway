@@ -3,6 +3,8 @@ package de.dnpm.dip.rest.util
 
 import cats.data.EitherNel
 import cats.syntax.either._
+import cats.syntax.traverse._
+import cats.syntax.validated._
 import play.api.libs.json.{
   JsArray,
   JsObject,
@@ -142,14 +144,14 @@ object JsonProjection
   def of(opt: Option[List[String]]): EitherNel[String,JsonProjection] =
     opt match { 
       case Some(projections) if projections.nonEmpty =>
-        projections.map(JsonPath.parse)
-          .foldLeft[EitherNel[String,JsonProjection]](
-            Tree.empty.asRight.toEitherNel
-          ){
-            case (acc,        Parsed.Success(jsonpath,_)) => acc.map(_ insert jsonpath)
-            case (Right(_),   Parsed.Failure(err,_,_))    => err.asLeft.toEitherNel 
-            case (Left(errs), Parsed.Failure(err,_,_))    => (err :: errs).asLeft 
+        projections.traverse(
+          path => JsonPath.parse(path) match {
+            case Parsed.Success(jsonpath,_) => jsonpath.validNel
+            case _: Parsed.Failure          => s"Malformed JSONPath $path".invalidNel
           }
+        )
+        .map(_.foldLeft[JsonProjection](Tree.empty)(_ insert _))
+        .toEither
 
       case _ => Identity.asRight.toEitherNel
     }
@@ -161,7 +163,11 @@ object JsonProjection
    * /api/resources?project=jsonpath1,jsonpath2,...
    */
   implicit def fromRequest(implicit req: RequestHeader): EitherNel[String,JsonProjection] =
-    of(req.getQueryString("project").map(_.split(",")).map(_.toList))
+    of(
+      req.getQueryString("project")
+        .map(_ split ",")
+        .map(_.toList.filterNot(_.isBlank))
+    )
 
 
   object syntax
