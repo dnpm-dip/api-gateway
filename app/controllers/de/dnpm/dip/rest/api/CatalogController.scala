@@ -15,7 +15,6 @@ import play.api.mvc.{
   ControllerComponents
 }
 import play.api.cache.Cached
-import play.api.libs.json.Json.toJson
 import de.dnpm.dip.coding.{
   Coding,
   CodeSystem,
@@ -49,12 +48,11 @@ with CatalogHypermedia
 
 
   def codeSystemInfos: Action[AnyContent] =
-    Action.async {
+    Action.async { implicit req =>
       catalogService.codeSystemInfos
         .map(_.map(Hyper(_)))
         .map(Collection(_))
-        .map(toJson(_))
-        .map(Ok(_))
+        .map(ProjectedJsonResult(_))
     }
 
 
@@ -120,21 +118,20 @@ with CatalogHypermedia
     filters: Seq[String]
   ) =
     cached.status(_.uri,OK){
-      Action.async {
+      Action.async { implicit req =>
         getCodeSystem(uri,version,filters)
           .map(_.map(Hyper(_)))
-          .map(JsonResult(_))
+          .map(ProjectedJsonResult(_))
       }
     }
 
 
   def valueSetInfos: Action[AnyContent] =
-    Action.async {
+    Action.async { implicit req =>
       catalogService.valueSetInfos
         .map(_.map(Hyper(_)))
         .map(Collection(_))
-        .map(toJson(_))
-        .map(Ok(_))
+        .map(ProjectedJsonResult(_))
     }
 
 
@@ -144,7 +141,7 @@ with CatalogHypermedia
     filters: Seq[String]
   ) =
     cached.status(_.uri,OK){
-      Action.async {
+      Action.async { implicit req =>
         catalogService.valueSet(uri,version)
           .filter(_.isDefined)
           .fallbackTo(
@@ -152,7 +149,7 @@ with CatalogHypermedia
               .map(_.map(ValueSet.from(_)))
           )
           .map(_.map(Hyper(_)))
-          .map(JsonResult(_))
+          .map(ProjectedJsonResult(_))
       }
     }
 
