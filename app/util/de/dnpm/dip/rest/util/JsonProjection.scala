@@ -17,21 +17,21 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 {
 
   import JsonProjection.{
-    Node,
+    Selector,
     Field,
     Wildcard,
     Tree,
     Identity
   }
 
-  private def insert(path: List[Node]): JsonProjection =
-    (path,this) match { 
+  private def insert(segments: List[Selector]): JsonProjection =
+    (segments,this) match { 
 
       case (Nil,_) => Identity
 
       case (_,Identity) => Identity
 
-      case ((node: Node) :: tail, Tree(nodes)) => 
+      case ((node: Selector) :: tail, Tree(nodes)) => 
         Tree( 
           nodes.updatedWith(node)(
             _.map(_ insert tail)
@@ -39,7 +39,7 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
           )
         )
 
-      case _ => Tree.empty.insert(path)
+      case _ => Tree.empty.insert(segments)
     }
     
     
@@ -80,14 +80,12 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
 object JsonProjection
 {
 
-  private type JsonPath = List[Node]
+  private type JsonPath = List[Selector]
 
-  private sealed trait Node
-  private case object Root extends Node
-  private case class Field(name: String) extends Node
-//  private case class Element(idx: Int) extends Node
-//  private case class Slice(start: Int, end: Int) extends Node
-  private case object Wildcard extends Node
+  private sealed trait Selector
+  private case object Root extends Selector
+  private case class Field(name: String) extends Selector
+  private case object Wildcard extends Selector
 
 
   import fastparse._
@@ -96,24 +94,20 @@ object JsonProjection
   private object JsonPath
   {
 
-    private def root[$: P]: P[Node] =
+    private def root[$: P]: P[Selector] =
       P("$").map(_ => Root)
  
-    private def field[$: P]: P[Node] =
+    private def field[$: P]: P[Selector] =
       P(CharsWhileIn("a-zA-Z0-9_").!).map(Field)
 
-    private def dotField[$: P]: P[Node] =
+    private def dotField[$: P]: P[Selector] =
       P("." ~ field)
   
-//    private def element[$: P]: P[Node] =
-//      P("[" ~ CharsWhileIn("0-9").!.map(_.toInt) ~ "]").map(Element)
-  
-    private def wildcard[$: P]: P[Node] =
+    private def wildcard[$: P]: P[Selector] =
       P("[*]").map(_ => Wildcard)
   
-    private def segment[$: P]: P[Node] =
+    private def segment[$: P]: P[Selector] =
       P(dotField | wildcard)
-//      P(dotField | element | wildcard)
 
     /**
      * Keep the parser tolerant:
@@ -132,7 +126,7 @@ object JsonProjection
   }
 
 
-  private case class Tree(nodes: Map[Node,JsonProjection]) extends JsonProjection
+  private case class Tree(nodes: Map[Selector,JsonProjection]) extends JsonProjection
   private case object Identity extends JsonProjection
 
   private object Tree 
