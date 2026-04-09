@@ -144,16 +144,18 @@ object JsonProjection
   def of(opt: Option[List[String]]): EitherNel[String,JsonProjection] =
     opt match { 
       case Some(projections) if projections.nonEmpty =>
-        projections.traverse(
-          path => JsonPath.parse(path) match {
+        projections.traverse {
+          case path if path.isEmpty => s"Empty JSONPath detected".invalidNel
+
+          case path => JsonPath.parse(path) match {
             case Parsed.Success(jsonpath,_) => jsonpath.validNel
-            case _: Parsed.Failure          => s"Malformed JSONPath $path".invalidNel
+            case _: Parsed.Failure          => s"Malformed JSONPath '$path'".invalidNel
           }
-        )
+        }
         .map(_.foldLeft[JsonProjection](Tree.empty)(_ insert _))
         .toEither
 
-      case _ => Identity.asRight.toEitherNel
+      case _ => Identity.rightNel
     }
 
 
@@ -165,8 +167,7 @@ object JsonProjection
   implicit def fromRequest(implicit req: RequestHeader): EitherNel[String,JsonProjection] =
     of(
       req.getQueryString("project")
-        .map(_ split ",")
-        .map(_.toList.filterNot(_.isBlank))
+        .map(_.split(",",-1).toList.map(_.trim))
     )
 
 
