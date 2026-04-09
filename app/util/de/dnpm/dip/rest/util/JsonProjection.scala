@@ -47,47 +47,28 @@ sealed trait JsonProjection extends (JsValue => Option[JsValue])
       case (Identity,_) => Some(json)
 
       case (Tree(nodes), JsObject(value)) =>
-        val projectedFields =
-          nodes.flatMap {
-            case (Field(key),proj) => value.get(key).flatMap(proj).map(key -> _) 
-            case _ => None
+        // Only apply projections if at least one field selector exists,
+        // else return None
+        Option.when(
+          nodes.keys.exists {
+            case _: Field => true 
+            case _        => false
           }
-
-        Option.when(projectedFields.nonEmpty)(
-          JsObject(projectedFields)
+        )(
+          JsObject(
+            nodes.flatMap {
+              case (Field(key),proj) => value.get(key).flatMap(proj).map(key -> _) 
+              case _ => None
+            }
+          )
         )
-
         
       case (Tree(nodes),JsArray(entries)) =>
-/*
-        val indexed =
-          nodes.flatMap { 
-            case (Element(i),proj) if (entries isDefinedAt i) => proj(entries(i)).map(i -> _)
-            case _ => None
-          }
-        val sliced = 
-          nodes.flatMap { 
-            case (Slice(start,end),proj) =>
-              entries.zipWithIndex
-                .slice(start,end)
-                .flatMap { case (value,i) => proj(value).map(i -> _) }
-
-            case _ => None
-          }
-*/
-        val projectedElements = 
-          nodes.flatMap { 
-            case (Wildcard,proj) =>
-              entries.zipWithIndex.flatMap { case (value,i) => proj(value).map(i -> _) }
-
-            case _ => None
-          }
-
-//        val projectedElements = (indexed ++ sliced ++ all)
-
-        Option.when(projectedElements.nonEmpty)(
-          JsArray(projectedElements.toSeq.sortBy(_._1).map(_._2))
-        )
+        // Only apply projections if Wildcard selector exists (i.e. all array elements),
+        // else return None
+        nodes.get(Wildcard)
+          .map(entries.flatMap(_).toSeq)
+          .map(JsArray(_))
 
       case _ => None
     }
@@ -138,7 +119,7 @@ object JsonProjection
      * e.g. 'field.nested' instead of full '$.field.nested'
      */
     private def path[$: P]: P[JsonPath] =
-      P(root.? ~ field.? ~ segment.rep).map {
+      P(root.? ~ field.? ~ segment.rep ~ End).map {
         // Ignore the root element from the path
         case (_,Some(field),segments) => field :: segments.toList
         case (_,None,segments)        => segments.toList
