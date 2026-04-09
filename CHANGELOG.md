@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/dnpm-dip/api-gateway/compare/v1.2.3...v1.2.4) (2026-04-09)
+
+
+### Features
+
+* project json fields ([#33](https://github.com/dnpm-dip/api-gateway/issues/33)) ([3d22397](https://github.com/dnpm-dip/api-gateway/commit/3d22397bf0a2c6faad2dce34acb7bcd181fbf7e5))
+
 ## [1.2.3](https://github.com/dnpm-dip/api-gateway/compare/v1.2.2...v1.2.3) (2025-12-15)
 
 
