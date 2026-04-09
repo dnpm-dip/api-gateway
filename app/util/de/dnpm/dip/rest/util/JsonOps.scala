@@ -15,8 +15,8 @@ import cats.syntax.either._
 import play.api.libs.json.{
   Json,
   JsValue,
-  Reads,
   OWrites,
+  Reads,
   Writes
 }
 import play.api.mvc.{
@@ -24,6 +24,7 @@ import play.api.mvc.{
   ActionBuilder,
   BodyParser,
   Request,
+  RequestHeader,
   Result
 }
 
@@ -67,11 +68,9 @@ trait JsonOps
   ): ActionBuilder[Request,T] =
     new ActionBuilder[Request,T]{
 
-      override val executionContext =
-        ec
+      override val executionContext = ec
 
-      override val parser: BodyParser[T] =
-        JsonBody[T]
+      override val parser: BodyParser[T] = JsonBody[T]
 
       override def invokeBlock[A](
         request: Request[A],
@@ -141,5 +140,16 @@ trait JsonOps
       NotFound(_)
     )
 
+
+  def ProjectedJsonResult[T: Writes](t: T)(
+    implicit req: RequestHeader
+  ): Result = {
+    import JsonProjection.syntax._
+
+    Json.toJson(t).project match { 
+      case Right(json) => Ok(json)
+      case Left(errs)  => BadRequest(Json.toJson(Outcome(errs)))
+    }
+  }
 
 }

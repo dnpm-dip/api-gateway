@@ -43,7 +43,6 @@ import Orchestrator.{
 }
 import de.dnpm.dip.service.validation.ValidationService
 import ValidationService.{
-  Validate,
   DataAcceptableWithIssues,
   FatalIssuesDetected,
   UnacceptableIssuesDetected,
@@ -238,7 +237,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        (validationService ! Validate(req.body)).map {
+        validationService.validate(req.body).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok("Valid")
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
@@ -563,10 +562,10 @@ with AuthorizationOps[UserPermissions]
 
   def peerToPeerQuery =
     JsonAction[PeerToPeerQuery[Criteria,PatientRecord]].async { 
-      req =>
+      implicit req =>
         (queryService ! req.body)
           .map {
-            case Right(resultSet) => Ok(Json.toJson(resultSet))
+            case Right(resultSet) => ProjectedJsonResult(resultSet)
             case Left(err)        => InternalServerError(err)
           }
     }
@@ -579,8 +578,9 @@ with AuthorizationOps[UserPermissions]
     snapshot: Option[Long]
   ) =
     Action.async {
-      (queryService ! PatientRecordRequest[PatientRecord](origin,querier,patId,snapshot))
-        .map(JsonResult(_))
+      implicit req =>
+        (queryService ! PatientRecordRequest[PatientRecord](origin,querier,patId,snapshot))
+          .map(ProjectedJsonResult(_))
     }
 
   def patientRecordRequest =
@@ -598,17 +598,16 @@ with AuthorizationOps[UserPermissions]
     `type`: Option[Set[Submission.Type.Value]]
   ) = 
     Action.async {
-      (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status,`type`))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status,`type`))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
 
   def mvhSubmissionReport(id: Id[TransferTAN]) = 
     Action.async {
-      (mvhService ? id)
-        .map(JsonResult(_))
+      (mvhService ? id).map(JsonResult(_))
     }
 
 
@@ -618,10 +617,10 @@ with AuthorizationOps[UserPermissions]
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-      (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
   
