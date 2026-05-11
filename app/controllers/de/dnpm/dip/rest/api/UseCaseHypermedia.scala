@@ -10,6 +10,7 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Hyper,
   HypermediaBase
 }
+import de.dnpm.dip.service.mvh.UseCase
 import de.dnpm.dip.service.query.{
   PatientMatch,
   Query,
@@ -21,26 +22,6 @@ import de.dnpm.dip.service.validation.{
   ValidationReport
 }
 import scala.util.chaining._
-
-
-/*
-case class HyperEntry[+K,+V](
-  key: K,
-  value: V,
-  children: Option[Seq[HyperEntry[K,V]]]
-)
-extends Hypermediable
-
-
-type HyperConceptCount[+T] = HyperEntry[T,Count]
-
-
-case class HyperDistribution[T](
-  total: Int,
-  elements: Seq[HyperConceptCount[T]]
-)
-extends Hypermediable
-*/
 
 
 trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
@@ -61,12 +42,11 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   import Method.{DELETE,PATCH,POST,PUT}
 
 
-
-  val prefix: String
+  val useCase: UseCase.Value
 
 
   protected val BASE_URI =
-    s"$BASE_URL/$prefix"
+    s"$BASE_URL/${useCase.toString.toLowerCase}"
 
   private val VALIDATION_BASE_URI =
     s"$BASE_URI/validation"

@@ -21,7 +21,7 @@ import cats.Eval
 class RDRouter @Inject()(
   override val controller: RDController
 )
-extends UseCaseRouter[RDConfig]("rd")
+extends UseCaseRouter[RDConfig]
 with FakeDataGen[RDPatientRecord]
 {
 

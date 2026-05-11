@@ -33,7 +33,10 @@ import de.dnpm.dip.mtb.model.{
   Completers
 }
 import de.dnpm.dip.service.query.Query
-import de.dnpm.dip.service.mvh.Report
+import de.dnpm.dip.service.mvh.{
+  Report,
+  UseCase
+}
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
   MTBValidationService
@@ -63,7 +66,7 @@ class MTBController @Inject()(
 )(
   implicit ec: ExecutionContext,
 )
-extends UseCaseController[MTBConfig]
+extends UseCaseController[MTBConfig](UseCase.MTB)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with MTBHypermedia
@@ -73,8 +76,6 @@ with MTBHypermedia
   import Json.toJson
   import de.dnpm.dip.rest.util.AuthorizationConversions._
 
-
-  override lazy val prefix = "mtb"
 
   override implicit val completer: Completer[MTBPatientRecord] =
     Completers.mtbPatientRecordCompleter
