@@ -173,10 +173,24 @@ POST /api/{use-case}/etl/patient-record:validate
 | Fatal Issues Detected       | `400 Bad Request` with JSON issue report           | Payload syntactically invalid or unacceptable for MVGenomSeq due to `fatal` issues |
 
 
-### Delete All of a Patient's Data
+### Delete a Patient's Data
 
 ```
 DELETE /api/{use-case}/etl/patient/{Patient-ID}
+```
+
+**NOTE**: Patient data is stored in different modules/services within the DIP node, depending on its "scope":
+MV data sets are stored in the MV module and, given consent for research use, also in the query module; DNPM-only uploads (i.e. without MV metadata) are stored only in the query module; in case of data quality issues of at least `warning`-level severity, also in the validation module.
+Data of a given Patient can be deleted in a fine-grained manner by passing `scope` as an optional query parameter: 
+
+| Parameter | Type/Value | Effect |
+| --------- | ----- | ------ |
+| `scope`   | CSV string of values in {`mvgenomseq`,`query`} | Delete patient's data from the specified modules. Default: delete from all modules |
+
+For instance, to delete a Patient's data only from the query module:
+
+```
+DELETE /api/{use-case}/etl/patient/{Patient-ID}?scope=query
 ```
 
 -------
