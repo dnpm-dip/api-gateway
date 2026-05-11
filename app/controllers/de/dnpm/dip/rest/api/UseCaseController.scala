@@ -708,7 +708,7 @@ with AuthorizationOps[UserPermissions]
       req =>
         (queryService ! req.body)
           .map {
-            case Right(resultSet) => Ok(Json.toJson(resultSet))
+            case Right(resultSet) => ProjectedJsonResult(resultSet)
             case Left(err)        => InternalServerError(err)
           }
     }
@@ -734,10 +734,10 @@ with AuthorizationOps[UserPermissions]
     `type`: Option[Set[Submission.Type.Value]]
   ) = 
     Action.async {
-      (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status,`type`))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        (mvhService ? Submission.Report.Filter(start.map(OpenEndPeriod(_,end)),status,`type`))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
 
