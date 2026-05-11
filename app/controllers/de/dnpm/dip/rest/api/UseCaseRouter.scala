@@ -82,6 +82,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
     implicit w: Witness.Aux[E]
   ): Extractor[String,E#Value] =
     s => w.value.values.find(_.toString == s)
+      .orElse(throw new IllegalArgumentException(s"Invalid Enum values '$s', expected one of {${w.value.values.mkString(",")}}"))
 
   protected val Quarter = Extractor.of[Report.Quarter.Value]
 
