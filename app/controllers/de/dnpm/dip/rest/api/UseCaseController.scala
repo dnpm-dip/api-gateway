@@ -1,7 +1,11 @@
 package de.dnpm.dip.rest.api
 
 
-import java.time.LocalDateTime
+import java.time.{
+  LocalDate,
+  LocalDateTime
+}
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import scala.util.{
   Left,
   Right,
@@ -37,12 +41,21 @@ import de.dnpm.dip.service.{
   Orchestrator,
   UsageScope
 }
+import de.dnpm.dip.connector.{
+  FakeConnector,
+  HttpConnector
+}
+import de.dnpm.dip.connector.HttpMethod._
 import Orchestrator.{
   Process,
   Saved,
   SavedWithIssues,
   Delete,
   Deleted
+}
+import de.dnpm.dip.service.controlling.{
+  Controlling,
+  LocalControllingInfo
 }
 import de.dnpm.dip.service.validation.{
   ValidationReport,
@@ -56,7 +69,7 @@ import ValidationService.{
 import de.dnpm.dip.service.query.{
   PatientFilter,
   PatientMatch,
-  PeerToPeerQuery,
+  FederatedQuery,
   PatientRecordRequest,
   Query,
   Querier,
@@ -68,7 +81,8 @@ import de.dnpm.dip.service.mvh.{
   MVHService,
   Report,
   Submission,
-  TransferTAN
+  TransferTAN,
+  UseCase
 }
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
@@ -76,6 +90,7 @@ import de.dnpm.dip.model.{
   Gender,
   VitalStatus,
   Patient,
+  Period,
   OpenEndPeriod,
   Site
 }
@@ -106,6 +121,8 @@ object QueryPatch
 
 
 abstract class UseCaseController[UseCase <: UseCaseConfig](
+  val useCase: UseCase.Value
+)(
   implicit
   ec: ExecutionContext,
   formatPatRec: OFormat[UseCase#PatientRecord],
@@ -155,6 +172,30 @@ with AuthorizationOps[UserPermissions]
       validationService,
       mvhService,
       queryService
+    )(
+      sys.props.getOrElse(HttpConnector.Type.property,"broker") match {
+
+        case HttpConnector.Type(typ) =>
+          val baseURI = "/api/USECASE/peer2peer"
+          HttpConnector(
+            typ,
+            {
+              case LocalControllingInfo.Request(origin,criteria) =>
+                (
+                  GET, s"$baseURI/local-controlling-info",
+                  criteria match {
+                    case Some(Controlling.Criteria(period)) =>
+                      Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++
+                      period.endOption.map(ISO_LOCAL_DATE.format).map(Seq(_)).map("episode.end" -> _)
+                    case _ => Map.empty 
+                  }
+                )
+            }
+          )
+        
+        case _ =>
+          FakeConnector[Future]
+      }
     )
 
 
@@ -268,7 +309,7 @@ with AuthorizationOps[UserPermissions]
               
                   case Left(UnacceptableIssuesDetected(report))  => acc + (UNPROCESSABLE_ENTITY -> report.asRight)
               
-                  case Left(ValidationService.GenericError(msg)) => //acc + (INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft)
+                  case Left(ValidationService.GenericError(msg)) =>
                     acc.updatedWith(INTERNAL_SERVER_ERROR){
                       case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
                       case _ => Some(NonEmptyList.of(msg).asLeft)
@@ -633,16 +674,37 @@ with AuthorizationOps[UserPermissions]
   // Peer-to-Peer Operations
   // --------------------------------------------------------------------------  
 
-  def statusInfo =
+  def localControllingInfo(
+    origin: Coding[Site],
+    start: Option[LocalDate],
+    end: Option[LocalDate]
+  ) =
     Action.async { 
-      orchestrator.statusInfo
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      orchestrator.process(
+        LocalControllingInfo.Request(
+          origin,start.map(Period(_,end)).map(Controlling.Criteria)
+        )
+      )
+      .map(Json.toJson(_))
+      .map(Ok(_))
+    }
+
+  def federatedControllingInfo(
+    sites: Option[Set[Coding[Site]]],
+    start: Option[LocalDate],
+    end: Option[LocalDate]
+  ) =
+    Action.async { 
+      orchestrator.federatedControllingInfo(
+        start.map(Period(_,end)).map(Controlling.Criteria),
+        sites
+      )
+      .map(JsonResult(_,InternalServerError(_)))
     }
 
 
-  def peerToPeerQuery =
-    JsonAction[PeerToPeerQuery[Criteria,PatientRecord]].async { 
+  def federatedQuery =
+    JsonAction[FederatedQuery[Criteria,PatientRecord]].async { 
       req =>
         (queryService ! req.body)
           .map {
@@ -660,14 +722,8 @@ with AuthorizationOps[UserPermissions]
   ) =
     Action.async {
       (queryService ! PatientRecordRequest[PatientRecord](origin,querier,patId,snapshot))
-        .map(JsonResult(_))
-    }
-
-  def patientRecordRequest =
-    JsonAction[PatientRecordRequest[PatientRecord]].async { 
-      req =>
-        (queryService ! req.body)
-          .map(JsonResult(_))
+        .map(_.toEitherNel)
+        .map(JsonResult(_,InternalServerError(_)))
     }
 
 
@@ -687,18 +743,25 @@ with AuthorizationOps[UserPermissions]
 
   def mvhSubmissionReport(id: Id[TransferTAN]) = 
     Action.async {
-      (mvhService ? id)
+      (mvhService submissionReport id)
+        .map(JsonResult(_))
+    }
+
+
+  def mvhSubmission(id: Id[TransferTAN]) = 
+    Action.async {
+      (mvhService submission id)
         .map(JsonResult(_))
     }
 
 
   def mvhSubmissions(
-    tans: Option[Set[Id[TransferTAN]]],
+    types: Option[Set[Submission.Type.Value]],
     start: Option[LocalDateTime],
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-      (mvhService ? Submission.Filter(tans,start.map(OpenEndPeriod(_,end))))
+      (mvhService ? Submission.Filter(types,start.map(OpenEndPeriod(_,end))))
         .map(rs => Collection(rs.toSeq))
         .map(Json.toJson(_))
         .map(Ok(_))

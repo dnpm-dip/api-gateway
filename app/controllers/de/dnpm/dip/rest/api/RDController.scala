@@ -18,7 +18,10 @@ import play.api.cache.{
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.Query
-import de.dnpm.dip.service.mvh.Report
+import de.dnpm.dip.service.mvh.{
+  Report,
+  UseCase
+}
 import de.dnpm.dip.coding.Coding 
 import de.dnpm.dip.model.Patient
 import de.dnpm.dip.rd.model.{
@@ -51,7 +54,7 @@ class RDController @Inject()(
 )(
   implicit ec: ExecutionContext,
 )
-extends UseCaseController[RDConfig]
+extends UseCaseController[RDConfig](UseCase.RD)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with RDHypermedia
@@ -61,8 +64,6 @@ with RDHypermedia
   import Json.toJson
   import de.dnpm.dip.rest.util.AuthorizationConversions._
 
-
-  override lazy val prefix = "rd"
 
   override implicit val completer: Completer[RDPatientRecord] =
     Completers.rdPatientRecordCompleter

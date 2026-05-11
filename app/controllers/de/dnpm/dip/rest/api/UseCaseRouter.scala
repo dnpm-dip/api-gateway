@@ -47,11 +47,7 @@ import cats.Eval
 import shapeless.Witness
 
 
-abstract class UseCaseRouter[UseCase <: UseCaseConfig]
-(
-  private val pref: String
-)
-extends SimpleRouter
+abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 {
 
   this: FakeDataGen[UseCase#PatientRecord] =>
@@ -61,6 +57,8 @@ extends SimpleRouter
 
   protected val Origin: Extractor[String,Coding[Site]] = Extractor(Coding[Site](_))
 
+  protected val SiteSetOption = Extractor.option(Extractor.csvSet(Origin))
+
   protected val QueryId = Extractor(Query.Id(_))
 
   protected val PreparedQueryId = Extractor(PreparedQuery.Id(_))
@@ -68,7 +66,8 @@ extends SimpleRouter
   protected val PatId = Extractor(Id[Patient](_))
 
   protected val date = Extractor.of[LocalDate]
-//  protected val date = Extractor.isoDate
+
+  protected val dateOption = Extractor.option[LocalDate]
 
   protected val dateTime = Extractor.option[LocalDateTime]
 
@@ -93,10 +92,9 @@ extends SimpleRouter
   protected val ScopeSet = Extractor.option(Extractor.csvSet[UsageScope.Value])
 
 
-  val prefix = if (pref startsWith "/") pref else s"/$pref"
-
-
   protected val controller: UseCaseController[UseCase]
+
+  def useCase = controller.useCase
 
   protected val APPLICATION_JSON = "application/json"
 
@@ -138,6 +136,14 @@ extends SimpleRouter
 
 
     // ------------------------------------------------------------------------
+    // Controlling Result Routes:
+    // ------------------------------------------------------------------------
+     
+    case GET(p"/controlling/federated-infos"?q_o"sites=${SiteSetOption(sites)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+      controller.federatedControllingInfo(sites,start,end)
+
+
+    // ------------------------------------------------------------------------
     // Data Validation Result Routes:
     // ------------------------------------------------------------------------
 
@@ -152,9 +158,10 @@ extends SimpleRouter
     // Peer-to-peer Routes:
     // ------------------------------------------------------------------------
 
-    case GET(p"/peer2peer/status-info") => controller.statusInfo
+    case GET(p"/peer2peer/local-controlling-info"?q"origin=${Origin(site)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+      controller.localControllingInfo(site,start,end)
 
-    case POST(p"/peer2peer/query") => controller.peerToPeerQuery
+    case POST(p"/peer2peer/query") => controller.federatedQuery
 
     case GET(p"/peer2peer/patient-record"?q"origin=${Origin(site)}"&q"querier=${querier(q)}"&q"patient=${PatId(id)}"&q_o"snapshot=${long(snp)}") =>
       controller.patientRecord(site,q,id,snp)
@@ -170,7 +177,9 @@ extends SimpleRouter
 
     case POST(p"/peer2peer/mvh/submission-reports/${TAN(id)}:submitted") => controller.confirmReportSubmitted(id)
 
-    case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"tan=${TANs(tans)}") => controller.mvhSubmissions(tans,start,end)
+    case GET(p"/peer2peer/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
+
+    case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
 
     case GET(p"/peer2peer/mvh/report"?q"quarter=${Quarter(q)}"&q_o"year=${year(y)}") => controller.mvhReport(ForQuarter(q,y))
     case GET(p"/peer2peer/mvh/report"?q"start=${date(start)}"&q"end=${date(end)}")   => controller.mvhReport(ForPeriod(start,end))

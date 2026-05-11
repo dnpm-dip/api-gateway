@@ -45,6 +45,7 @@ trait FakeDataGen[T <: PatientRecord]
         Submission.Metadata(
           Submission.Type.Test,
           Id[TransferTAN](ttan),
+          None,
           ModelProjectConsent(
             "Patient Info TE Consent MVGenomSeq vers01",
             Some(consentDate minusDays 1),

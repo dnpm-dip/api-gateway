@@ -23,7 +23,7 @@ import cats.Eval
 class MTBRouter @Inject()(
   override val controller: MTBController
 )
-extends UseCaseRouter[MTBConfig]("mtb")
+extends UseCaseRouter[MTBConfig]
 with FakeDataGen[MTBPatientRecord]
 {
 
