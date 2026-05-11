@@ -176,13 +176,12 @@ with AuthorizationOps[UserPermissions]
       sys.props.getOrElse(HttpConnector.Type.property,"broker") match {
 
         case HttpConnector.Type(typ) =>
-          val baseURI = "/api/USECASE/peer2peer"
           HttpConnector(
             typ,
             {
               case LocalControllingInfo.Request(origin,criteria) =>
                 (
-                  GET, s"$baseURI/local-controlling-info",
+                  GET, s"/api/${useCase.toString.toLowerCase}/peer2peer/local-controlling-info",
                   criteria match {
                     case Some(Controlling.Criteria(period)) =>
                       Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++
@@ -705,7 +704,7 @@ with AuthorizationOps[UserPermissions]
 
   def federatedQuery =
     JsonAction[FederatedQuery[Criteria,PatientRecord]].async { 
-      req =>
+      implicit req =>
         (queryService ! req.body)
           .map {
             case Right(resultSet) => ProjectedJsonResult(resultSet)
