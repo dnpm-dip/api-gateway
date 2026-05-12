@@ -10,7 +10,6 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Hyper,
   HypermediaBase
 }
-import de.dnpm.dip.service.mvh.UseCase
 import de.dnpm.dip.service.query.{
   PatientMatch,
   Query,
@@ -42,11 +41,11 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   import Method.{DELETE,PATCH,POST,PUT}
 
 
-  val useCase: UseCase.Value
+  def useCasePrefix: UseCasePrefix.Value
 
 
   protected val BASE_URI =
-    s"$BASE_URL/${useCase.toString.toLowerCase}"
+    s"$BASE_URL/$useCasePrefix"
 
   private val VALIDATION_BASE_URI =
     s"$BASE_URI/validation"

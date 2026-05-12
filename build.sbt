@@ -5,7 +5,7 @@ import scala.util.Properties.envOrElse
 name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.18"
-ThisBuild / version      := envOrElse("VERSION","1.2.3-SNAPSHOT")
+ThisBuild / version      := envOrElse("VERSION","1.3.0-SNAPSHOT")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/api-gateway").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.8",
   "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.4",
   "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.4",
-  "de.dnpm.dip"            %% "connector-base"              % "1.1.2",
+  "de.dnpm.dip"            %% "connector-base"              % "1.1.3",
   "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.0",
   "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.0",
   "de.dnpm.dip"            %% "orphanet-ordo"               % "1.2.0",
