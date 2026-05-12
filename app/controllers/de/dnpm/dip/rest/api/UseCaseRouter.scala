@@ -95,7 +95,8 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   protected val controller: UseCaseController[UseCase]
 
-  def useCase = controller.useCase
+  def useCasePrefix = s"/${controller.useCase}"
+  
 
   protected val APPLICATION_JSON = "application/json"
 
@@ -111,7 +112,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
     // ETL Routes:
     // ------------------------------------------------------------------------
 
-    case GET(p"/etl/patient-record/schema" ? q_o"version=$version") =>
+    case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
       controller.Action { req =>
         jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>

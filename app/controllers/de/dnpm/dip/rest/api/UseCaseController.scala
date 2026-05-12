@@ -81,8 +81,7 @@ import de.dnpm.dip.service.mvh.{
   MVHService,
   Report,
   Submission,
-  TransferTAN,
-  UseCase
+  TransferTAN
 }
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
@@ -121,7 +120,7 @@ object QueryPatch
 
 
 abstract class UseCaseController[UseCase <: UseCaseConfig](
-  val useCase: UseCase.Value
+  val useCase: String
 )(
   implicit
   ec: ExecutionContext,
@@ -181,7 +180,7 @@ with AuthorizationOps[UserPermissions]
             {
               case LocalControllingInfo.Request(origin,criteria) =>
                 (
-                  GET, s"/api/${useCase.toString.toLowerCase}/peer2peer/local-controlling-info",
+                  GET, s"/api/$useCase/peer2peer/local-controlling-info",
                   criteria match {
                     case Some(Controlling.Criteria(period)) =>
                       Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++
@@ -191,9 +190,8 @@ with AuthorizationOps[UserPermissions]
                 )
             }
           )
-        
-        case _ =>
-          FakeConnector[Future]
+  
+        case _ => FakeConnector[Future]
       }
     )
 

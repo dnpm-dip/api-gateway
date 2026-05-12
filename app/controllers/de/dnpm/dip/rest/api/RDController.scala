@@ -20,7 +20,7 @@ import de.dnpm.dip.util.Completer
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.service.mvh.{
   Report,
-  UseCase
+//  UseCase
 }
 import de.dnpm.dip.coding.Coding 
 import de.dnpm.dip.model.Patient
@@ -54,7 +54,8 @@ class RDController @Inject()(
 )(
   implicit ec: ExecutionContext,
 )
-extends UseCaseController[RDConfig](UseCase.RD)
+extends UseCaseController[RDConfig]("rd")
+//extends UseCaseController[RDConfig](UseCase.RD)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with RDHypermedia
