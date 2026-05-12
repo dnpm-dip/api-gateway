@@ -44,7 +44,6 @@ import de.dnpm.dip.rest.util.{
   Outcome
 }
 import cats.Eval
-import shapeless.Witness
 
 
 abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
@@ -76,13 +75,6 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
   protected val TAN = Extractor(Id[TransferTAN](_))
 
   protected val TANs = Extractor.option(Extractor.csvSet(TAN))
-
-
-  implicit def enumExtractor[E <: Enumeration](
-    implicit w: Witness.Aux[E]
-  ): Extractor[String,E#Value] =
-    s => w.value.values.find(_.toString == s)
-      .orElse(throw new IllegalArgumentException(s"Invalid Enum values '$s', expected one of {${w.value.values.mkString(",")}}"))
 
   protected val Quarter = Extractor.of[Report.Quarter.Value]
 
