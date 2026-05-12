@@ -129,12 +129,17 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case GET(p"/etl/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
 
+    case GET(p"/etl/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
+    case GET(p"/etl/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
 
     // ------------------------------------------------------------------------
     // Controlling Result Routes:
     // ------------------------------------------------------------------------
      
-    case GET(p"/controlling/federated-infos"?q_o"sites=${SiteSetOption(sites)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+    case GET(p"/controlling/local-controlling-info"?q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+      controller.localControllingInfo(Site.local,start,end)
+
+    case GET(p"/controlling/federated-controlling-info"?q_o"sites=${SiteSetOption(sites)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
       controller.federatedControllingInfo(sites,start,end)
 
 
