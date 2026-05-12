@@ -109,7 +109,7 @@ Aside from the different language, this difference of "error report addressee" i
 
 
 ```
-POST /api/{use-case}/etl/patient-record[?deidentify-consent={true|false}]
+POST /api/{use-case}/etl/patient-record
 ```
 
 **Response**
