@@ -120,7 +120,7 @@ object QueryPatch
 
 
 abstract class UseCaseController[UseCase <: UseCaseConfig](
-  val useCase: String
+  val useCasePrefix: UseCasePrefix.Value 
 )(
   implicit
   ec: ExecutionContext,
@@ -180,7 +180,7 @@ with AuthorizationOps[UserPermissions]
             {
               case LocalControllingInfo.Request(origin,criteria) =>
                 (
-                  GET, s"/api/$useCase/peer2peer/local-controlling-info",
+                  GET, s"/api/$useCasePrefix/peer2peer/local-controlling-info",
                   criteria match {
                     case Some(Controlling.Criteria(period)) =>
                       Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++

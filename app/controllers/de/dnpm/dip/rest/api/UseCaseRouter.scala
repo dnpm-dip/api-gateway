@@ -95,7 +95,8 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   protected val controller: UseCaseController[UseCase]
 
-  def useCasePrefix = s"/${controller.useCase}"
+
+  def useCasePrefix = s"/${controller.useCasePrefix}"
   
 
   protected val APPLICATION_JSON = "application/json"

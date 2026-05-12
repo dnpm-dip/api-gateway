@@ -41,11 +41,11 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   import Method.{DELETE,PATCH,POST,PUT}
 
 
-  def useCase: String
+  def useCasePrefix: UseCasePrefix.Value
 
 
   protected val BASE_URI =
-    s"$BASE_URL/$useCase"
+    s"$BASE_URL/$useCasePrefix"
 
   private val VALIDATION_BASE_URI =
     s"$BASE_URI/validation"

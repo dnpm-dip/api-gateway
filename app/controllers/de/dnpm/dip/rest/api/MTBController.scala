@@ -64,7 +64,7 @@ class MTBController @Inject()(
 )(
   implicit ec: ExecutionContext,
 )
-extends UseCaseController[MTBConfig]("mtb")
+extends UseCaseController[MTBConfig](UseCasePrefix.MTB)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with MTBHypermedia
