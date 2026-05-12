@@ -31,8 +31,8 @@ extends SimpleRouter
       Seq(
         adminRouter,
         catalogRouter,
-        mtbRouter withPrefix mtbRouter.useCase.toString.toLowerCase,
-        rdRouter withPrefix rdRouter.useCase.toString.toLowerCase
+        mtbRouter withPrefix mtbRouter.useCasePrefix,
+        rdRouter withPrefix rdRouter.useCasePrefix
       )
       .reduce(_ orElse _)
       .routes

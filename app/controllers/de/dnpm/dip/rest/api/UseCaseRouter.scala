@@ -44,7 +44,6 @@ import de.dnpm.dip.rest.util.{
   Outcome
 }
 import cats.Eval
-import shapeless.Witness
 
 
 abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
@@ -77,13 +76,6 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   protected val TANs = Extractor.option(Extractor.csvSet(TAN))
 
-
-  implicit def enumExtractor[E <: Enumeration](
-    implicit w: Witness.Aux[E]
-  ): Extractor[String,E#Value] =
-    s => w.value.values.find(_.toString == s)
-      .orElse(throw new IllegalArgumentException(s"Invalid Enum values '$s', expected one of {${w.value.values.mkString(",")}}"))
-
   protected val Quarter = Extractor.of[Report.Quarter.Value]
 
   protected val ReportStatusSet = Extractor.option(Extractor.csvSet[Submission.Report.Status.Value])
@@ -95,7 +87,9 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   protected val controller: UseCaseController[UseCase]
 
-  def useCase = controller.useCase
+
+  def useCasePrefix = s"/${controller.useCasePrefix}"
+  
 
   protected val APPLICATION_JSON = "application/json"
 
@@ -111,7 +105,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
     // ETL Routes:
     // ------------------------------------------------------------------------
 
-    case GET(p"/etl/patient-record/schema" ? q_o"version=$version") =>
+    case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
       controller.Action { req =>
         jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
@@ -135,12 +129,17 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case GET(p"/etl/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
 
+    case GET(p"/etl/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
+    case GET(p"/etl/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
 
     // ------------------------------------------------------------------------
     // Controlling Result Routes:
     // ------------------------------------------------------------------------
      
-    case GET(p"/controlling/federated-infos"?q_o"sites=${SiteSetOption(sites)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+    case GET(p"/controlling/local-controlling-info"?q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
+      controller.localControllingInfo(Site.local,start,end)
+
+    case GET(p"/controlling/federated-controlling-info"?q_o"sites=${SiteSetOption(sites)}"&q_o"episode.start=${dateOption(start)}"&q_o"episode.end=${dateOption(end)}") =>
       controller.federatedControllingInfo(sites,start,end)
 
 

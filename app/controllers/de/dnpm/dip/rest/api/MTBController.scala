@@ -33,10 +33,7 @@ import de.dnpm.dip.mtb.model.{
   Completers
 }
 import de.dnpm.dip.service.query.Query
-import de.dnpm.dip.service.mvh.{
-  Report,
-  UseCase
-}
+import de.dnpm.dip.service.mvh.Report
 import de.dnpm.dip.mtb.validation.api.{
   MTBValidationPermissions,
   MTBValidationService
@@ -59,6 +56,7 @@ import de.dnpm.dip.auth.api.{
   UserPermissions,
 }
 
+
 class MTBController @Inject()(
   override val cache: Cache,
   override val cached: Cached,
@@ -66,7 +64,7 @@ class MTBController @Inject()(
 )(
   implicit ec: ExecutionContext,
 )
-extends UseCaseController[MTBConfig](UseCase.MTB)
+extends UseCaseController[MTBConfig](UseCasePrefix.MTB)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
 with MTBHypermedia

@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter.{
   ISO_LOCAL_DATE,
   ISO_LOCAL_DATE_TIME
 }
+import shapeless.Witness
 
 
 abstract class Extractor[S,T]
@@ -50,12 +51,23 @@ object Extractor
   implicit lazy val isoDateTime: Extractor[String,LocalDateTime] =
     Extractor(LocalDateTime.parse(_,ISO_LOCAL_DATE_TIME))
 
+
   implicit def option[T](
     implicit ext: Extractor[String,T]
   ): Extractor[Option[String],Option[T]] =
     Extractor(
       _.map { case ext(t) => t }
     )
+
+  def enumValue[E <: Enumeration](e: E): Extractor[String,E#Value] =
+    s => e.values.find(_.toString == s)
+      .orElse(throw new IllegalArgumentException(s"Invalid Enum values '$s', expected one of {${e.values.mkString(",")}}"))
+
+
+  implicit def enumExtractor[E <: Enumeration](
+    implicit w: Witness.Aux[E]
+  ): Extractor[String,E#Value] =
+    enumValue(w.value)
 
 
   def csv[T](del: String)(
