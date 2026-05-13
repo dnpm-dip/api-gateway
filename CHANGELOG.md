@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/dnpm-dip/api-gateway/compare/v1.2.3...v1.3.0) (2026-05-12)
+
+
+### Features
+
+* context specific delete ([#37](https://github.com/dnpm-dip/api-gateway/issues/37)) ([cce4abe](https://github.com/dnpm-dip/api-gateway/commit/cce4abe0a8d9b3fdcef0fdaf97f61c0bc48ee9f0))
+* project json fields ([#33](https://github.com/dnpm-dip/api-gateway/issues/33)) ([3d22397](https://github.com/dnpm-dip/api-gateway/commit/3d22397bf0a2c6faad2dce34acb7bcd181fbf7e5))
+
+
+### Bug Fixes
+
+* usecase routes prefix ([#38](https://github.com/dnpm-dip/api-gateway/issues/38)) ([414c7f8](https://github.com/dnpm-dip/api-gateway/commit/414c7f84ccdaa7e174a68ad8b1d9d95a93e4ee7b))
+
 ## [1.2.3](https://github.com/dnpm-dip/api-gateway/compare/v1.2.2...v1.2.3) (2025-12-15)
 
 
