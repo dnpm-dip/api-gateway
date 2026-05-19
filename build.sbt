@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.8",
   "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.4",
   "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.4",
-  "de.dnpm.dip"            %% "connector-base"              % "1.2.0-SNAPSHOT",
+  "de.dnpm.dip"            %% "connector-base"              % "1.1.3",
   "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.0",
   "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.0",
   "de.dnpm.dip"            %% "orphanet-ordo"               % "1.2.0",
