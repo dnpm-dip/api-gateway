@@ -42,9 +42,10 @@ import de.dnpm.dip.service.{
   UsageScope
 }
 import de.dnpm.dip.connector.{
-  FakeConnector,
   HttpConnector
 }
+import HttpConnector.QueryParameters
+import HttpConnector.QueryParameters._
 import de.dnpm.dip.connector.HttpMethod._
 import Orchestrator.{
   Process,
@@ -172,26 +173,17 @@ with AuthorizationOps[UserPermissions]
       mvhService,
       queryService
     )(
-      sys.props.getOrElse(HttpConnector.Type.property,"broker") match {
-
-        case HttpConnector.Type(typ) =>
-          HttpConnector(
-            typ,
-            {
-              case LocalControllingInfo.Request(origin,criteria) =>
-                (
-                  GET, s"/api/$useCasePrefix/peer2peer/local-controlling-info",
-                  criteria match {
-                    case Some(Controlling.Criteria(period)) =>
-                      Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++
-                      period.endOption.map(ISO_LOCAL_DATE.format).map(Seq(_)).map("episode.end" -> _)
-                    case _ => Map.empty 
-                  }
-                )
+      HttpConnector {
+        case LocalControllingInfo.Request(origin,criteria) =>
+          (
+            GET, s"/api/$useCasePrefix/peer2peer/local-controlling-info",
+            criteria match {
+              case Some(Controlling.Criteria(period)) =>
+                QueryParameters("episode.start" -> ISO_LOCAL_DATE.format(period.start)) +
+                ("episode.end" -> period.endOption.map(ISO_LOCAL_DATE.format))
+              case _ => Map.empty 
             }
           )
-  
-        case _ => FakeConnector[Future]
       }
     )
 
