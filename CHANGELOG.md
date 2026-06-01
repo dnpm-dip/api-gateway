@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/dnpm-dip/api-gateway/compare/v1.3.0...v1.3.1) (2026-06-01)
+
+
+### Bug Fixes
+
+* updated dependencies and improved connector provision ([#39](https://github.com/dnpm-dip/api-gateway/issues/39)) ([0e04b04](https://github.com/dnpm-dip/api-gateway/commit/0e04b041546c2eda38997963d112319d2ab309f1))
+
 ## [1.3.0](https://github.com/dnpm-dip/api-gateway/compare/v1.2.3...v1.3.0) (2026-05-12)
 
 
