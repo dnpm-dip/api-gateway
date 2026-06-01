@@ -66,6 +66,7 @@ import ValidationService.{
   DataAcceptableWithIssues,
   FatalIssuesDetected,
   UnacceptableIssuesDetected,
+  Validate
 }
 import de.dnpm.dip.service.query.{
   PatientFilter,
@@ -274,7 +275,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        validationService.validate(req.body).map {
+        (validationService ! Validate(req.body,persist = false)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
@@ -413,7 +414,7 @@ with AuthorizationOps[UserPermissions]
   def validationReport(id: Id[Patient]) =
     AuthorizedAction(ReadValidationReport).async {
       req =>
-        (validationService.dataQualityReport(id))
+        (validationService.validationReport(id))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
     }  
