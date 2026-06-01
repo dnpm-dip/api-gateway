@@ -42,9 +42,10 @@ import de.dnpm.dip.service.{
   UsageScope
 }
 import de.dnpm.dip.connector.{
-  FakeConnector,
   HttpConnector
 }
+import HttpConnector.QueryParameters
+import HttpConnector.QueryParameters._
 import de.dnpm.dip.connector.HttpMethod._
 import Orchestrator.{
   Process,
@@ -65,6 +66,7 @@ import ValidationService.{
   DataAcceptableWithIssues,
   FatalIssuesDetected,
   UnacceptableIssuesDetected,
+  Validate
 }
 import de.dnpm.dip.service.query.{
   PatientFilter,
@@ -172,26 +174,17 @@ with AuthorizationOps[UserPermissions]
       mvhService,
       queryService
     )(
-      sys.props.getOrElse(HttpConnector.Type.property,"broker") match {
-
-        case HttpConnector.Type(typ) =>
-          HttpConnector(
-            typ,
-            {
-              case LocalControllingInfo.Request(origin,criteria) =>
-                (
-                  GET, s"/api/$useCasePrefix/peer2peer/local-controlling-info",
-                  criteria match {
-                    case Some(Controlling.Criteria(period)) =>
-                      Map("episode.start" -> Seq(ISO_LOCAL_DATE.format(period.start))) ++
-                      period.endOption.map(ISO_LOCAL_DATE.format).map(Seq(_)).map("episode.end" -> _)
-                    case _ => Map.empty 
-                  }
-                )
+      HttpConnector {
+        case LocalControllingInfo.Request(origin,criteria) =>
+          (
+            GET, s"/api/$useCasePrefix/peer2peer/local-controlling-info",
+            criteria match {
+              case Some(Controlling.Criteria(period)) =>
+                QueryParameters("episode.start" -> ISO_LOCAL_DATE.format(period.start)) +
+                ("episode.end" -> period.endOption.map(ISO_LOCAL_DATE.format))
+              case _ => Map.empty 
             }
           )
-  
-        case _ => FakeConnector[Future]
       }
     )
 
@@ -282,7 +275,7 @@ with AuthorizationOps[UserPermissions]
   def validate =
     Action.async(patientRecordParser){ 
       req =>
-        validationService.validate(req.body).map {
+        (validationService ! Validate(req.body,persist = false)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
           case Right(_)                                  => Ok
           case Left(UnacceptableIssuesDetected(report))  => UnprocessableEntity(Json.toJson(report))
@@ -421,7 +414,7 @@ with AuthorizationOps[UserPermissions]
   def validationReport(id: Id[Patient]) =
     AuthorizedAction(ReadValidationReport).async {
       req =>
-        (validationService.dataQualityReport(id))
+        (validationService.validationReport(id))
           .map(_.map(Hyper(_)))
           .map(JsonResult(_,s"Invalid Patient ID ${id.value}"))
     }  
