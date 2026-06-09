@@ -24,7 +24,7 @@ lazy val root = (project in file("."))
 libraryDependencies ++= Seq(
   caffeine,
   guice,
-  "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.1" % Test,  //TODO: version!
+  "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
   "de.dnpm.dip"            %% "admin-service-api"           % "1.1.2",
