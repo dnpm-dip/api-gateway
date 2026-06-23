@@ -20,7 +20,8 @@ import play.api.mvc.{
   Action,
   AnyContent,
   BaseController,
-  RequestHeader
+  RequestHeader,
+  Result
 }
 import play.api.libs.json.{
   Json,
@@ -109,9 +110,11 @@ import de.dnpm.dip.rest.util._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
 import com.networknt.schema.{
   JsonSchemaFactory,
-//  JSonSchema,
   SpecVersion
 }
+import com.fasterxml.jackson.databind.ObjectMapper
+import scala.jdk.CollectionConverters._
+
 
 final case class QueryPatch[Criteria]
 (
@@ -296,17 +299,30 @@ with AuthorizationOps[UserPermissions]
   // Data Operations
   // --------------------------------------------------------------------------  
 
-//  protected val patientRecordParser =
-//    JsonBody[DataUpload[PatientRecord]]
+  protected val dataUploadSchemaValidator: String => Either[Result,List[String]] = {
 
-  protected lazy val patientRecordParser =
-    SchemaValidatedJsonBody[DataUpload[PatientRecord]](
+    val objectMapper = new ObjectMapper
+
+    lazy val schema =
       JsonSchemaFactory
         .getInstance(SpecVersion.VersionFlag.V202012)
         .getSchema(
           formattedJsonSchemata("draft-12").value
         )
-    )
+
+    jsonString => 
+      // Ensure parsing errors from malformed JSON are reported as 400 BadRequest
+      Either.catchNonFatal(objectMapper.readTree(jsonString))
+        .bimap(
+          t => BadRequest(Json.toJson(Outcome(t.getMessage))),
+          s => schema.validate(s).asScala.map(_.getMessage).toList
+        )
+
+  }
+
+  protected val patientRecordParser =
+    SchemaValidatedJsonBody[DataUpload[PatientRecord]](dataUploadSchemaValidator)
+
 
   def validate =
     Action.async(patientRecordParser){ 

@@ -26,9 +26,6 @@ import play.api.mvc.{
   RequestHeader,
   Result
 }
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.networknt.schema.JsonSchema
-import scala.jdk.CollectionConverters._
 
 
 trait JsonOps
@@ -52,10 +49,8 @@ trait JsonOps
        )
 
 
-  private val objectMapper = new ObjectMapper
-
   def SchemaValidatedJsonBody[T: Reads](
-    schema: JsonSchema
+    schemaValidator: String => Either[Result,List[String]]
   )(
     implicit ec: ExecutionContext
   ): BodyParser[T] =
@@ -70,28 +65,20 @@ trait JsonOps
       )
       .validate {
         jsonString =>
-
-          // Ensure parsing errors from malformed JSON are reported as 400 BadRequest
-          Either.catchNonFatal(objectMapper.readTree(jsonString))
-            .leftMap(t => BadRequest(Json.toJson(Outcome(t.getMessage))))
-            .flatMap {
-              json =>
-
-                val validationErrors = schema.validate(json).asScala.toList
+          schemaValidator(jsonString).flatMap {
+            errs => NonEmptyList.fromList(errs) match {
                 
-                NonEmptyList.fromList(validationErrors) match {
-                
-                  case Some(errors) =>
-                    BadRequest(Json.toJson(Outcome(errors.map(_.getMessage)))).asLeft
-                
-                  case None  =>
-                    Json.parse(jsonString).validate[T]
-                      .asEither
-                      .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
-                }
+              case Some(errors) =>
+                BadRequest(Json.toJson(Outcome(errors))).asLeft
+              
+              case None  =>
+                Json.parse(jsonString).validate[T]
+                  .asEither
+                  .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
             }
+          }
       }
-  
+
 
   def JsonBodyOpt[T: Reads](
     implicit ec: ExecutionContext
