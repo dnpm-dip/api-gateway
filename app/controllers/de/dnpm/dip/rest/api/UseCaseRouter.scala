@@ -78,12 +78,6 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   def useCasePrefix = s"/${controller.useCasePrefix}"
   
-/*
-  protected val APPLICATION_JSON = "application/json"
-
-  protected val jsonSchemas: Map[String,Eval[JsObject]]
-*/
-
   final val baseRoutes: Routes = {
 
     case GET(p"/sites") => controller.sites
@@ -95,19 +89,6 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
       controller.jsonSchema(version)
-/*      
-      controller.Action { req =>
-        jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
-          case Some(sch) =>
-            Ok(Json.prettyPrint(sch.value)).as(APPLICATION_JSON)
-
-          case None =>
-            NotFound(
-              Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${jsonSchemas.keys.mkString(",")}}"))
-            )
-        }
-      }
-*/
 
     case POST(p"/etl/patient-record:validate") => controller.validate
 
