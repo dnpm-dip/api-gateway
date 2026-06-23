@@ -5,6 +5,7 @@ package de.dnpm.dip.rest.api
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 import scala.util.Success
+import cats.Eval
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -16,6 +17,9 @@ import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
+import json.Schema
+import json.schema.Version._
+import com.github.andyglow.jsonschema.AsPlay._
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
 import de.dnpm.dip.coding.{
@@ -32,6 +36,7 @@ import de.dnpm.dip.mtb.model.{
   MTBPatientRecord,
   Completers
 }
+import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.service.mvh.Report
 import de.dnpm.dip.mtb.validation.api.{
@@ -109,6 +114,22 @@ with MTBHypermedia
   override val ReadInvalidPatientRecord =
     MTBValidationPermissions.ReadInvalidPatientRecord
 
+
+  override val formattedJsonSchemata = {
+
+    import DataUpload.Schemas._
+    import de.dnpm.dip.mtb.model.json.Schemas._
+
+    Map(
+      "draft-12" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft12("http://dnpm-dip/schema/mtb-submission"))),
+      "draft-09" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft09("http://dnpm-dip/schema/mtb-submission"))),
+      "draft-07" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft07("http://dnpm-dip/schema/mtb-submission"))),
+      "draft-04" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft04()))
+    )
+    .map {
+      case (version,value) => version -> value.map(Json.prettyPrint)
+    }
+  }
 
   import CodingExtractors._
 

@@ -9,14 +9,6 @@ import java.time.{
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
-import play.api.mvc.Results.{
-  NotFound,
-  Ok
-}
-import play.api.libs.json.{
-  Json,
-  JsObject
-}
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
   Id,
@@ -39,11 +31,7 @@ import de.dnpm.dip.service.query.{
   PreparedQuery,
   UseCaseConfig
 }
-import de.dnpm.dip.rest.util.{
-  Extractor,
-  Outcome
-}
-import cats.Eval
+import de.dnpm.dip.rest.util.Extractor
 
 
 abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
@@ -90,11 +78,11 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
   def useCasePrefix = s"/${controller.useCasePrefix}"
   
-
+/*
   protected val APPLICATION_JSON = "application/json"
 
   protected val jsonSchemas: Map[String,Eval[JsObject]]
-
+*/
 
   final val baseRoutes: Routes = {
 
@@ -106,6 +94,8 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
     // ------------------------------------------------------------------------
 
     case GET(p"/etl/patient-record/schema"?q_o"version=$version") =>
+      controller.jsonSchema(version)
+/*      
       controller.Action { req =>
         jsonSchemas.get(version.getOrElse("draft-12").toLowerCase) match {
           case Some(sch) =>
@@ -117,6 +107,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
             )
         }
       }
+*/
 
     case POST(p"/etl/patient-record:validate") => controller.validate
 

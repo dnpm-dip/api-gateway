@@ -5,7 +5,6 @@ import scala.concurrent.{
   Future,
   ExecutionContext
 }
-import scala.util.Either
 import cats.data.{
   Ior,
   IorNel,
@@ -27,6 +26,9 @@ import play.api.mvc.{
   RequestHeader,
   Result
 }
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.networknt.schema.JsonSchema
+import scala.jdk.CollectionConverters._
 
 
 trait JsonOps
@@ -46,8 +48,38 @@ trait JsonOps
          .leftMap(
            errs => BadRequest(Json.toJson(Outcome(errs))),
          )
+    
        )
 
+
+  private val objectMapper = new ObjectMapper
+
+  def SchemaValidatedJsonBody[T: Reads](
+    schema: JsonSchema
+  )(
+    implicit ec: ExecutionContext
+  ): BodyParser[T] =
+    // Tolerant text used deliberately here, because the expected payload type is JSON,
+    // but the request shopuld be accepted irrespective of the specified Content-type header
+    parse.byteString
+      .map(_.decodeString("UTF-8"))
+      .validate {
+        json =>
+
+          val validationErrors = schema.validate(objectMapper.readTree(json)).asScala.toList
+
+          NonEmptyList.fromList(validationErrors) match {
+
+            case Some(errors) =>
+              BadRequest(Json.toJson(Outcome(errors.map(_.getMessage)))).asLeft
+
+            case None  =>
+              Json.parse(json).validate[T]
+                .asEither
+                .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
+          }
+      }
+  
 
   def JsonBodyOpt[T: Reads](
     implicit ec: ExecutionContext

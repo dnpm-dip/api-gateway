@@ -32,7 +32,10 @@ import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
-import cats.Monad
+import cats.{
+  Eval,
+  Monad
+}
 import cats.data.NonEmptyList
 import cats.syntax.either._
 import de.dnpm.dip.util.Completer
@@ -104,7 +107,11 @@ import de.dnpm.dip.auth.api.{
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
-
+import com.networknt.schema.{
+  JsonSchemaFactory,
+//  JSonSchema,
+  SpecVersion
+}
 
 final case class QueryPatch[Criteria]
 (
@@ -153,6 +160,14 @@ with AuthorizationOps[UserPermissions]
   protected val cached: Cached
   protected val cachingDuration: Duration = 15 minutes
   protected val CACHE_CONTROL_SETTINGS = "no-store"
+
+
+  /**
+   * Map of JSON schemata by schema spec version
+   *
+   * Eval used as value type to allow lazily populating the Map with Eval.later(...)
+   */
+  protected val formattedJsonSchemata: Map[String,Eval[String]]
 
 
   protected implicit val completer: Completer[PatientRecord]
@@ -263,14 +278,35 @@ with AuthorizationOps[UserPermissions]
         .map(Ok(_))
     }
 
+  def jsonSchema(version: Option[String]) =
+    Action {
+      formattedJsonSchemata.get(version.getOrElse("draft-12").toLowerCase) match {
+        case Some(sch) =>
+          Ok(sch.value).as("application/json")
+
+        case None =>
+          NotFound(
+            Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${formattedJsonSchemata.keys.mkString(",")}}"))
+          )
+      }
+    }
+
 
   // --------------------------------------------------------------------------  
   // Data Operations
   // --------------------------------------------------------------------------  
 
-  protected val patientRecordParser =
-    JsonBody[DataUpload[PatientRecord]]
+//  protected val patientRecordParser =
+//    JsonBody[DataUpload[PatientRecord]]
 
+  protected lazy val patientRecordParser =
+    SchemaValidatedJsonBody[DataUpload[PatientRecord]](
+      JsonSchemaFactory
+        .getInstance(SpecVersion.VersionFlag.V202012)
+        .getSchema(
+          formattedJsonSchemata("draft-12").value
+        )
+    )
 
   def validate =
     Action.async(patientRecordParser){ 

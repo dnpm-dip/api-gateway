@@ -21,11 +21,23 @@ lazy val root = (project in file("."))
   )
 
 
+val jacksonVersion = "2.18.3" 
+
+
 libraryDependencies ++= Seq(
   caffeine,
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
+
+  // Pinned jacksonVersion because otherwise there's a version conflict
+  // between  the one depended on by Play itself and com.networknt.json-schema-validator
+  "com.fasterxml.jackson.core"   % "jackson-core"          % jacksonVersion,
+  "com.fasterxml.jackson.core"   % "jackson-databind"      % jacksonVersion,
+  "com.fasterxml.jackson.core"   % "jackson-annotations"   % jacksonVersion,
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+
+  "com.networknt"          %  "json-schema-validator"       % "1.5.9",
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
   "de.dnpm.dip"            %% "admin-service-api"           % "1.1.2",
   "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.2",
