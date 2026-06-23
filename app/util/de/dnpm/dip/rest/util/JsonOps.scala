@@ -59,25 +59,37 @@ trait JsonOps
   )(
     implicit ec: ExecutionContext
   ): BodyParser[T] =
-    // Tolerant text used deliberately here, because the expected payload type is JSON,
-    // but the request shopuld be accepted irrespective of the specified Content-type header
+    // ByteString parser used deliberately here, because the expected payload type is JSON,
+    // but the request should be accepted irrespective of the specified Content-type and charset
     parse.byteString
-      .map(_.decodeString("UTF-8"))
+      .validate(
+        bs =>
+          // JSON string should be UTF-8 encoded, so ensure this
+          Either.catchNonFatal(bs.decodeString("UTF-8"))
+            .leftMap(t => BadRequest(Json.toJson(Outcome(t.getMessage))))
+      )
       .validate {
-        json =>
+        jsonString =>
 
-          val validationErrors = schema.validate(objectMapper.readTree(json)).asScala.toList
+          // Ensure parsing errors from malformed JSON are reported as 400 BadRequest
+          Either.catchNonFatal(objectMapper.readTree(jsonString))
+            .leftMap(t => BadRequest(Json.toJson(Outcome(t.getMessage))))
+            .flatMap {
+              json =>
 
-          NonEmptyList.fromList(validationErrors) match {
-
-            case Some(errors) =>
-              BadRequest(Json.toJson(Outcome(errors.map(_.getMessage)))).asLeft
-
-            case None  =>
-              Json.parse(json).validate[T]
-                .asEither
-                .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
-          }
+                val validationErrors = schema.validate(json).asScala.toList
+                
+                NonEmptyList.fromList(validationErrors) match {
+                
+                  case Some(errors) =>
+                    BadRequest(Json.toJson(Outcome(errors.map(_.getMessage)))).asLeft
+                
+                  case None  =>
+                    Json.parse(jsonString).validate[T]
+                      .asEither
+                      .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
+                }
+            }
       }
   
 
