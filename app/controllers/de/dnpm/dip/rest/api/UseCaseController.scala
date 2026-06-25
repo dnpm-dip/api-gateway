@@ -21,7 +21,6 @@ import play.api.mvc.{
   AnyContent,
   BaseController,
   RequestHeader,
-  Result
 }
 import play.api.libs.json.{
   Json,
@@ -108,13 +107,6 @@ import de.dnpm.dip.auth.api.{
 }
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
-import com.networknt.schema.{
-  JsonSchemaFactory,
-  SpecVersion
-}
-import com.fasterxml.jackson.databind.ObjectMapper
-import scala.jdk.CollectionConverters._
-
 
 final case class QueryPatch[Criteria]
 (
@@ -147,6 +139,7 @@ with AuthorizationOps[UserPermissions]
   this: 
     QueryAuthorizations[UserPermissions]
     with ValidationAuthorizations[UserPermissions]
+    with JsonSchemata[DataUpload[UseCase#PatientRecord]]
     with UseCaseHypermedia[UseCase] =>
 
 
@@ -170,7 +163,7 @@ with AuthorizationOps[UserPermissions]
    *
    * Eval used as value type to allow lazily populating the Map with Eval.later(...)
    */
-  protected val formattedJsonSchemata: Map[String,Eval[String]]
+  protected val formattedSchemata: Map[String,Eval[String]]
 
 
   protected implicit val completer: Completer[PatientRecord]
@@ -283,13 +276,13 @@ with AuthorizationOps[UserPermissions]
 
   def jsonSchema(version: Option[String]) =
     Action {
-      formattedJsonSchemata.get(version.getOrElse("draft-12").toLowerCase) match {
+      formattedSchemata.get(version.getOrElse("draft-12").toLowerCase) match {
         case Some(sch) =>
           Ok(sch.value).as("application/json")
 
         case None =>
           NotFound(
-            Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${formattedJsonSchemata.keys.mkString(",")}}"))
+            Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${formattedSchemata.keys.mkString(",")}}"))
           )
       }
     }
@@ -299,29 +292,8 @@ with AuthorizationOps[UserPermissions]
   // Data Operations
   // --------------------------------------------------------------------------  
 
-  protected val dataUploadSchemaValidator: String => Either[Result,List[String]] = {
-
-    val objectMapper = new ObjectMapper
-
-    lazy val schema =
-      JsonSchemaFactory
-        .getInstance(SpecVersion.VersionFlag.V202012)
-        .getSchema(
-          formattedJsonSchemata("draft-12").value
-        )
-
-    jsonString => 
-      // Ensure parsing errors from malformed JSON are reported as 400 BadRequest
-      Either.catchNonFatal(objectMapper.readTree(jsonString))
-        .bimap(
-          t => BadRequest(Json.toJson(Outcome(t.getMessage))),
-          s => schema.validate(s).asScala.map(_.getMessage).toList
-        )
-
-  }
-
   protected val patientRecordParser =
-    SchemaValidatedJsonBody[DataUpload[PatientRecord]](dataUploadSchemaValidator)
+    SchemaValidatedJsonBody[DataUpload[PatientRecord]](schemaValidator)
 
 
   def validate =
@@ -387,38 +359,6 @@ with AuthorizationOps[UserPermissions]
                 .leftMap(Outcome(_))
                 .fold(Json.toJson(_),Json.toJson(_))
             )
-            
-/*            
-            val result =
-              errs.foldLeft(Option.empty[(Int,Either[NonEmptyList[String],ValidationReport])]){
-                (acc,err) => err match {
-                  case Left(FatalIssuesDetected(report))         => Some(BAD_REQUEST -> report.asRight)
-              
-                  case Left(UnacceptableIssuesDetected(report))  => Some(UNPROCESSABLE_ENTITY -> report.asRight)
-              
-                  case Left(ValidationService.GenericError(msg)) => Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft)
-              
-                  case Right(Left(MVHService.InvalidTAN(msg)))   => Some(BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
-              
-                  case Right(Left(MVHService.GenericError(msg))) =>
-                    acc.collect {
-                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
-                    }
-                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
-              
-                  case Right(Right(QueryService.GenericError(msg))) =>
-                    acc.collect {
-                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
-                    }
-                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
-                }
-              }
-
-            result match {
-              case Some(sc -> result) => Status(sc)(result.leftMap(Outcome(_)).fold(Json.toJson(_),Json.toJson(_)))
-              case None => Ok
-            }
-*/            
         }
     }
 

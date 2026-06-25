@@ -4,7 +4,7 @@ package de.dnpm.dip.rest.api
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
-import cats.Eval
+//import cats.Eval
 import play.api.mvc.{
   Action,
   AnyContent,
@@ -16,12 +16,12 @@ import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
-import json.Schema
-import json.schema.Version._
-import com.github.andyglow.jsonschema.AsPlay._
+//import json.Schema
+//import json.schema.Version._
+//import com.github.andyglow.jsonschema.AsPlay._
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.util.Completer
-import de.dnpm.dip.service.DataUpload
+//import de.dnpm.dip.service.DataUpload
 import de.dnpm.dip.service.query.Query
 import de.dnpm.dip.service.mvh.Report
 import de.dnpm.dip.coding.Coding 
@@ -59,6 +59,7 @@ class RDController @Inject()(
 extends UseCaseController[RDConfig](UseCasePrefix.RD)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
+with RDJsonSchemata
 with RDHypermedia
 {
 
@@ -102,7 +103,7 @@ with RDHypermedia
   override val ReadInvalidPatientRecord =
     RDValidationPermissions.ReadInvalidPatientRecord
 
-
+/*
   override val formattedJsonSchemata = {
 
     import DataUpload.Schemas._
@@ -118,7 +119,7 @@ with RDHypermedia
       case (version,value) => version -> value.map(Json.prettyPrint)
     }
   }
-
+*/
 
   import CodingExtractors._
 
