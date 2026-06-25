@@ -40,6 +40,8 @@ trait JsonSchemata[T]
       JsonSchemaFactory
         .getInstance(SpecVersion.VersionFlag.V202012)
         .getSchema(
+          // Hardcoded "draft-12" acceptable, because it is ensured to be available in MTB and RD implementations,
+          // and will hardly ever change
           formattedSchemata("draft-12").value
         )
 
