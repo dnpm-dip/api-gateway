@@ -32,10 +32,7 @@ import play.api.cache.{
   Cached,
   AsyncCacheApi => Cache
 }
-import cats.{
-  Eval,
-  Monad
-}
+import cats.Monad
 import cats.data.NonEmptyList
 import cats.syntax.either._
 import de.dnpm.dip.util.Completer
@@ -44,9 +41,7 @@ import de.dnpm.dip.service.{
   Orchestrator,
   UsageScope
 }
-import de.dnpm.dip.connector.{
-  HttpConnector
-}
+import de.dnpm.dip.connector.HttpConnector
 import HttpConnector.QueryParameters
 import HttpConnector.QueryParameters._
 import de.dnpm.dip.connector.HttpMethod._
@@ -156,14 +151,6 @@ with AuthorizationOps[UserPermissions]
   protected val cached: Cached
   protected val cachingDuration: Duration = 15 minutes
   protected val CACHE_CONTROL_SETTINGS = "no-store"
-
-
-  /**
-   * Map of JSON schemata by schema spec version
-   *
-   * Eval used as value type to allow lazily populating the Map with Eval.later(...)
-   */
-  protected val formattedSchemata: Map[String,Eval[String]]
 
 
   protected implicit val completer: Completer[PatientRecord]
