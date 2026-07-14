@@ -5,7 +5,6 @@ import scala.concurrent.{
   Future,
   ExecutionContext
 }
-import scala.util.Either
 import cats.data.{
   Ior,
   IorNel,
@@ -20,26 +19,26 @@ import play.api.libs.json.{
   Writes
 }
 import play.api.mvc.{
-  BaseController,
+  BaseControllerHelpers,
   ActionBuilder,
   BodyParser,
+  PlayBodyParsers,
   Request,
   RequestHeader,
   Result
 }
+import play.api.mvc.Results.BadRequest
 
 
-trait JsonOps
+trait CustomBodyParsers
 {
 
-  self: BaseController =>
-
+  def parse: PlayBodyParsers
 
   def JsonBody[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[T] =
-    parse
-      .tolerantJson
+    parse.tolerantJson
       .validate(
         _.validate[T]
          .asEither
@@ -48,12 +47,10 @@ trait JsonOps
          )
        )
 
-
   def JsonBodyOpt[T: Reads](
     implicit ec: ExecutionContext
   ): BodyParser[Option[T]] =
-    parse
-      .tolerantJson
+    parse.tolerantJson
       .validate(
         _.validateOpt[T]
          .asEither
@@ -61,6 +58,51 @@ trait JsonOps
            errs => BadRequest(Json.toJson(Outcome(errs))),
          )
        )
+
+  /**
+   * Utility method to build a BodyParser[T] that performs validation based on the injected function
+   * before proceeding with JSON-to-DTO deserialization.
+   *
+   * @param schemaValidator: Function to validate a JSON string:
+   * Returns a Result in case of failure to even process the JSON (malformed, etc) else a potentially empty list of validation errors
+   */
+  def SchemaValidatedJsonBody[T: Reads](
+    schemaValidator: String => Either[Result,List[String]]
+  )(
+    implicit ec: ExecutionContext
+  ): BodyParser[T] =
+    // ByteString parser used deliberately here, because the expected payload type is JSON,
+    // but the request should be accepted irrespective of the specified Content-type and charset
+    parse.byteString
+      .validate(
+        bs =>
+          // JSON string should be UTF-8 encoded, so ensure this
+          Either.catchNonFatal(bs.decodeString("UTF-8"))
+            .leftMap(t => BadRequest(Json.toJson(Outcome("Malformed body: JSON content is expected to be decodable as UTF-8"))))
+      )
+      .validate {
+        jsonString =>
+          schemaValidator(jsonString).flatMap {
+            errs => NonEmptyList.fromList(errs) match {
+                
+              case Some(errors) =>
+                BadRequest(Json.toJson(Outcome(errors))).asLeft
+              
+              case None  =>
+                Json.parse(jsonString).validate[T]
+                  .asEither
+                  .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))
+            }
+          }
+      }
+
+}
+
+
+trait JsonOps extends CustomBodyParsers
+{
+
+  self: BaseControllerHelpers =>
 
 
   def JsonAction[T: Reads](
@@ -87,11 +129,9 @@ trait JsonOps
   ): ActionBuilder[Request,Option[T]] =
     new ActionBuilder[Request,Option[T]]{
 
-      override val executionContext =
-        ec
+      override val executionContext = ec
 
-      override val parser =
-        JsonBodyOpt[T]
+      override val parser = JsonBodyOpt[T]
 
       override def invokeBlock[A](
         request: Request[A],

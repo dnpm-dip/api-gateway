@@ -5,7 +5,7 @@ import scala.util.Properties.envOrElse
 name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.18"
-ThisBuild / version      := envOrElse("VERSION","1.3.0-SNAPSHOT")
+ThisBuild / version      := envOrElse("VERSION","1.4.0-SNAPSHOT")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/api-gateway").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
@@ -21,11 +21,25 @@ lazy val root = (project in file("."))
   )
 
 
+val jacksonVersion = "2.18.8" 
+
+
 libraryDependencies ++= Seq(
   caffeine,
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
+
+  // Pinned jacksonVersion because otherwise there's a version conflict
+  // between the one depended on by Play itself and com.networknt.json-schema-validator
+  // Also resolves vulnerability warnings due to transitive dependency
+  // on outdated jackson modules via scala-jsonschema-play-json -> play-json 2.9.2)
+  "com.fasterxml.jackson.core"   % "jackson-core"          % jacksonVersion,
+  "com.fasterxml.jackson.core"   % "jackson-databind"      % jacksonVersion,
+  "com.fasterxml.jackson.core"   % "jackson-annotations"   % jacksonVersion,
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+
+  "com.networknt"          %  "json-schema-validator"       % "1.5.9",
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
   "de.dnpm.dip"            %% "admin-service-api"           % "1.1.2",
   "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.2",
