@@ -8,8 +8,7 @@ import scala.concurrent.{
 import scala.util.Either
 import cats.data.{
   Ior,
-  IorNel,
-  NonEmptyList
+  IorNel
 }
 import cats.syntax.either._
 import play.api.libs.json.{
@@ -114,21 +113,18 @@ trait JsonOps
     }
 
 
-  def JsonResult[T: Writes](
-    xor: Either[NonEmptyList[String],T],
-    err: JsValue => Result
+  def JsonResult[E,T: Writes](
+    xor: Either[E,T]
+  )(
+    outcome: E => (Int,Outcome)
   ): Result =
-    xor.leftMap(
-      Outcome(_)
-    )
-    .bimap(
-      Json.toJson(_),
-      Json.toJson(_)
-    )
-    .fold(
-      err(_),
-      Ok(_)
-    )
+    xor match {
+      case Right(t) => Ok(Json.toJson(t))
+
+      case Left(err) =>
+        val (code,out) = outcome(err)
+        Status(code)(Json.toJson(out))      
+    }
 
 
   def JsonResult[T: Writes](
@@ -136,8 +132,9 @@ trait JsonOps
     err: => String = "Resource Not Found"
   ): Result =
     JsonResult(
-      opt.toRight(err).toEitherNel,
-      NotFound(_)
+      opt.toRight(err).toEitherNel
+    )(
+      NOT_FOUND -> Outcome(_) 
     )
 
 
