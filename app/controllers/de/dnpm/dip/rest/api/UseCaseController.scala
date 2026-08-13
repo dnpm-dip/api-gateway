@@ -432,13 +432,12 @@ with AuthorizationOps[UserPermissions]
   // PreparedQuery Operations
   // --------------------------------------------------------------------------  
 
-  private val queryErrorOutcome: Query.Error => (Int,Outcome) = {
+  protected val queryErrorOutcome: Query.Error => (Int,Outcome) = {
     case Query.NoResults                => NOT_FOUND             -> Outcome("Query returned no results")
     case Query.InvalidId                => BAD_REQUEST           -> Outcome("Invalid Query ID")
     case Query.InvalidCriteria(errors)  => BAD_REQUEST           -> Outcome(errors)
     case Query.ConnectionErrors(errors) => BAD_GATEWAY           -> Outcome(errors)
     case Query.GenericError(msg)        => INTERNAL_SERVER_ERROR -> Outcome(msg)
-    case err                            => INTERNAL_SERVER_ERROR -> Outcome(err.toString)
   }
 
 
@@ -491,25 +490,6 @@ with AuthorizationOps[UserPermissions]
   // --------------------------------------------------------------------------  
   // Query Operations
   // --------------------------------------------------------------------------  
-/*
-  def submit =
-    AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
-      implicit req =>
-        (queryService ! req.body)
-          .map {
-            case Right(query) =>
-              Ok(Json.toJson(Hyper(query)))
-           
-            case Left(err) =>
-              err match {
-                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
-                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
-                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
-                case Query.InvalidId              => InternalServerError(Json.toJson(Outcome("Unexpected Query error")))
-              }
-          }
-    }
-*/
 
   def submit =
     AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
@@ -538,28 +518,6 @@ with AuthorizationOps[UserPermissions]
             case Success(res) if res.header.status == OK => clearCachedResults(id)
           }
     }
-/*
-  def update(id: Query.Id) =
-    AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async { 
-      implicit req =>
-        (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
-          .map {
-            case Right(query) =>
-              Ok(Json.toJson(Hyper(query)))
-            
-            case Left(err) =>
-              err match {
-                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
-                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
-                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
-                case Query.InvalidId              => NotFound(Json.toJson(Outcome(s"Invalid Query ID ${id.value}")))
-              }
-          }
-          .andThen { 
-            case Success(res) if res.header.status == OK => clearCachedResults(id)
-          }
-    }
-*/
 
   def delete(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async {
