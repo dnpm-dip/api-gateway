@@ -65,10 +65,10 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
   protected val PatId = Extractor(Id[Patient](_))
 
   protected val date = Extractor.of[LocalDate]
-
   protected val dateOption = Extractor.option[LocalDate]
 
-  protected val dateTime = Extractor.option[LocalDateTime]
+  protected val dateTime = Extractor.of[LocalDateTime]
+  protected val dateTimeOption = Extractor.option[LocalDateTime]
 
   protected val year = Extractor.option[Year]
 
@@ -124,13 +124,13 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case DELETE(p"/etl/patient/${PatId(patId)}"?q_o"scope=${ScopeSet(scopes)}") => controller.deleteData(patId,scopes)
 
-    case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
+    case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTimeOption(start)}"&q_o"created-before=${dateTimeOption(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
       controller.mvhSubmissionReports(start,end,status,typ)
 
     case GET(p"/etl/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
 
     case GET(p"/etl/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
-    case GET(p"/etl/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
+    case GET(p"/etl/mvh/submissions"?q_o"after=${dateTimeOption(start)}"&q_o"before=${dateTimeOption(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
 
     // ------------------------------------------------------------------------
     // Controlling Result Routes:
@@ -170,7 +170,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
     // MVH Endpoints  
     // ------------------------------------------------------------------------
 
-    case GET(p"/peer2peer/mvh/submission-reports"?q_o"created-after=${dateTime(start)}"&q_o"created-before=${dateTime(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
+    case GET(p"/peer2peer/mvh/submission-reports"?q_o"created-after=${dateTimeOption(start)}"&q_o"created-before=${dateTimeOption(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
       controller.mvhSubmissionReports(start,end,status,typ)
 
     case GET(p"/peer2peer/mvh/submission-reports/${TAN(id)}") => controller.mvhSubmissionReport(id)
@@ -179,7 +179,9 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case GET(p"/peer2peer/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
 
-    case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTime(start)}"&q_o"before=${dateTime(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
+    case GET(p"/peer2peer/mvh/submissions"?q_o"after=${dateTimeOption(start)}"&q_o"before=${dateTimeOption(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
+
+    case GET(p"/peer2peer/mvh/deletion-events"?q_o"after=${dateTimeOption(start)}"&q_o"before=${dateTimeOption(end)}") => controller.deletionEvents(start,end)
 
     case GET(p"/peer2peer/mvh/report"?q"quarter=${Quarter(q)}"&q_o"year=${year(y)}") => controller.mvhReport(ForQuarter(q,y))
     case GET(p"/peer2peer/mvh/report"?q"start=${date(start)}"&q"end=${date(end)}")   => controller.mvhReport(ForPeriod(start,end))

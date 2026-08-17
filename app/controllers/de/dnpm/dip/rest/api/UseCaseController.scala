@@ -3,7 +3,8 @@ package de.dnpm.dip.rest.api
 
 import java.time.{
   LocalDate,
-  LocalDateTime
+  LocalDateTime,
+  LocalTime
 }
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import scala.util.{
@@ -431,13 +432,22 @@ with AuthorizationOps[UserPermissions]
   // PreparedQuery Operations
   // --------------------------------------------------------------------------  
 
+  protected val queryErrorOutcome: Query.Error => (Int,Outcome) = {
+    case Query.NoResults                => NOT_FOUND             -> Outcome("Query returned no results")
+    case Query.InvalidId                => BAD_REQUEST           -> Outcome("Invalid Query ID")
+    case Query.InvalidCriteria(errors)  => BAD_REQUEST           -> Outcome(errors)
+    case Query.ConnectionErrors(errors) => BAD_GATEWAY           -> Outcome(errors)
+    case Query.GenericError(msg)        => INTERNAL_SERVER_ERROR -> Outcome(msg)
+  }
+
+
   def createPreparedQuery =
     AuthorizedAction(JsonBody[PreparedQuery.Create[Criteria]])(SubmitQuery)
       .async { 
         implicit req =>
           (queryService ! req.body)
             .map(_.map(Hyper(_)))
-            .map(JsonResult(_,InternalServerError(_)))
+            .map(JsonResult(_)(queryErrorOutcome))
       }
 
   def getPreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
@@ -465,17 +475,15 @@ with AuthorizationOps[UserPermissions]
         implicit req =>
           (queryService ! PreparedQuery.Update(id,req.body.name,req.body.criteria))
             .map(_.map(Hyper(_)))
-            .map(JsonResult(_,InternalServerError(_)))
+            .map(JsonResult(_)(queryErrorOutcome))
       }
       
   def deletePreparedQuery(id: PreparedQuery.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOfPreparedQuery(id))
       .async { 
         implicit req =>
-        (queryService ! PreparedQuery.Delete(id))
-         .map(
-           JsonResult(_,_ => BadRequest(s"Invalid PreparedQuery ID ${id.value}"))
-         )
+          (queryService ! PreparedQuery.Delete(id))
+            .map(JsonResult(_)(queryErrorOutcome))
       }
 
 
@@ -487,18 +495,8 @@ with AuthorizationOps[UserPermissions]
     AuthorizedAction(JsonBody[Query.Submit[Criteria]])(SubmitQuery).async { 
       implicit req =>
         (queryService ! req.body)
-          .map {
-            case Right(query) =>
-              Ok(Json.toJson(Hyper(query)))
-           
-            case Left(err) =>
-              err match {
-                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
-                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
-                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
-                case Query.InvalidId              => InternalServerError(Json.toJson(Outcome("Unexpected Query error")))
-              }
-          }
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_)(queryErrorOutcome))
     }
 
 
@@ -510,28 +508,16 @@ with AuthorizationOps[UserPermissions]
           .map(JsonResult(_,s"Invalid Query ID ${id.value}"))
     }
 
-
   def update(id: Query.Id) =
     AuthorizedAction(JsonBody[QueryPatch[Criteria]])(OwnershipOf(id)).async { 
       implicit req =>
         (queryService ! Query.Update(id,req.body.mode,req.body.sites,req.body.criteria))
-          .map {
-            case Right(query) =>
-              Ok(Json.toJson(Hyper(query)))
-            
-            case Left(err) =>
-              err match {
-                case Query.ConnectionErrors(errs) => BadGateway(Json.toJson(Outcome(errs)))
-                case Query.NoResults              => NotFound(Json.toJson(Outcome("Query returned no results")))
-                case Query.GenericError(msg)      => InternalServerError(Json.toJson(Outcome(msg)))
-                case Query.InvalidId              => NotFound(Json.toJson(Outcome(s"Invalid Query ID ${id.value}")))
-              }
-          }
+          .map(_.map(Hyper(_)))
+          .map(JsonResult(_)(queryErrorOutcome))
           .andThen { 
             case Success(res) if res.header.status == OK => clearCachedResults(id)
           }
     }
-
 
   def delete(id: Query.Id): Action[AnyContent] =
     AuthorizedAction(OwnershipOf(id)).async {
@@ -689,9 +675,8 @@ with AuthorizationOps[UserPermissions]
         start.map(Period(_,end)).map(Controlling.Criteria),
         sites
       )
-      .map(JsonResult(_,InternalServerError(_)))
+      .map(JsonResult(_)(INTERNAL_SERVER_ERROR -> Outcome(_)))
     }
-
 
   def federatedQuery =
     JsonAction[FederatedQuery[Criteria,PatientRecord]].async { 
@@ -713,7 +698,7 @@ with AuthorizationOps[UserPermissions]
     Action.async {
       (queryService ! PatientRecordRequest[PatientRecord](origin,querier,patId,snapshot))
         .map(_.toEitherNel)
-        .map(JsonResult(_,InternalServerError(_)))
+        .map(JsonResult(_)(INTERNAL_SERVER_ERROR -> Outcome(_)))
     }
 
 
@@ -740,8 +725,9 @@ with AuthorizationOps[UserPermissions]
 
   def mvhSubmission(id: Id[TransferTAN]) = 
     Action.async {
-      (mvhService submission id)
-        .map(JsonResult(_))
+      implicit req =>
+        (mvhService submission id)
+          .map(ProjectedJsonResult(_))
     }
 
 
@@ -751,10 +737,10 @@ with AuthorizationOps[UserPermissions]
     end: Option[LocalDateTime]
   ) = 
     Action.async {
-      (mvhService ? Submission.Filter(types,start.map(OpenEndPeriod(_,end))))
-        .map(rs => Collection(rs.toSeq))
-        .map(Json.toJson(_))
-        .map(Ok(_))
+      implicit req =>
+        (mvhService ? Submission.Filter(types,start.map(OpenEndPeriod(_,end))))
+          .map(rs => Collection(rs.toSeq))
+          .map(ProjectedJsonResult(_))
     }
 
   
@@ -765,9 +751,26 @@ with AuthorizationOps[UserPermissions]
     Action.async {
       (mvhService ! MVHService.ConfirmSubmitted(id))
         .collect { 
-          case Right(_)                           => Ok
-          case Left(MVHService.GenericError(err)) => InternalServerError(err)
+          case Right(_) => Ok
+          case Left(NonEmptyList(MVHService.GenericError(err),_)) => InternalServerError(err)
         }
+    }
+
+  def deletionEvents(
+    startOption: Option[LocalDateTime],
+    end: Option[LocalDateTime]
+  ) = 
+    Action.async {
+
+      // To make the API flexible even though the filtering period is required,
+      // keep "start" as an optional query parameter, and use a default before which
+      // no DeletionEvent can possibly have occurred
+      val start = startOption.getOrElse(LocalDate.EPOCH.atTime(LocalTime.MIN))
+
+      mvhService.deletionEvents(Period(start,end))
+        .map(Collection(_))
+        .map(Json.toJson(_))
+        .map(Ok(_))
     }
 
 }
