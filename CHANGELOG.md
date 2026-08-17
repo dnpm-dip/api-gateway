@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2](https://github.com/dnpm-dip/api-gateway/compare/v1.3.1...v1.3.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* Bump dependency versions ([#44](https://github.com/dnpm-dip/api-gateway/issues/44)) ([f2afa81](https://github.com/dnpm-dip/api-gateway/commit/f2afa8106880f6ca8934154b6fe2f246c54da67b))
+* Bump scalatestplus-play to 7.0.2 to attempt fixing vulnerable dependencies ([a0492df](https://github.com/dnpm-dip/api-gateway/commit/a0492df5ecce0af52194f53a1c52d369419abe87))
+
 ## [1.3.1](https://github.com/dnpm-dip/api-gateway/compare/v1.3.0...v1.3.1) (2026-06-01)
 
 
