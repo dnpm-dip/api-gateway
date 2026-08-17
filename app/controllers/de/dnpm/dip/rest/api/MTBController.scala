@@ -271,6 +271,29 @@ with MTBHypermedia
     }
 
 
+  def coarseTherapyResponses(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.coarseTherapyResponses(FilterFrom(req))
+                 .pipe(Collection(_))
+              )
+            )
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
+            )
+            .andThen {
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
+            }
+      }
+    }
+
+
   def survivalStatistics(
     id: Query.Id,
     typ: Option[SurvivalType.Value],
