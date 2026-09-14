@@ -131,7 +131,7 @@ with MTBHypermedia
       ),
       RecommendationFilter(
         req.queryString.get("therapyRecommendation[medication]").flatMap(_.headOption) collect { 
-          case MedicationCodings(codings) if codings.nonEmpty => codings.tap(println)
+          case MedicationCodings(codings) if codings.nonEmpty => codings
         }
       ),
       TherapyFilter(
