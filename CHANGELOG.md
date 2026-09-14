@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/dnpm-dip/api-gateway/compare/v1.3.2...v1.3.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* Bump validation dependencies ([c796cd1](https://github.com/dnpm-dip/api-gateway/commit/c796cd11366d844d0e80045d6b2c6c617db87817))
+
 ## [1.3.2](https://github.com/dnpm-dip/api-gateway/compare/v1.3.1...v1.3.2) (2026-08-17)
 
 
