@@ -54,6 +54,7 @@ class RDController @Inject()(
 extends UseCaseController[RDConfig](UseCasePrefix.RD)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
+with RDJsonSchemata
 with RDHypermedia
 {
 

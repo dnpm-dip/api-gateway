@@ -6,18 +6,13 @@ import scala.util.chaining._
 import play.api.routing.sird._
 import play.api.mvc.Results.Ok
 import play.api.libs.json.Json.toJson
-import json.Schema
-import json.schema.Version._
-import com.github.andyglow.jsonschema.AsPlay._
 import de.dnpm.dip.mtb.query.api.MTBConfig
 import de.dnpm.dip.mtb.model.MTBPatientRecord
-import de.dnpm.dip.mtb.model.json.Schemas._
 import de.dnpm.dip.mtb.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.mtb.query.api.KaplanMeier
 import de.dnpm.dip.rest.util.Extractor
 import de.dnpm.dip.service.DataUpload
-import cats.Eval
 
 
 class MTBRouter @Inject()(
@@ -26,17 +21,6 @@ class MTBRouter @Inject()(
 extends UseCaseRouter[MTBConfig]
 with FakeDataGen[MTBPatientRecord]
 {
-
-  import DataUpload.Schemas._
-
-  override val jsonSchemas = 
-    Map(
-      "draft-12" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft12("MTB-Patient-Record"))),
-      "draft-09" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft09("MTB-Patient-Record"))),
-      "draft-07" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft07("MTB-Patient-Record"))),
-      "draft-04" -> Eval.later(Schema[DataUpload[MTBPatientRecord]].asPlay(Draft04()))
-    )
-
 
   private val SurvivalType: Extractor[String,KaplanMeier.SurvivalType.Value] =
    KaplanMeier.SurvivalType.unapply(_)
