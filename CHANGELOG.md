@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.4](https://github.com/dnpm-dip/api-gateway/compare/v1.3.3...v1.3.4) (2026-10-01)
+
+
+### Bug Fixes
+
+* Bump atc-catalogs, service-base and validation dependencies ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+* Bump to corrected mtb-validation dependencies 1.1.13 ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+* Release 2026-10 ([#46](https://github.com/dnpm-dip/api-gateway/issues/46)) ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+
 ## [1.3.3](https://github.com/dnpm-dip/api-gateway/compare/v1.3.2...v1.3.3) (2026-09-14)
 
 
