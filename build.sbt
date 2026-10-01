@@ -20,7 +20,7 @@ lazy val root = (project in file("."))
     buildInfoPackage := "de.dnpm.dip.rest.api"
   )
 
-val jacksonVersion = "2.18.8"
+val jacksonVersion = "2.19.4"
 
 libraryDependencies ++= Seq(
   caffeine,
@@ -28,10 +28,7 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
 
-  // Pinned jacksonVersion because otherwise there's a version conflict
-  // between the one depended on by Play itself and com.networknt.json-schema-validator
-  // Also resolves vulnerability warnings due to transitive dependency
-  // on outdated jackson modules via scala-jsonschema-play-json -> play-json 2.9.2)
+  // Pinned jacksonVersion to resolve vulnerability warnings due to transitive dependency on outdated jackson modules
   "com.fasterxml.jackson.core"   % "jackson-core"          % jacksonVersion,
   "com.fasterxml.jackson.core"   % "jackson-databind"      % jacksonVersion,
   "com.fasterxml.jackson.core"   % "jackson-annotations"   % jacksonVersion,
@@ -43,8 +40,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "catalog-service-api"         % "1.1.1",
   "de.dnpm.dip"            %% "catalog-service-impl"        % "1.1.1",
   "de.dnpm.dip"            %% "service-base"                % "1.5.2",
-  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.12",
-  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.12",
+  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.13",
+  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.13",
   "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.5",
   "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.5",
   "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.12",
