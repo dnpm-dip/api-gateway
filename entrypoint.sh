@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-/opt/bin/dnpm-dip-api-gateway \
+exec /opt/bin/dnpm-dip-api-gateway \
   -Dhttp.port="$HTTP_PORT" \
   -Dplay.http.secret.key="$APPLICATION_SECRET" \
   -Dconfig.file="$CONFIG_DIR/production.conf" \
