@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.5](https://github.com/dnpm-dip/api-gateway/compare/v1.3.4...v1.3.5) (2026-10-08)
+
+
+### Bug Fixes
+
+* Execute gateway as PID 1 ([#48](https://github.com/dnpm-dip/api-gateway/issues/48)) ([874baec](https://github.com/dnpm-dip/api-gateway/commit/874baeca606cede748fc10c844e0208466624774))
+* Moved setting of APPLICATION_SECRET ENV variable to entrypoint.sh (if not defined) ([#50](https://github.com/dnpm-dip/api-gateway/issues/50)) ([3017b1b](https://github.com/dnpm-dip/api-gateway/commit/3017b1b4c6f0da0556f544e187b44b914bee17f4))
+
 ## [1.3.4](https://github.com/dnpm-dip/api-gateway/compare/v1.3.3...v1.3.4) (2026-10-01)
 
 
