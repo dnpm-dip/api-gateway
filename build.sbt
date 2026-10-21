@@ -46,8 +46,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.6", //TODO
   "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.13",
   "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.13",
-  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.6", //TODO
-  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.6", //TODO
+  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.6",
+  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.6",
   "de.dnpm.dip"            %% "connector-base"              % "1.2.2",
   "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.2",
   "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.2",
@@ -58,8 +58,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "icd-claml-packaged"          % "1.1.5",
   "de.dnpm.dip"            %% "atc-impl"                    % "1.1.4",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.1.4",
-  "de.dnpm.dip"            %% "auth-api"                    % "1.1.5", //TODO
-  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.5", //TODO
+  "de.dnpm.dip"            %% "auth-api"                    % "1.1.5",
+  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.5",
 )
 
 
