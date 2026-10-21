@@ -87,9 +87,7 @@ import de.dnpm.dip.service.mvh.{
   TransferTAN
 }
 import MVHService.{
-  AllDeleted,
-  DeleteAll,
-  DeleteSubmission
+  DeleteSubmission,
   SubmissionDeleted
 }
 import de.dnpm.dip.coding.Coding
@@ -352,7 +350,7 @@ with AuthorizationOps[UserPermissions]
     scopes: Option[Set[UsageScope.Value]]
   ): Action[AnyContent] =
     Action.async { 
-      (orchestrator ! DeleteAll(patId,scopes))
+      (orchestrator ! Delete(patId,scopes))
         .collect {
           case Right(Deleted(id)) => Ok
           case Left(errs) => InternalServerError(
@@ -710,8 +708,21 @@ with AuthorizationOps[UserPermissions]
     Action.async {
       (mvhService ! DeleteSubmission(id)).map { 
         case Right(SubmissionDeleted) => Ok 
-        case Right(_)                 => InternalServerError(Outcome("Unexpected deletion outcome"))
-        case Left(errors)             => 
+        case Right(_)                 => InternalServerError(Json.toJson(Outcome("Unexpected deletion outcome")))
+        case Left(errors)             =>
+          val statusCodesWithError = errors.map {
+            case MVHService.GenericError(msg)          => INTERNAL_SERVER_ERROR -> msg
+            case MVHService.InvalidTAN(msg)            => BAD_REQUEST -> msg
+            case MVHService.InvalidSubmissionType(msg) => BAD_REQUEST -> msg 
+          }
+          
+          Status(
+            statusCodesWithError
+              .collectFirst { case (code,_) if code == BAD_REQUEST => code }
+              .getOrElse(INTERNAL_SERVER_ERROR)
+          )(
+            Json.toJson(Outcome(statusCodesWithError.map(_._2)))
+          )            
       }
     }
 
