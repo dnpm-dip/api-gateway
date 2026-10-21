@@ -131,6 +131,7 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case GET(p"/etl/mvh/submissions/${TAN(id)}") => controller.mvhSubmission(id)
     case GET(p"/etl/mvh/submissions"?q_o"after=${dateTimeOption(start)}"&q_o"before=${dateTimeOption(end)}"&q_o"type=${SubmissionTypeSet(types)}") => controller.mvhSubmissions(types,start,end)
+    case DELETE(p"/etl/mvh/submissions/${TAN(id)}") => controller.deleteSubmission(id)
 
     // ------------------------------------------------------------------------
     // Controlling Result Routes:

@@ -86,6 +86,10 @@ import de.dnpm.dip.service.mvh.{
   Submission,
   TransferTAN
 }
+import MVHService.{
+  DeleteSubmission,
+  SubmissionDeleted
+}
 import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.model.{
   Id,
@@ -337,37 +341,6 @@ with AuthorizationOps[UserPermissions]
                 .fold(Json.toJson(_),Json.toJson(_))
             )
             
-/*            
-            val result =
-              errs.foldLeft(Option.empty[(Int,Either[NonEmptyList[String],ValidationReport])]){
-                (acc,err) => err match {
-                  case Left(FatalIssuesDetected(report))         => Some(BAD_REQUEST -> report.asRight)
-              
-                  case Left(UnacceptableIssuesDetected(report))  => Some(UNPROCESSABLE_ENTITY -> report.asRight)
-              
-                  case Left(ValidationService.GenericError(msg)) => Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft)
-              
-                  case Right(Left(MVHService.InvalidTAN(msg)))   => Some(BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
-              
-                  case Right(Left(MVHService.GenericError(msg))) =>
-                    acc.collect {
-                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
-                    }
-                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
-              
-                  case Right(Right(QueryService.GenericError(msg))) =>
-                    acc.collect {
-                      case (sc,Left(msgs)) if sc == INTERNAL_SERVER_ERROR => sc -> (msg :: msgs).asLeft
-                    }
-                    .orElse(Some(INTERNAL_SERVER_ERROR -> NonEmptyList.of(msg).asLeft))
-                }
-              }
-
-            result match {
-              case Some(sc -> result) => Status(sc)(result.leftMap(Outcome(_)).fold(Json.toJson(_),Json.toJson(_)))
-              case None => Ok
-            }
-*/            
         }
     }
 
@@ -728,6 +701,29 @@ with AuthorizationOps[UserPermissions]
       implicit req =>
         (mvhService submission id)
           .map(ProjectedJsonResult(_))
+    }
+
+
+  def deleteSubmission(id: Id[TransferTAN]) = 
+    Action.async {
+      (mvhService ! DeleteSubmission(id)).map { 
+        case Right(SubmissionDeleted) => Ok 
+        case Right(_)                 => InternalServerError(Json.toJson(Outcome("Unexpected deletion outcome")))
+        case Left(errors)             =>
+          val statusCodesWithError = errors.map {
+            case MVHService.GenericError(msg)          => INTERNAL_SERVER_ERROR -> msg
+            case MVHService.InvalidTAN(msg)            => BAD_REQUEST -> msg
+            case MVHService.InvalidSubmissionType(msg) => BAD_REQUEST -> msg 
+          }
+          
+          Status(
+            statusCodesWithError
+              .collectFirst { case (code,_) if code == BAD_REQUEST => code }
+              .getOrElse(INTERNAL_SERVER_ERROR)
+          )(
+            Json.toJson(Outcome(statusCodesWithError.map(_._2)))
+          )            
+      }
     }
 
 
