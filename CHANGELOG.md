@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.5](https://github.com/dnpm-dip/api-gateway/compare/v1.3.4...v1.3.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* Added endpoint to delete submission by tan ([#51](https://github.com/dnpm-dip/api-gateway/issues/51)) ([08093e0](https://github.com/dnpm-dip/api-gateway/commit/08093e09ed8342ef2509ed50cab241e851cce5bb))
+* Bump dependencies ([08093e0](https://github.com/dnpm-dip/api-gateway/commit/08093e09ed8342ef2509ed50cab241e851cce5bb))
+* Bump jackson module versions to fix vulnerability warnings ([#52](https://github.com/dnpm-dip/api-gateway/issues/52)) ([c93b886](https://github.com/dnpm-dip/api-gateway/commit/c93b8869b6e52d0e35b7db51e2fa5c7fb1260dc2))
+* Bump plugins esp. play 3.0.12 ([7748a99](https://github.com/dnpm-dip/api-gateway/commit/7748a991e3afb20173a3318f9f4043fc4d765bd5))
+* Execute gateway as PID 1 ([#48](https://github.com/dnpm-dip/api-gateway/issues/48)) ([874baec](https://github.com/dnpm-dip/api-gateway/commit/874baeca606cede748fc10c844e0208466624774))
+* Moved setting of APPLICATION_SECRET ENV variable to entrypoint.sh (if not defined) ([#50](https://github.com/dnpm-dip/api-gateway/issues/50)) ([3017b1b](https://github.com/dnpm-dip/api-gateway/commit/3017b1b4c6f0da0556f544e187b44b914bee17f4))
+
 ## [1.3.4](https://github.com/dnpm-dip/api-gateway/compare/v1.3.3...v1.3.4) (2026-10-01)
 
 
