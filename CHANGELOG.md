@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.3.5](https://github.com/dnpm-dip/api-gateway/compare/v1.3.4...v1.3.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* Added endpoint to delete submission by tan ([#51](https://github.com/dnpm-dip/api-gateway/issues/51)) ([08093e0](https://github.com/dnpm-dip/api-gateway/commit/08093e09ed8342ef2509ed50cab241e851cce5bb))
+* Bump dependencies ([08093e0](https://github.com/dnpm-dip/api-gateway/commit/08093e09ed8342ef2509ed50cab241e851cce5bb))
+* Bump jackson module versions to fix vulnerability warnings ([#52](https://github.com/dnpm-dip/api-gateway/issues/52)) ([c93b886](https://github.com/dnpm-dip/api-gateway/commit/c93b8869b6e52d0e35b7db51e2fa5c7fb1260dc2))
+* Bump plugins esp. play 3.0.12 ([7748a99](https://github.com/dnpm-dip/api-gateway/commit/7748a991e3afb20173a3318f9f4043fc4d765bd5))
+* Execute gateway as PID 1 ([#48](https://github.com/dnpm-dip/api-gateway/issues/48)) ([874baec](https://github.com/dnpm-dip/api-gateway/commit/874baeca606cede748fc10c844e0208466624774))
+* Moved setting of APPLICATION_SECRET ENV variable to entrypoint.sh (if not defined) ([#50](https://github.com/dnpm-dip/api-gateway/issues/50)) ([3017b1b](https://github.com/dnpm-dip/api-gateway/commit/3017b1b4c6f0da0556f544e187b44b914bee17f4))
+
+## [1.3.4](https://github.com/dnpm-dip/api-gateway/compare/v1.3.3...v1.3.4) (2026-10-01)
+
+
+### Bug Fixes
+
+* Bump atc-catalogs, service-base and validation dependencies ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+* Bump to corrected mtb-validation dependencies 1.1.13 ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+* Release 2026-10 ([#46](https://github.com/dnpm-dip/api-gateway/issues/46)) ([c04fd00](https://github.com/dnpm-dip/api-gateway/commit/c04fd0075d964a5b16b371c854e2acaa376b6137))
+
+## [1.3.3](https://github.com/dnpm-dip/api-gateway/compare/v1.3.2...v1.3.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* Bump validation dependencies ([c796cd1](https://github.com/dnpm-dip/api-gateway/commit/c796cd11366d844d0e80045d6b2c6c617db87817))
+
+## [1.3.2](https://github.com/dnpm-dip/api-gateway/compare/v1.3.1...v1.3.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* Bump dependency versions ([#44](https://github.com/dnpm-dip/api-gateway/issues/44)) ([f2afa81](https://github.com/dnpm-dip/api-gateway/commit/f2afa8106880f6ca8934154b6fe2f246c54da67b))
+* Bump scalatestplus-play to 7.0.2 to attempt fixing vulnerable dependencies ([a0492df](https://github.com/dnpm-dip/api-gateway/commit/a0492df5ecce0af52194f53a1c52d369419abe87))
+
 ## [1.3.1](https://github.com/dnpm-dip/api-gateway/compare/v1.3.0...v1.3.1) (2026-06-01)
 
 

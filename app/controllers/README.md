@@ -55,26 +55,26 @@ i.e. a patient record + [MVH metadata](https://ibmi-ut.atlassian.net/wiki/spaces
 ```
 GET /api/{use-case}/fake/data/mvh-submission
 ```
-> :warning: **NOTE about generated MVH metadata**:  
-> The generated metadata does not contain examples of Research Consent entries.
-> These are expected to be FHIR/JSON [Consent](https://hl7.org/fhir/R4/consent.html) resources conforming to MII Consent specifications.
-> One example can be found [here](https://github.com/dnpm-dip/service-base/blob/main/src/test/resources/consent.json).
-> Refer to MII Consent documentation or your local consent management for further info on Broad/Research Consent.
+:warning: **NOTE about generated MVH metadata**:  
+The generated metadata does not contain examples of Research Consent entries.
+These are expected to be FHIR/JSON [Consent](https://hl7.org/fhir/R4/consent.html) resources conforming to MII Consent specifications.
+One example can be found [here](https://github.com/dnpm-dip/service-base/blob/main/src/test/resources/consent.json).
+Refer to MII Consent documentation or your local consent management for further info on Broad/Research Consent.
 
 
 ### Upload a Patient Record
 
-> :warning: **IMPORTANT NOTE about Codings**:
-> Given that many elements of a patient record are concepts from various code systems, the models contain many [Coding](https://hl7.org/fhir/datatypes.html#Coding) objects.
-> In the random generated JSON examples (see above), these Coding elements are created not only with the `code`, but also `display`, `system` and possibly `version` attribute values.
-> However, in uploads only the `code` attribute is _required_, and the latter attributes can generally be omitted, so bear the following in mind for your Coding management: 
->
->| Attribute | Use | Note |
->|-----------|-----|------|
->|`code`     | Required | |
->| `system ` | Optional | For most of the coded elements, the code system is clearly defined from the context (e.g. for attribute `patient.gender`). The `system` must thus only be explicitly specified for those few attributes which allow Codings from _multiple_ code systems (e.g. for rare diseases, the diagnosis codes from ICD-10-GM, Orphanet or Alpha-ID-SE). In these cases, the referenced Coding type in the JSON schema has a required `system` attribute and lists admissible code system identifiers. |
->| `version` | Optional  | The code system version need only be set in cases where the code-system is versioned and the version particularly relevant (e.g. for medications, the ATC version). Else, by default, the Coding is resolved against the _latest_ available version of the corresponding code system. |
->| `display` | Discarded | Upon import, Coding objects are validated against the respective code system and the `display` is completed, so no need to set it. |
+:warning: **IMPORTANT NOTE about Codings**:
+Given that many elements of a patient record are concepts from various code systems, the models contain many [Coding](https://hl7.org/fhir/datatypes.html#Coding) objects.
+In the random generated JSON examples (see above), these Coding elements are created not only with the `code`, but also `display`, `system` and possibly `version` attribute values.
+However, in uploads only the `code` attribute is _required_, and the latter attributes can generally be omitted, so bear the following in mind for your Coding management: 
+
+| Attribute | Use | Note |
+|-----------|-----|------|
+|`code`     | Required | |
+| `system ` | Optional | For most of the coded elements, the code system is clearly defined from the context (e.g. for attribute `patient.gender`). The `system` must thus only be explicitly specified for those few attributes which allow Codings from _multiple_ code systems (e.g. for rare diseases, the diagnosis codes from ICD-10-GM, Orphanet or Alpha-ID-SE). In these cases, the referenced Coding type in the JSON schema has a required `system` attribute and lists admissible code system identifiers. |
+| `version` | Optional  | The code system version need only be set in cases where the code-system is versioned and the version particularly relevant (e.g. for medications, the ATC version). Else, by default, the Coding is resolved against the _latest_ available version of the corresponding code system. |
+| `display` | Discarded | Upon import, Coding objects are validated against the respective code system and the `display` is completed, so no need to set it. |
 
 
 <details>
@@ -173,6 +173,14 @@ POST /api/{use-case}/etl/patient-record:validate
 | Fatal Issues Detected       | `400 Bad Request` with JSON issue report           | Payload syntactically invalid or unacceptable for MVGenomSeq due to `fatal` issues |
 
 
+### Delete a specific MVGenomSeq Submission by TAN
+
+:warning: Deletion of MVGenomSeq data must first be requested from the "Plattformträger"
+
+```
+DELETE /api/{use-case}/etl/mvh/submissions/{TAN}
+```
+
 ### Delete a Patient's Data
 
 ```
@@ -192,6 +200,7 @@ For instance, to delete a Patient's data only from the query module:
 ```
 DELETE /api/{use-case}/etl/patient/{Patient-ID}?scope=query
 ```
+:warning: Deletion of MVGenomSeq data must first be requested from the "Plattformträger"
 
 -------
 

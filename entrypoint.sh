@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-/opt/bin/dnpm-dip-api-gateway \
+if [ -z "${APPLICATION_SECRET:-}" ]; then
+  APPLICATION_SECRET="$(head -c 64 /dev/urandom | base64 -w0)"
+fi
+
+exec /opt/bin/dnpm-dip-api-gateway \
   -Dhttp.port="$HTTP_PORT" \
   -Dplay.http.secret.key="$APPLICATION_SECRET" \
   -Dconfig.file="$CONFIG_DIR/production.conf" \
