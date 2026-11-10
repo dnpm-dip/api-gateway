@@ -131,7 +131,7 @@ with MTBHypermedia
       ),
       RecommendationFilter(
         req.queryString.get("therapyRecommendation[medication]").flatMap(_.headOption) collect { 
-          case MedicationCodings(codings) if codings.nonEmpty => codings.tap(println)
+          case MedicationCodings(codings) if codings.nonEmpty => codings
         }
       ),
       TherapyFilter(
@@ -168,7 +168,7 @@ with MTBHypermedia
 
   def tumorDiagnostics(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -186,7 +186,7 @@ with MTBHypermedia
 
   def medication(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
       
           queryService.resultSet(id)
@@ -202,16 +202,62 @@ with MTBHypermedia
     }
 
 
+  def geneAlterations(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.geneAlterations(FilterFrom(req))
+                 .pipe(Collection(_))
+              )
+            )
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
+            )
+            .andThen {
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
+            }
+      }
+    }
+
+
+  def alteredGeneDistributions(id: Query.Id) =
+    cached.status(_.uri,OK,cachingDuration){
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
+        implicit req =>
+  
+          queryService.resultSet(id)
+            .map(
+              _.map(
+                _.alteredGeneDistributions(FilterFrom(req))
+                 .pipe(Collection(_))
+              )
+            )
+            .map(
+              JsonResult(_,s"Invalid Query ID ${id.value}")
+                .withHeaders(CACHE_CONTROL -> CACHE_CONTROL_SETTINGS)
+            )
+            .andThen {
+              case Success(res) if res.header.status == OK => addCachedResult(id,req.uri)
+            }
+      }
+    }
+
+
   def therapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
             .map(
               _.map(
                 _.therapyResponses(FilterFrom(req))
-                 .pipe(Collection(_).paginated)
+                 .pipe(Collection(_))
               )
             )
             .map(
@@ -225,16 +271,16 @@ with MTBHypermedia
     }
 
 
-  def therapyResponsesByVariant(id: Query.Id) =
+  def coarseTherapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
             .map(
               _.map(
-                _.therapyResponsesBySupportingVariant(FilterFrom(req))
-                 .pipe(Collection(_).paginated)
+                _.coarseTherapyResponses(FilterFrom(req))
+                 .pipe(Collection(_))
               )
             )
             .map(
@@ -246,6 +292,7 @@ with MTBHypermedia
             }
       }
     }
+
 
   def survivalStatistics(
     id: Query.Id,
@@ -253,7 +300,7 @@ with MTBHypermedia
     grp: Option[Grouping.Value]
   ) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
           queryService.resultSet(id)
             .map(

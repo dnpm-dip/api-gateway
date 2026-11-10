@@ -5,7 +5,7 @@ import scala.util.Properties.envOrElse
 name := "dnpm-dip-api-gateway"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.18"
-ThisBuild / version      := envOrElse("VERSION","1.3.5-SNAPSHOT")
+ThisBuild / version      := envOrElse("VERSION","1.4.0-SNAPSHOT")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/api-gateway").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
@@ -19,7 +19,6 @@ lazy val root = (project in file("."))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion),
     buildInfoPackage := "de.dnpm.dip.rest.api"
   )
-
 
 libraryDependencies ++= Seq(
   caffeine,
@@ -38,15 +37,15 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.4",
   "de.dnpm.dip"            %% "catalog-service-api"         % "1.1.2",
   "de.dnpm.dip"            %% "catalog-service-impl"        % "1.1.2",
-  "de.dnpm.dip"            %% "service-base"                % "1.5.4",
-  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.14",
-  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.14",
-  "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.6",
-  "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.6",
-  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.13",
-  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.13",
-  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.6",
-  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.6",
+  "de.dnpm.dip"            %% "service-base"                % "1.5.5",
+  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.15",
+  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.15",
+  "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.7",
+  "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.7",
+  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.14",
+  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.14",
+  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.8",
+  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.8",
   "de.dnpm.dip"            %% "connector-base"              % "1.2.2",
   "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.2",
   "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.2",
@@ -57,8 +56,8 @@ libraryDependencies ++= Seq(
   "de.dnpm.dip"            %% "icd-claml-packaged"          % "1.1.5",
   "de.dnpm.dip"            %% "atc-impl"                    % "1.1.4",
   "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.1.4",
-  "de.dnpm.dip"            %% "auth-api"                    % "1.1.5",
-  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.5",
+  "de.dnpm.dip"            %% "auth-api"                    % "1.1.6",
+  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.6",
 )
 
 
