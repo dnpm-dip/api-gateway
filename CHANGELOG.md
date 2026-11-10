@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/dnpm-dip/api-gateway/compare/v1.3.5...v1.4.0) (2026-11-10)
+
+
+### Features
+
+* Mtb query adaptations ([#55](https://github.com/dnpm-dip/api-gateway/issues/55)) ([34d9068](https://github.com/dnpm-dip/api-gateway/commit/34d906811498715294d99f763f5bf551ccc93ac0))
+
 ## [1.3.5](https://github.com/dnpm-dip/api-gateway/compare/v1.3.4...v1.3.5) (2026-10-21)
 
 
