@@ -168,7 +168,7 @@ with MTBHypermedia
 
   def tumorDiagnostics(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -186,7 +186,7 @@ with MTBHypermedia
 
   def medication(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
       
           queryService.resultSet(id)
@@ -204,7 +204,7 @@ with MTBHypermedia
 
   def geneAlterations(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -227,7 +227,7 @@ with MTBHypermedia
 
   def alteredGeneDistributions(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -250,7 +250,7 @@ with MTBHypermedia
 
   def therapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -273,7 +273,7 @@ with MTBHypermedia
 
   def coarseTherapyResponses(id: Query.Id) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
   
           queryService.resultSet(id)
@@ -300,7 +300,7 @@ with MTBHypermedia
     grp: Option[Grouping.Value]
   ) =
     cached.status(_.uri,OK,cachingDuration){
-      AuthorizedAction(OwnershipOf(id)).async { 
+      AuthorizedAction(ReadQueryResult,OwnershipOf(id)).async { 
         implicit req =>
           queryService.resultSet(id)
             .map(
