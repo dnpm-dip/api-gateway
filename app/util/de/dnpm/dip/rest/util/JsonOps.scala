@@ -85,10 +85,9 @@ trait CustomBodyParsers
           schemaValidator(jsonString).flatMap {
             errs => NonEmptyList.fromList(errs) match {
                 
-              case Some(errors) =>
-                BadRequest(Json.toJson(Outcome(errors))).asLeft
+              case Some(errors) => BadRequest(Json.toJson(Outcome(errors))).asLeft
               
-              case None  =>
+              case None =>
                 Json.parse(jsonString).validate[T]
                   .asEither
                   .leftMap(errors => BadRequest(Json.toJson(Outcome(errors))))

@@ -279,12 +279,13 @@ with AuthorizationOps[UserPermissions]
   // Data Operations
   // --------------------------------------------------------------------------  
 
-  protected val patientRecordParser =
-    SchemaValidatedJsonBody[DataUpload[PatientRecord]](schemaValidator)
+  protected val dataUploadParser = JsonBody[DataUpload[PatientRecord]]
+
+  protected val validatingDataUploadParser = SchemaValidatedJsonBody[DataUpload[PatientRecord]](schemaValidator)
 
 
   def validate =
-    Action.async(patientRecordParser){ 
+    Action.async(validatingDataUploadParser){ 
       req =>
         (validationService ! Validate(req.body,persist = false)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
@@ -297,7 +298,7 @@ with AuthorizationOps[UserPermissions]
 
 
   def processUpload =
-    Action.async(patientRecordParser){ 
+    Action.async(dataUploadParser){ 
       req =>
         (orchestrator ! Process(req.body)).collect {
           case Right(Saved)                   => Ok
