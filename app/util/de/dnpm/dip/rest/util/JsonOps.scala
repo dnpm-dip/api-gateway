@@ -7,7 +7,8 @@ import scala.concurrent.{
 }
 import cats.data.{
   Ior,
-  IorNel
+  IorNel,
+  NonEmptyList
 }
 import cats.syntax.either._
 import play.api.libs.json.{

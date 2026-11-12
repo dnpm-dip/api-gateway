@@ -26,15 +26,6 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
 
-  // Pinned jacksonVersion because otherwise there's a version conflict
-  // between the one depended on by Play itself and com.networknt.json-schema-validator
-  // Also resolves vulnerability warnings due to transitive dependency
-  // on outdated jackson modules via scala-jsonschema-play-json -> play-json 2.9.2)
-  "com.fasterxml.jackson.core"   % "jackson-core"          % jacksonVersion,
-  "com.fasterxml.jackson.core"   % "jackson-databind"      % jacksonVersion,
-  "com.fasterxml.jackson.core"   % "jackson-annotations"   % jacksonVersion,
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-
   "com.networknt"          %  "json-schema-validator"       % "1.5.9",
   // Pinned jackson dependency versions to resolve vulnerability warnings due to transitive dependency on outdated jackson modules
   "com.fasterxml.jackson.core"   %  "jackson-core"         % "2.22.4",
