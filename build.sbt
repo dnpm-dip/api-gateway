@@ -20,10 +20,6 @@ lazy val root = (project in file("."))
     buildInfoPackage := "de.dnpm.dip.rest.api"
   )
 
-
-val jacksonVersion = "2.18.8" 
-
-
 libraryDependencies ++= Seq(
   caffeine,
   guice,
@@ -40,32 +36,38 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
 
   "com.networknt"          %  "json-schema-validator"       % "1.5.9",
+  // Pinned jackson dependency versions to resolve vulnerability warnings due to transitive dependency on outdated jackson modules
+  "com.fasterxml.jackson.core"   %  "jackson-core"         % "2.22.4",
+  "com.fasterxml.jackson.core"   %  "jackson-databind"     % "2.22.4",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.22.4",
+  "com.fasterxml.jackson.core"   %  "jackson-annotations"  % "2.18.12",
+
   "de.ekut.tbi"            %% "generators"                  % "1.0.0",
-  "de.dnpm.dip"            %% "admin-service-api"           % "1.1.2",
-  "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.2",
-  "de.dnpm.dip"            %% "catalog-service-api"         % "1.1.1",
-  "de.dnpm.dip"            %% "catalog-service-impl"        % "1.1.1",
-  "de.dnpm.dip"            %% "service-base"                % "1.4.0",
-  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.9",
-  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.9",
-  "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.4",
-  "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.4",
-  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.9",
-  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.9",
-  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.5",
-  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.5",
-  "de.dnpm.dip"            %% "connector-base"              % "1.2.0",
-  "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.0",
-  "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.0",
-  "de.dnpm.dip"            %% "orphanet-ordo"               % "1.2.0",
-  "de.dnpm.dip"            %% "hgnc-gene-set-impl"          % "1.1.2",
-  "de.dnpm.dip"            %% "icd10gm-impl"                % "1.1.3",
-  "de.dnpm.dip"            %% "icdo3-impl"                  % "1.1.3",
-  "de.dnpm.dip"            %% "icd-claml-packaged"          % "1.1.3",
-  "de.dnpm.dip"            %% "atc-impl"                    % "1.1.1",
-  "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.1.1",
-  "de.dnpm.dip"            %% "auth-api"                    % "1.1.1",
-  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.1",
+  "de.dnpm.dip"            %% "admin-service-api"           % "1.1.4",
+  "de.dnpm.dip"            %% "admin-service-impl"          % "1.1.4",
+  "de.dnpm.dip"            %% "catalog-service-api"         % "1.1.2",
+  "de.dnpm.dip"            %% "catalog-service-impl"        % "1.1.2",
+  "de.dnpm.dip"            %% "service-base"                % "1.5.5",
+  "de.dnpm.dip"            %% "mtb-validation-service-api"  % "1.1.15",
+  "de.dnpm.dip"            %% "mtb-validation-service-impl" % "1.1.15",
+  "de.dnpm.dip"            %% "mtb-query-service-api"       % "1.1.7",
+  "de.dnpm.dip"            %% "mtb-query-service-impl"      % "1.1.7",
+  "de.dnpm.dip"            %% "rd-validation-service-api"   % "1.1.14",
+  "de.dnpm.dip"            %% "rd-validation-service-impl"  % "1.1.14",
+  "de.dnpm.dip"            %% "rd-query-service-api"        % "1.1.8",
+  "de.dnpm.dip"            %% "rd-query-service-impl"       % "1.1.8",
+  "de.dnpm.dip"            %% "connector-base"              % "1.2.2",
+  "de.dnpm.dip"            %% "hp-ontology"                 % "1.2.2",
+  "de.dnpm.dip"            %% "alpha-id-se"                 % "1.2.2",
+  "de.dnpm.dip"            %% "orphanet-ordo"               % "1.2.2",
+  "de.dnpm.dip"            %% "hgnc-gene-set-impl"          % "1.1.4",
+  "de.dnpm.dip"            %% "icd10gm-impl"                % "1.1.5",
+  "de.dnpm.dip"            %% "icdo3-impl"                  % "1.1.5",
+  "de.dnpm.dip"            %% "icd-claml-packaged"          % "1.1.5",
+  "de.dnpm.dip"            %% "atc-impl"                    % "1.1.4",
+  "de.dnpm.dip"            %% "atc-catalogs-packaged"       % "1.1.4",
+  "de.dnpm.dip"            %% "auth-api"                    % "1.1.6",
+  "de.dnpm.dip"            %% "standalone-authup-client"    % "1.1.6",
 )
 
 
