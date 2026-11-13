@@ -52,9 +52,8 @@ import de.dnpm.dip.mtb.query.api.KaplanMeier.{
   SurvivalType,
   Grouping
 }
-import de.dnpm.dip.auth.api.{
-  UserPermissions,
-}
+import de.dnpm.dip.auth.api.UserPermissions
+
 
 
 class MTBController @Inject()(
@@ -67,6 +66,7 @@ class MTBController @Inject()(
 extends UseCaseController[MTBConfig](UseCasePrefix.MTB)
 with ValidationAuthorizations[UserPermissions]
 with QueryAuthorizations[UserPermissions]
+with MTBJsonSchemata
 with MTBHypermedia
 {
 

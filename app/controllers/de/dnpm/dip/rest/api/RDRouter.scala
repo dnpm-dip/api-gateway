@@ -6,16 +6,11 @@ import scala.util.chaining._
 import play.api.routing.sird._
 import play.api.mvc.Results.Ok
 import play.api.libs.json.Json.toJson
-import json.Schema
-import json.schema.Version._
-import com.github.andyglow.jsonschema.AsPlay._
 import de.dnpm.dip.rd.query.api.RDConfig
 import de.dnpm.dip.rd.model.RDPatientRecord
-import de.dnpm.dip.rd.model.json.Schemas._
 import de.dnpm.dip.rd.gens.Generators._
 import de.ekut.tbi.generators.Gen
 import de.dnpm.dip.service.DataUpload
-import cats.Eval
 
 
 class RDRouter @Inject()(
@@ -24,16 +19,6 @@ class RDRouter @Inject()(
 extends UseCaseRouter[RDConfig]
 with FakeDataGen[RDPatientRecord]
 {
-
-  import DataUpload.Schemas._
-
-  override val jsonSchemas =
-    Map(
-      "draft-12" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft12("RD-Patient-Record"))),
-      "draft-09" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft09("RD-Patient-Record"))),
-      "draft-07" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft07("RD-Patient-Record"))),
-      "draft-04" -> Eval.later(Schema[DataUpload[RDPatientRecord]].asPlay(Draft04()))
-    )
 
   override val additionalRoutes = {
 
