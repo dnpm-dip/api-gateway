@@ -154,6 +154,13 @@ This endpoint returns a specific SubmissionReport by its TAN:
 GET /api/{use-case}/etl/mvh/submission-reports/{TAN}
 ```
 
+#### Submissions for MVGenomSeq
+This endpoint returns a specific Submission by its TAN:
+
+```
+GET /api/{use-case}/etl/mvh/submissions/{TAN}
+```
+
 
 ### Validate a Patient Record
 
