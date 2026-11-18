@@ -10,6 +10,7 @@ import de.dnpm.dip.rest.util.sapphyre.{
   Hyper,
   HypermediaBase
 }
+import de.dnpm.dip.service.mvh.Submission
 import de.dnpm.dip.service.query.{
   PatientMatch,
   Query,
@@ -44,17 +45,15 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   def useCasePrefix: UseCasePrefix.Value
 
 
-  protected val BASE_URI =
-    s"$BASE_URL/$useCasePrefix"
+  protected val BASE_URI = s"$BASE_URL/$useCasePrefix"
 
-  private val VALIDATION_BASE_URI =
-    s"$BASE_URI/validation"
+  private val ETL_BASE_URI = s"$BASE_URI/etl"
 
-  private val QUERY_BASE_URI =
-    s"$BASE_URI/queries"
+  private val VALIDATION_BASE_URI = s"$BASE_URI/validation"
 
-  private val PREPARED_QUERY_BASE_URI =
-    s"$BASE_URI/prepared-queries"
+  private val QUERY_BASE_URI = s"$BASE_URI/queries"
+
+  private val PREPARED_QUERY_BASE_URI = s"$BASE_URI/prepared-queries"
 
 
   protected def QueryUri(id: Query.Id) =
@@ -138,18 +137,15 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
 
       val prev =
         matches.limit.flatMap(
-          n => 
-            matches.offset.map(_ - n)
-              .collect {
-                case off if (off > 0) => off -> n
-                case _                => 0 -> n
-              }
+          n => matches.offset.map(_ - n).collect {
+            case off if (off > 0) => off -> n
+            case _                => 0 -> n
+          }
         )
 
       val next =
         matches.limit.collect {
-          case n if (matches.size - n >= 0) =>
-            (matches.offset.getOrElse(0) + n -> n)
+          case n if (matches.size - n >= 0) => (matches.offset.getOrElse(0) + n -> n)
         }
 
     matches.withLinks(
@@ -158,24 +154,15 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
      .pipe { coll =>
 
        prev match {
-         case Some(0 -> n) =>
-           coll.addLinks(
-             "prev" -> Link(s"${QueryUri(id)}/patient-matches?limit=${n}"),
-           )
-         case Some(off -> n) =>
-           coll.addLinks(
-             "prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}")
-           )
+         case Some(0 -> n)   => coll.addLinks("prev" -> Link(s"${QueryUri(id)}/patient-matches?limit=${n}"))
+         case Some(off -> n) => coll.addLinks("prev" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"))
          case _ => coll
        }
      }
      .pipe { coll =>
 
        next match {
-         case Some(off -> n) =>
-           coll.addLinks(
-             "next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"),
-           )
+         case Some(off -> n) => coll.addLinks("next" -> Link(s"${QueryUri(id)}/patient-matches?offset=${off}&limit=${n}"))
          case _ => coll
        }
      }
@@ -195,8 +182,7 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
   implicit val HyperPreparedQuery: Hyper.Mapper[PreparedQueryType] = {
     query =>
 
-      val selfLink =
-        Link(Uri(query))
+      val selfLink = Link(Uri(query))
 
       query.withLinks(
         SELF -> selfLink,
@@ -216,5 +202,12 @@ trait UseCaseHypermedia[UseCase <: UseCaseConfig] extends HypermediaBase
        CREATE -> Operation(POST, Link(PREPARED_QUERY_BASE_URI))
      )
 
+
+  implicit val HyperSubmissionReport: Hyper.Mapper[Submission.Report] =
+    report => report.withLinks(
+      SELF         -> Link(s"$ETL_BASE_URI/mvh/submission-reports/${report.id}"),
+      "history"    -> Link(s"$ETL_BASE_URI/mvh/submission-reports?patient=${report.patient}"),
+      "submission" -> Link(s"$ETL_BASE_URI/mvh/submissions/${report.id}")
+    )
 
 }
