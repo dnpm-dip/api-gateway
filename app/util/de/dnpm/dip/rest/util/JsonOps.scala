@@ -138,12 +138,33 @@ trait JsonOps
     )
 
 
-  def ProjectedJsonResult[T: Writes](t: T)(
+  def ProjectedJsonResult[T: Writes](
+    opt: Option[T],
+    err: => String = "Resource Not Found"
+  )(
     implicit req: RequestHeader
   ): Result = {
     import JsonProjection.syntax._
 
-    Json.toJson(t).project match { 
+    opt match {
+      case Some(value) => Json.toJson(value).project match { 
+        case Right(json) => Ok(json)
+        case Left(errs)  => BadRequest(Json.toJson(Outcome(errs)))
+      }
+    
+      case None => NotFound(Json.toJson(Outcome(err)))
+
+    }
+  }
+
+  def ProjectedJsonResult[T: Writes](
+    ts: Collection[T]
+  )(
+    implicit req: RequestHeader
+  ): Result = {
+    import JsonProjection.syntax._
+
+    Json.toJson(ts).project match { 
       case Right(json) => Ok(json)
       case Left(errs)  => BadRequest(Json.toJson(Outcome(errs)))
     }

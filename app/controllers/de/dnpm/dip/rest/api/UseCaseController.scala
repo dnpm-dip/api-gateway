@@ -651,11 +651,10 @@ with AuthorizationOps[UserPermissions]
   def federatedQuery =
     JsonAction[FederatedQuery[Criteria,PatientRecord]].async { 
       implicit req =>
-        (queryService ! req.body)
-          .map {
-            case Right(resultSet) => ProjectedJsonResult(resultSet)
-            case Left(err)        => InternalServerError(err)
-          }
+        (queryService ! req.body).map {
+          case Right(resultSet) => ProjectedJsonResult(Some(resultSet))
+          case Left(err)        => InternalServerError(err)
+        }
     }
 
 
@@ -688,16 +687,14 @@ with AuthorizationOps[UserPermissions]
 
   def mvhSubmissionReport(id: Id[TransferTAN]) = 
     Action.async {
-      (mvhService submissionReport id)
-        .map(JsonResult(_))
+      (mvhService submissionReport id).map(JsonResult(_))
     }
 
 
   def mvhSubmission(id: Id[TransferTAN]) = 
     Action.async {
       implicit req =>
-        (mvhService submission id)
-          .map(ProjectedJsonResult(_))
+        (mvhService submission id).map(ProjectedJsonResult(_))
     }
 
 
