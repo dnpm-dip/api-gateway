@@ -691,6 +691,18 @@ with AuthorizationOps[UserPermissions]
     }
 
 
+  def mvhSubmissionReportHistory(patId: Id[Patient]) = 
+    Action.async {
+      implicit req =>
+        (mvhService.submissionReportHistory(patId))
+          .map(
+            _.map(_.history.toList.sortBy(_.createdAt).map(Hyper(_)))
+             .map(Collection(_))
+          )
+          .map(JsonResult(_))
+    }
+
+
   def mvhSubmission(id: Id[TransferTAN]) = 
     Action.async {
       implicit req =>
