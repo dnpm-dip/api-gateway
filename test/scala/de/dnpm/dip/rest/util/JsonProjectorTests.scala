@@ -74,12 +74,9 @@ class JsonProjectorTests extends AnyFlatSpec
 
   "JsonProjector" must s"have picked fields ${fields.mkString(",")}" in { 
 
-    implicit val req: RequestHeader =
-      FakeRequest("GET",s"/foos?project=${fields.mkString(",")}")
+    implicit val req: RequestHeader = FakeRequest("GET",s"/foos?project=${fields.mkString(",")}")
 
     val projected = Json.toJson(foo).project.getOrElse(JsObject.empty)
-
-    println(Json.prettyPrint(projected))
 
     assert(projected.as[JsObject].keys == Set("int","composite","bars"))
     assert((projected \ "composite").as[JsObject].keys == Set("string"))
