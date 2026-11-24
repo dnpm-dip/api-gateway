@@ -21,7 +21,7 @@ import play.api.mvc.{
   Action,
   AnyContent,
   BaseController,
-  RequestHeader
+  RequestHeader,
 }
 import play.api.libs.json.{
   Json,
@@ -42,9 +42,7 @@ import de.dnpm.dip.service.{
   Orchestrator,
   UsageScope
 }
-import de.dnpm.dip.connector.{
-  HttpConnector
-}
+import de.dnpm.dip.connector.HttpConnector
 import HttpConnector.QueryParameters
 import HttpConnector.QueryParameters._
 import de.dnpm.dip.connector.HttpMethod._
@@ -107,7 +105,6 @@ import de.dnpm.dip.auth.api.{
 import de.dnpm.dip.rest.util._
 import de.dnpm.dip.rest.util.sapphyre.Hyper
 
-
 final case class QueryPatch[Criteria]
 (
   name: Option[String],
@@ -139,6 +136,7 @@ with AuthorizationOps[UserPermissions]
   this: 
     QueryAuthorizations[UserPermissions]
     with ValidationAuthorizations[UserPermissions]
+    with JsonSchemata[DataUpload[UseCase#PatientRecord]]
     with UseCaseHypermedia[UseCase] =>
 
 
@@ -265,17 +263,31 @@ with AuthorizationOps[UserPermissions]
         .map(Ok(_))
     }
 
+  def jsonSchema(version: Option[String]) =
+    Action {
+      formattedSchemata.get(version.getOrElse("draft-12").toLowerCase) match {
+        case Some(sch) =>
+          Ok(sch.value).as("application/json")
+
+        case None =>
+          NotFound(
+            Json.toJson(Outcome(s"Invalid JSON schema version, expected one of {${formattedSchemata.keys.mkString(",")}}"))
+          )
+      }
+    }
+
 
   // --------------------------------------------------------------------------  
   // Data Operations
   // --------------------------------------------------------------------------  
 
-  protected val patientRecordParser =
-    JsonBody[DataUpload[PatientRecord]]
+  protected val dataUploadParser = JsonBody[DataUpload[PatientRecord]]
+
+  protected val validatingDataUploadParser = SchemaValidatedJsonBody[DataUpload[PatientRecord]](schemaValidator)
 
 
   def validate =
-    Action.async(patientRecordParser){ 
+    Action.async(validatingDataUploadParser){ 
       req =>
         (validationService ! Validate(req.body,persist = false)).map {
           case Right(DataAcceptableWithIssues(_,report)) => Ok(Json.toJson(report))
@@ -288,7 +300,7 @@ with AuthorizationOps[UserPermissions]
 
 
   def processUpload =
-    Action.async(patientRecordParser){ 
+    Action.async(dataUploadParser){ 
       req =>
         (orchestrator ! Process(req.body)).collect {
           case Right(Saved)                   => Ok

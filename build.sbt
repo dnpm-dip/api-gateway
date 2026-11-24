@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play"          % "7.0.2" % Test,  //TODO: version!
   "com.lihaoyi"            %% "fastparse"                   % "3.1.1",
 
+  "com.networknt"          %  "json-schema-validator"       % "1.5.9",
   // Pinned jackson dependency versions to resolve vulnerability warnings due to transitive dependency on outdated jackson modules
   "com.fasterxml.jackson.core"   %  "jackson-core"         % "2.22.4",
   "com.fasterxml.jackson.core"   %  "jackson-databind"     % "2.22.4",
