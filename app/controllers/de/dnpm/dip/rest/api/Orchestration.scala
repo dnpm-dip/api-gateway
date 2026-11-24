@@ -76,6 +76,7 @@ object Orchestration
   private def maxByPriority(sc1: Int, sc2: Int) =
     Set(sc1,sc2).maxBy(priority)
 
+
   // Combination logic of APIErrors
   private implicit val semigroup: Semigroup[APIError] =
     Semigroup.instance {
@@ -104,101 +105,4 @@ object Orchestration
       }
   }
 
-/*
-  def ErrorResult(errors: NonEmptyList[Orchestrator.Error]): Result =
-    errors.map(_ fold toError).reduce match {
-      case Error(status,Right(validationReport)) => Status(status)(Json.toJson(validationReport))
-      case Error(status,Left(messages)) => Status(status)(Json.toJson(Outcome(messages)))
-    }
-*/
 }
-
-
-/*
-object OrchestrationResult
-{
-
-  private sealed trait Error
-  {
-    def status: Int
-  }
-
-  private final case class ValidationError
-  (
-    status: Int,
-    report: ValidationReport
-  )
-  extends Error
-
-  private final case class MessageError
-  (
-    status: Int,
-    message: String
-  )
-  extends Error
-
-  import shapeless.Poly1
-
-  private object toError extends Poly1
-  { 
-    implicit val validationServiceError: Case.Aux[ValidationService.Error,Error] = at {
-      case FatalIssuesDetected(report)         => ValidationError(BAD_REQUEST,report)
-      case UnacceptableIssuesDetected(report)  => ValidationError(UNPROCESSABLE_ENTITY,report)
-      case ValidationService.GenericError(msg) => MessageError(INTERNAL_SERVER_ERROR,msg)
-    }
-
-    implicit val mvhServiceError: Case.Aux[MVHService.Error,Error] = at { 
-      case InvalidTAN(msg)              => MessageError(BAD_REQUEST,msg)
-      case InvalidSubmissionType(msg)   => MessageError(BAD_REQUEST,msg)
-      case MVHService.GenericError(msg) => MessageError(INTERNAL_SERVER_ERROR,msg)
-    }
-
-    implicit val queryServiceError: Case.Aux[QueryService.DataError,Error] = at { 
-      case QueryService.GenericError(msg) => MessageError(INTERNAL_SERVER_ERROR,msg)
-    }
-  } 
-
-
-  private def priority: Int => Int =
-    Map(
-      BAD_REQUEST           -> 3,
-      UNPROCESSABLE_ENTITY  -> 2,
-      INTERNAL_SERVER_ERROR -> 1
-    )
-    .orElse { case _ => 0 }
- 
-  private def maxByPriority(sc1: Int, sc2: Int) =
-    Set(sc1,sc2).maxBy(priority)
-
-
-  def apply(errors: NonEmptyList[Orchestrator.Error]): Result =
-    errors.map(_ fold toError)
-      .foldLeft(Option.empty[(Int,EitherNel[String,ValidationReport])]){
-        case (acc @ Some(status -> xor),error) =>
-          error match { 
-            case err: ValidationError => 
-              if (priority(err.status) > priority(status)) Some(err.status -> err.report.asRight.toEitherNel)
-              else acc
-            
-            case err: MessageError => 
-              Some(maxByPriority(status,err.status) -> xor.leftMap(err.message :: _))
-          } 
-        
-        case (None,error) => Some(
-          (
-            error.status,
-            error match { 
-              case err: ValidationError => err.report.asRight.toEitherNel
-              case err: MessageError    => err.message.asLeft.toEitherNel 
-            }
-          ) 
-        )
-      }
-      .map {
-        case (status,Right(validationReport)) => Status(status)(Json.toJson(validationReport))
-        case (status,Left(messages)) => Status(status)(Json.toJson(Outcome(messages)))
-      }
-      .get
-
-}
-*/
