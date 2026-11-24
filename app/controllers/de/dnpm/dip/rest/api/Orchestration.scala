@@ -33,10 +33,10 @@ import play.api.libs.json.Json
 import de.dnpm.dip.rest.util.Outcome
 
 
-object OrchestrationResult
+object Orchestration
 {
 
-  private final case class Error
+  final case class APIError
   (
     status: Int,
     value: EitherNel[String,ValidationReport]
@@ -46,20 +46,20 @@ object OrchestrationResult
 
   private object toError extends Poly1
   { 
-    implicit val validationServiceError: Case.Aux[ValidationService.Error,Error] = at {
-      case FatalIssuesDetected(report)         => Error(BAD_REQUEST,report.rightNel)
-      case UnacceptableIssuesDetected(report)  => Error(UNPROCESSABLE_ENTITY,report.rightNel)
-      case ValidationService.GenericError(msg) => Error(INTERNAL_SERVER_ERROR,msg.leftNel)
+    implicit val validationServiceError: Case.Aux[ValidationService.Error,APIError] = at {
+      case FatalIssuesDetected(report)         => APIError(BAD_REQUEST,report.rightNel)
+      case UnacceptableIssuesDetected(report)  => APIError(UNPROCESSABLE_ENTITY,report.rightNel)
+      case ValidationService.GenericError(msg) => APIError(INTERNAL_SERVER_ERROR,msg.leftNel)
     }
 
-    implicit val mvhServiceError: Case.Aux[MVHService.Error,Error] = at { 
-      case InvalidTAN(msg)              => Error(BAD_REQUEST,msg.leftNel)
-      case InvalidSubmissionType(msg)   => Error(BAD_REQUEST,msg.leftNel)
-      case MVHService.GenericError(msg) => Error(INTERNAL_SERVER_ERROR,msg.leftNel)
+    implicit val mvhServiceError: Case.Aux[MVHService.Error,APIError] = at { 
+      case InvalidTAN(msg)              => APIError(BAD_REQUEST,msg.leftNel)
+      case InvalidSubmissionType(msg)   => APIError(BAD_REQUEST,msg.leftNel)
+      case MVHService.GenericError(msg) => APIError(INTERNAL_SERVER_ERROR,msg.leftNel)
     }
 
-    implicit val queryServiceError: Case.Aux[QueryService.DataError,Error] = at { 
-      case QueryService.GenericError(msg) => Error(INTERNAL_SERVER_ERROR,msg.leftNel)
+    implicit val queryServiceError: Case.Aux[QueryService.DataError,APIError] = at { 
+      case QueryService.GenericError(msg) => APIError(INTERNAL_SERVER_ERROR,msg.leftNel)
     }
   } 
 
@@ -76,23 +76,41 @@ object OrchestrationResult
   private def maxByPriority(sc1: Int, sc2: Int) =
     Set(sc1,sc2).maxBy(priority)
 
-
-  private implicit val semigroup: Semigroup[Error] =
-    Semigroup.instance  {
-      case (err1 @ Error(status1,Right(_)), err2 @ Error(status2,Right(_))) =>
+  // Combination logic of APIErrors
+  private implicit val semigroup: Semigroup[APIError] =
+    Semigroup.instance {
+      case (err1 @ APIError(status1,Right(_)), err2 @ APIError(status2,Right(_))) =>
         if (priority(status1) > priority(status2)) err1
         else err2
-      case (Error(status1,value @ Right(_)),Error(_,Left(_)))       => Error(status1,value) 
-      case (Error(_,Left(_)),Error(status2,value @ Right(_)))       => Error(status2,value)
-      case (Error(status1,Left(msgs1)),Error(status2,Left(msgs2)))  => Error(maxByPriority(status1,status2),(msgs1 ::: msgs2).asLeft)
+
+      // A ValidationReport error primes over generic error messages
+      case (APIError(status1,validationReport @ Right(_)),APIError(_,Left(_))) =>
+        APIError(status1,validationReport) 
+      case (APIError(_,Left(_)),APIError(status2,validationReport @ Right(_))) =>
+        APIError(status2,validationReport)
+
+      // Else concatenate multiple error messages	
+      case (APIError(status1,Left(msgs1)),APIError(status2,Left(msgs2))) =>
+        APIError(maxByPriority(status1,status2),(msgs1 ::: msgs2).asLeft)
     }
 
 
-  def apply(errors: NonEmptyList[Orchestrator.Error]): Result =
+  object APIError
+  {
+    def apply(errors: NonEmptyList[Orchestrator.Error]): Result =
+      errors.map(_ fold toError).reduce match {
+        case APIError(status,Right(validationReport)) => Status(status)(Json.toJson(validationReport))
+        case APIError(status,Left(messages)) => Status(status)(Json.toJson(Outcome(messages)))
+      }
+  }
+
+/*
+  def ErrorResult(errors: NonEmptyList[Orchestrator.Error]): Result =
     errors.map(_ fold toError).reduce match {
       case Error(status,Right(validationReport)) => Status(status)(Json.toJson(validationReport))
       case Error(status,Left(messages)) => Status(status)(Json.toJson(Outcome(messages)))
     }
+*/
 }
 
 

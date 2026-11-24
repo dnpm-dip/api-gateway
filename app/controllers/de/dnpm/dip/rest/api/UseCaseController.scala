@@ -293,7 +293,7 @@ with AuthorizationOps[UserPermissions]
         (orchestrator ! Process(req.body)).collect {
           case Right(Saved)                   => Ok
           case Right(SavedWithIssues(report)) => Created(Json.toJson(report))
-          case Left(errs)                     => OrchestrationResult(errs)
+          case Left(errs)                     => Orchestration.APIError(errs)
         }
     }
 
@@ -306,7 +306,7 @@ with AuthorizationOps[UserPermissions]
       (orchestrator ! Delete(patId,scopes))
         .collect {
           case Right(Deleted(_)) => Ok
-          case Left(errs)        => OrchestrationResult(errs)
+          case Left(errs)        => Orchestration.APIError(errs)
         }
     }
 
