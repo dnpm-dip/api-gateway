@@ -96,6 +96,8 @@ abstract class UseCaseRouter[UseCase <: UseCaseConfig] extends SimpleRouter
 
     case DELETE(p"/etl/patient/${PatId(patId)}"?q_o"scope=${ScopeSet(scopes)}") => controller.deleteData(patId,scopes)
 
+    case GET(p"/etl/mvh/submission-reports"?q"patient=${PatId(patId)}") => controller.mvhSubmissionReportHistory(patId)
+
     case GET(p"/etl/mvh/submission-reports"?q_o"created-after=${dateTimeOption(start)}"&q_o"created-before=${dateTimeOption(end)}"&q_o"status=${ReportStatusSet(status)}"&q_o"type=${SubmissionTypeSet(typ)}") =>
       controller.mvhSubmissionReports(start,end,status,typ)
 

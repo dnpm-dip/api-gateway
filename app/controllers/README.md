@@ -134,6 +134,7 @@ GET /api/{use-case}/etl/mvh/submission-reports
 This can thus be used to check a submission report's `status`: A submission report is initially `unsubmitted`.
 After it has been successfully relayed to BfArM its status is updated to `submitted`
 
+#### Filter SubmissionReports
 The API call allows to filter using the following query parameters:
 
 | Parameter | Type/Value | Effect |
@@ -148,10 +149,26 @@ For instance:
 GET /api/{use-case}/etl/mvh/submission-reports?status=submitted,unsubmitted&created-after={datetime}&created-before={datetime}
 ```
 
+#### SubmissionReport History of a Patient
+A patient can have multiple submissions (`initial` -> `correction` -> `followup`, etc).
+This endpoint returns the SubmissionReport history (i.e. in chronological order) for a given Patient:
+
+```
+GET /api/{use-case}/etl/mvh/submission-reports?patient={PatID}
+```
+
+#### SubmissionReport by TAN
 This endpoint returns a specific SubmissionReport by its TAN:
 
 ```
 GET /api/{use-case}/etl/mvh/submission-reports/{TAN}
+```
+
+#### Submissions for MVGenomSeq
+This endpoint returns a specific Submission by its TAN:
+
+```
+GET /api/{use-case}/etl/mvh/submissions/{TAN}
 ```
 
 

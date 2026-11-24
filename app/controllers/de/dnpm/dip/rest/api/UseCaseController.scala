@@ -57,10 +57,7 @@ import de.dnpm.dip.service.controlling.{
   Controlling,
   LocalControllingInfo
 }
-import de.dnpm.dip.service.validation.{
-  ValidationReport,
-  ValidationService
-}
+import de.dnpm.dip.service.validation.ValidationService
 import ValidationService.{
   DataAcceptableWithIssues,
   FatalIssuesDetected,
@@ -308,50 +305,7 @@ with AuthorizationOps[UserPermissions]
         (orchestrator ! Process(req.body)).collect {
           case Right(Saved)                   => Ok
           case Right(SavedWithIssues(report)) => Created(Json.toJson(report))
-          case Left(errs) =>
-            val results =
-              errs.foldLeft(Map.empty[Int,Either[NonEmptyList[String],ValidationReport]]){
-                (acc,err) => err match {
-                  case Left(FatalIssuesDetected(report))         => acc + (BAD_REQUEST -> report.asRight)
-              
-                  case Left(UnacceptableIssuesDetected(report))  => acc + (UNPROCESSABLE_ENTITY -> report.asRight)
-              
-                  case Left(ValidationService.GenericError(msg)) =>
-                    acc.updatedWith(INTERNAL_SERVER_ERROR){
-                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
-                      case _ => Some(NonEmptyList.of(msg).asLeft)
-                    }
-              
-                  case Right(Left(MVHService.InvalidTAN(msg)))   => acc + (BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
-
-                  case Right(Left(MVHService.InvalidSubmissionType(msg))) => acc + (BAD_REQUEST -> NonEmptyList.of(msg).asLeft)
-              
-                  case Right(Left(MVHService.GenericError(msg))) =>
-                    acc.updatedWith(INTERNAL_SERVER_ERROR){
-                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
-                      case _ => Some(NonEmptyList.of(msg).asLeft)
-                    }
-              
-                  case Right(Right(QueryService.GenericError(msg))) =>
-                    acc.updatedWith(INTERNAL_SERVER_ERROR){
-                      case Some(Left(msgs)) => Some((msg :: msgs).asLeft)
-                      case _ => Some(NonEmptyList.of(msg).asLeft)
-                    }
-                }
-              }
-
-            val code =
-              results.keySet match {
-                case codes if codes(BAD_REQUEST) => BAD_REQUEST
-                case codes if codes(UNPROCESSABLE_ENTITY) => UNPROCESSABLE_ENTITY
-                case _ => INTERNAL_SERVER_ERROR  
-              }
-
-            Status(code)(
-              results(code)
-                .leftMap(Outcome(_))
-                .fold(Json.toJson(_),Json.toJson(_))
-            )
+          case Left(errs)                     => Orchestration.APIError(errs)
         }
     }
 
@@ -363,21 +317,8 @@ with AuthorizationOps[UserPermissions]
     Action.async { 
       (orchestrator ! Delete(patId,scopes))
         .collect {
-          case Right(Deleted(id)) => Ok
-          case Left(errs) => InternalServerError(
-            Json.toJson(
-              Outcome(
-                errs.collect {
-                  case Left(ValidationService.GenericError(msg))    => msg
-                  case Right(Left(MVHService.GenericError(msg)))    => msg
-                  case Right(Right(QueryService.GenericError(msg))) => msg
-                  case Right(_)                                     => "Unexpected data deletion outcome"
-                  case Left(_)                                      => "Unexpected data deletion outcome"
-                }
-                .map(Outcome.Issue.Error(_))
-              )
-            )
-          )
+          case Right(Deleted(_)) => Ok
+          case Left(errs)        => Orchestration.APIError(errs)
         }
     }
 
@@ -662,11 +603,10 @@ with AuthorizationOps[UserPermissions]
   def federatedQuery =
     JsonAction[FederatedQuery[Criteria,PatientRecord]].async { 
       implicit req =>
-        (queryService ! req.body)
-          .map {
-            case Right(resultSet) => ProjectedJsonResult(resultSet)
-            case Left(err)        => InternalServerError(err)
-          }
+        (queryService ! req.body).map {
+          case Right(resultSet) => ProjectedJsonResult(Some(resultSet))
+          case Left(err)        => InternalServerError(err)
+        }
     }
 
 
@@ -699,16 +639,26 @@ with AuthorizationOps[UserPermissions]
 
   def mvhSubmissionReport(id: Id[TransferTAN]) = 
     Action.async {
-      (mvhService submissionReport id)
-        .map(JsonResult(_))
+      (mvhService submissionReport id).map(JsonResult(_))
+    }
+
+
+  def mvhSubmissionReportHistory(patId: Id[Patient]) = 
+    Action.async {
+      implicit req =>
+        (mvhService.submissionReportHistory(patId))
+          .map(
+            _.map(_.history.toList.sortBy(_.createdAt).map(Hyper(_)))
+             .map(Collection(_))
+          )
+          .map(JsonResult(_))
     }
 
 
   def mvhSubmission(id: Id[TransferTAN]) = 
     Action.async {
       implicit req =>
-        (mvhService submission id)
-          .map(ProjectedJsonResult(_))
+        (mvhService submission id).map(ProjectedJsonResult(_))
     }
 
 
