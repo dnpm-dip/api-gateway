@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/dnpm-dip/api-gateway/compare/v1.4.1...v1.4.2) (2026-11-25)
+
+
+### Bug Fixes
+
+* Added Site to MetaInfo ([#61](https://github.com/dnpm-dip/api-gateway/issues/61)) ([2c8fc1b](https://github.com/dnpm-dip/api-gateway/commit/2c8fc1b29fddc099e33b9846862877220c64c7b5))
+
 ## [1.4.1](https://github.com/dnpm-dip/api-gateway/compare/v1.4.0...v1.4.1) (2026-11-24)
 
 
