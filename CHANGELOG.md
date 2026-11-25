@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.1](https://github.com/dnpm-dip/api-gateway/compare/v1.4.0...v1.4.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* Adapted mapping of Orchestrator.Error union type to HTTP response ([#60](https://github.com/dnpm-dip/api-gateway/issues/60)) ([fe58caf](https://github.com/dnpm-dip/api-gateway/commit/fe58cafbc386e9585c3910fa4cd60478f8ae9d60))
+* Fixed bug that lead to JsNull being returned on ProjectedJsonResult of undefined Option values ([#58](https://github.com/dnpm-dip/api-gateway/issues/58)) ([c98453f](https://github.com/dnpm-dip/api-gateway/commit/c98453f44dfe177fbc8ad604281498739e859541))
+* submission report history endpoint ([#57](https://github.com/dnpm-dip/api-gateway/issues/57)) ([a52da02](https://github.com/dnpm-dip/api-gateway/commit/a52da024a43844def3e0f877ccfa4379c2e71dea))
+
 ## [1.4.0](https://github.com/dnpm-dip/api-gateway/compare/v1.3.5...v1.4.0) (2026-11-10)
 
 
